@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.env
+
+# Chroma vector store
+vector_store/
+
+# Cypress logs/screenshots/videos
+cypress/screenshots/
+cypress/videos/
+node_modules/
