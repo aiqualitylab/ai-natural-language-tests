@@ -1,17 +1,50 @@
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Virtual environments
+*.py[cod]
+*$py.class
+*.so
+.Python
 venv/
-.env
+env/
+ENV/
+.venv
 
-# Chroma vector store
+# Vector Store
 vector_store/
+*.db
+*.sqlite3
 
-# Cypress logs/screenshots/videos
-cypress/screenshots/
-cypress/videos/
+# Node
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cypress
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# IMPORTANT: Do NOT ignore .github folder
+# We want to commit Copilot instructions and skills
+# !.github/
