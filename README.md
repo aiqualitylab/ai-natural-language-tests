@@ -218,4 +218,4 @@ Check out more AI-powered testing projects at [@aiqualitylab](https://github.com
 This project generates Cypress E2E tests automatically from natural language requirements using OpenAI GPT, LangChain, and LangGraph.
 
 **Author**: ([@aiqualitylab](https://github.com/aiqualitylab))  
-**Medium**: [AQE Publication](https://medium.com/ai-in-quality-assurance)
+**Medium**: [AQE Publication](https://medium.com/ai-in-quality-assurance) / [Let's Automate Medium ](https://aiqualityengineer.com/) 
