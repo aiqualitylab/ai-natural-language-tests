@@ -10,7 +10,7 @@ from typing import List, Optional
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter  # Updated import
 from langchain_community.document_loaders import DirectoryLoader
 from dotenv import load_dotenv
 
@@ -84,7 +84,7 @@ def parse_cli_args(state: QAState) -> QAState:
     args = parser.parse_args()
     state["requirements"] = args.requirements
     state["out_dir"] = args.out_dir
-    state["run_cypress"] = args.run_cypress   # <-- fixed here
+    state["run_cypress"] = args.run_cypress
     state["docs_dir"] = args.docs_dir
     state["persist_vector_store"] = args.persist_vector_store
     return state
@@ -116,10 +116,8 @@ def create_or_update_vector_store(state: QAState) -> QAState:
     if os.path.exists(VECTOR_STORE_DIR) and os.listdir(VECTOR_STORE_DIR):
         db = Chroma(persist_directory=VECTOR_STORE_DIR, embedding_function=embeddings)
         db.add_documents(chunks)
-        db.persist()
     else:
         db = Chroma.from_documents(chunks, embeddings, persist_directory=VECTOR_STORE_DIR)
-        db.persist()
 
     print("✅ Vector store updated.")
     return state
@@ -193,7 +191,6 @@ def run_cypress(state: QAState) -> QAState:
         spec_arg = ",".join(specs)
         subprocess.run(
             ["npx", "cypress", "run", "--spec", spec_arg],
-            shell=True,
             check=True
         )
         print("✅ Cypress run completed successfully.")
@@ -229,7 +226,6 @@ if __name__ == "__main__":
         app = create_workflow()
         state = QAState()
 
-        # Use .invoke() instead of .run()
         state = app.invoke(state)
 
         print("\n✅ Done.")
