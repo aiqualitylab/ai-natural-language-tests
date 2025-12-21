@@ -44,16 +44,8 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          
-          # Install langchain with the old import structure
-          pip install langchain
-          
-          # Then install other requirements
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
-          
-          echo "✅ Python packages installed successfully"
+          pip install -r requirements.txt
+          echo "Python packages installed successfully"
       
       - name: Install Node dependencies
         run: npm install
