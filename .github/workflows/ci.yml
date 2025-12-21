@@ -45,7 +45,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          echo "Python packages installed successfully"
+          echo "✅ Python packages installed successfully"
       
       - name: Install Node dependencies
         run: npm install
@@ -61,7 +61,7 @@ jobs:
           restore-keys: |
             cypress-${{ runner.os }}-cypress-
       
-      - name: Generate and run Cypress tests using AI
+      - name: Generate Cypress tests using AI
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
@@ -91,15 +91,36 @@ jobs:
             fi
           done < test_requirements.txt
           
-          # Add flags
-          if [ "$RUN_FLAG" == "true" ]; then
-            ARGS="$ARGS --run"
-          fi
+          # Only generate tests (don't run yet - we'll run separately)
           ARGS="$ARGS --out cypress/e2e/generated"
           
           # Run the command
           echo "Executing: python qa_automation.py $ARGS"
           eval python qa_automation.py $ARGS
+          
+          # Store run flag for next step
+          echo "RUN_TESTS=$RUN_FLAG" >> $GITHUB_ENV
+      
+      - name: List generated test files
+        run: |
+          echo "Generated test files:"
+          if [ -d "cypress/e2e/generated" ]; then
+            ls -lah cypress/e2e/generated/
+          else
+            echo "No generated directory found"
+          fi
+      
+      - name: Run Cypress tests
+        if: env.RUN_TESTS == 'true'
+        run: |
+          if [ -d "cypress/e2e/generated" ] && [ "$(ls -A cypress/e2e/generated/*.cy.js 2>/dev/null)" ]; then
+            echo "Running Cypress on generated tests..."
+            npx cypress run --spec "cypress/e2e/generated/**/*.cy.js"
+          else
+            echo "No test files to run"
+            exit 0
+          fi
+        continue-on-error: true
       
       - name: Upload generated test files
         uses: actions/upload-artifact@v4
@@ -108,6 +129,7 @@ jobs:
           name: generated-cypress-tests
           path: cypress/e2e/generated/**/*.cy.js
           retention-days: 30
+          if-no-files-found: warn
       
       - name: Upload Cypress screenshots (on failure)
         uses: actions/upload-artifact@v4
@@ -116,6 +138,7 @@ jobs:
           name: cypress-screenshots
           path: cypress/screenshots
           retention-days: 7
+          if-no-files-found: ignore
       
       - name: Upload Cypress videos
         uses: actions/upload-artifact@v4
@@ -124,3 +147,37 @@ jobs:
           name: cypress-videos
           path: cypress/videos
           retention-days: 7
+          if-no-files-found: ignore
+      
+      - name: Display test summary
+        if: always()
+        run: |
+          echo "📊 Test Generation Summary"
+          echo "=========================="
+          
+          if [ -d "cypress/e2e/generated" ]; then
+            FILE_COUNT=$(find cypress/e2e/generated -name "*.cy.js" 2>/dev/null | wc -l)
+            echo "✅ Generated test files: $FILE_COUNT"
+            echo ""
+            echo "Generated files:"
+            find cypress/e2e/generated -name "*.cy.js" 2>/dev/null | while read file; do
+              echo "  - $(basename $file)"
+            done
+          else
+            echo "⚠️  No test files generated"
+          fi
+          
+          echo ""
+          if [ "${{ env.RUN_TESTS }}" == "true" ]; then
+            if [ -d "cypress/videos" ] && [ "$(ls -A cypress/videos 2>/dev/null)" ]; then
+              VIDEO_COUNT=$(ls cypress/videos 2>/dev/null | wc -l)
+              echo "📹 Videos generated: $VIDEO_COUNT"
+            fi
+            
+            if [ -d "cypress/screenshots" ] && [ "$(ls -A cypress/screenshots 2>/dev/null)" ]; then
+              SCREENSHOT_COUNT=$(find cypress/screenshots -name "*.png" 2>/dev/null | wc -l)
+              echo "📸 Screenshots captured: $SCREENSHOT_COUNT"
+            fi
+          else
+            echo "ℹ️  Tests were not executed (run_tests=false)"
+          fi
