@@ -2,6 +2,24 @@
 
 An AI-powered tool that generates Cypress end-to-end tests from natural language requirements using OpenAI's GPT-4 and LangGraph workflows.
 
+## 📊 Visual Workflow
+
+### Complete End-to-End Process
+
+<p align="center">
+  <img src=".github/images/complete-workflow.png" alt="Complete Workflow - Local and CI/CD paths" width="900"/>
+</p>
+
+This framework transforms natural language requirements into production-ready Cypress tests using AI. It works seamlessly in both **local development** and **CI/CD environments**.
+
+---
+
+## 🏗️ System Architecture
+
+<p align="center">
+  <img src=".github/images/architecture.png" alt="System Architecture" width="700"/>
+</p>
+
 ## Features
 
 * 🤖 **AI-Powered**: Converts natural language requirements into working Cypress tests
@@ -116,6 +134,19 @@ python qa_automation.py \
   --run \
   --out cypress/e2e/profile
 ```
+## 🔄 How It Works
+
+### Option 1: Local Development
+
+<p align="center">
+  <img src=".github/images/local-flow.png" alt="Local Development Flow" width="600"/>
+</p>
+
+### Option 2: CI/CD Pipeline
+
+<p align="center">
+  <img src=".github/images/cicd-pipeline.png" alt="CI/CD Pipeline Flow" width="600"/>
+</p>
 
 ## Generated Test Structure
 
