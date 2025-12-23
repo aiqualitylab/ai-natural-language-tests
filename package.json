@@ -1,16 +1,20 @@
 {
-  "name": "ai-powered-cypress-framework",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "cypress-natural-language-tests",
+  "version": "2.0.0",
+  "description": "AI-powered Cypress test generation with cy.prompt() integration",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "cypress:run:prompt": "cypress run --spec 'cypress/e2e/prompt-powered/**/*.cy.js'",
+    "cypress:run:traditional": "cypress run --spec 'cypress/e2e/generated/**/*.cy.js'",
+    "test:all": "cypress run",
+    "generate:traditional": "python qa_prompt_hybrid.py",
+    "generate:hybrid": "python qa_prompt_hybrid.py"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "devDependencies": {
-    "cypress": "^15.1.0"
+    "cypress": "^15.8.1"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3"
   }
 }

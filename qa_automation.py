@@ -1,137 +1,62 @@
+#!/usr/bin/env python3
+"""
+Hybrid Cypress Test Generator with cy.prompt() Integration
+Combines LangGraph orchestration with Cypress's native AI capabilities
+"""
+
 import os
 import re
-import sys
+import json
 import argparse
-import subprocess
 from datetime import datetime
-from pathlib import Path
-from typing import List, Optional
+from typing import List, Dict, Any, Optional
+from dataclasses import dataclass
 
+# LangGraph and LangChain imports
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain_text_splitters import RecursiveCharacterTextSplitter  # Updated import
-from langchain_community.document_loaders import DirectoryLoader
-from dotenv import load_dotenv
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.documents import Document
 
-# =========================
-# Environment & LLM Setup
-# =========================
+# Environment setup
+from dotenv import load_dotenv
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    raise ValueError("Missing required environment variable: OPENAI_API_KEY")
+@dataclass
+class TestGenerationState:
+    """State for test generation workflow"""
+    requirements: List[str]
+    output_dir: str
+    use_prompt: bool
+    docs_context: Optional[str]
+    generated_tests: List[Dict[str, Any]]
+    run_tests: bool
+    error: Optional[str]
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 
-# =========================
-# Paths / Constants
-# =========================
-VECTOR_STORE_DIR = "vector_store"
-DEFAULT_E2E_DIR = "cypress/e2e"
+class HybridTestGenerator:
+    """Generates Cypress tests with cy.prompt() integration"""
+    
+    def __init__(self):
+        self.llm = ChatOpenAI(
+            model="gpt-4o-mini",
+            temperature=0
+        )
+        self.embeddings = OpenAIEmbeddings()
+        
+    def create_traditional_test_prompt(self) -> str:
+        """Prompt for generating traditional Cypress tests"""
+        return """You are an expert Cypress test automation engineer.
 
-# =========================
-# Workflow State
-# =========================
-class QAState(dict):
-    requirements: List[str] = []
-    out_dir: str = DEFAULT_E2E_DIR
-    run_cypress: bool = False
-    docs_dir: Optional[str] = None
-    persist_vector_store: bool = False
-    generated_files: List[str] = []
-    errors: List[str] = []
+Generate a complete Cypress test file based on the requirement.
 
-# =========================
-# Utilities
-# =========================
-def slugify(text: str, fallback: str = "spec") -> str:
-    text = text.strip().lower()
-    text = re.sub(r"[^\w\s-]", "", text)
-    text = re.sub(r"[\s_-]+", "-", text).strip("-")
-    return text or fallback
+REQUIREMENT: {requirement}
 
-def ensure_dir(p: str) -> None:
-    Path(p).mkdir(parents=True, exist_ok=True)
+CONTEXT (if available): {context}
 
-def now_stamp() -> str:
-    return datetime.now().strftime("%Y%m%d_%H%M%S")
-
-# =========================
-# CLI Parsing
-# =========================
-def parse_cli_args(state: QAState) -> QAState:
-    parser = argparse.ArgumentParser(
-        description="Generate Cypress tests from natural-language requirements.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-    parser.add_argument(
-        "requirements",
-        nargs="+",
-        help="One or more requirements. Each becomes its own Cypress spec."
-    )
-    parser.add_argument("--out", dest="out_dir", default=DEFAULT_E2E_DIR,
-                        help="Output directory for generated Cypress specs.")
-    parser.add_argument("--run", dest="run_cypress", action="store_true",
-                        help="Run Cypress after generating tests.")
-    parser.add_argument("--docs", dest="docs_dir", default=None,
-                        help="Optional directory of additional context files to index.")
-    parser.add_argument("--persist-vstore", dest="persist_vector_store", action="store_true",
-                        help="Create/update Chroma vector store from --docs (if provided).")
-
-    args = parser.parse_args()
-    state["requirements"] = args.requirements
-    state["out_dir"] = args.out_dir
-    state["run_cypress"] = args.run_cypress
-    state["docs_dir"] = args.docs_dir
-    state["persist_vector_store"] = args.persist_vector_store
-    return state
-
-# =========================
-# Vector Store Handling
-# =========================
-def create_or_update_vector_store(state: QAState) -> QAState:
-    docs_dir = state.get("docs_dir")
-    persist = state.get("persist_vector_store", False)
-    if not (docs_dir and persist):
-        return state
-
-    if not os.path.isdir(docs_dir):
-        print(f"⚠️  --docs directory not found: {docs_dir}. Skipping vector store.")
-        return state
-
-    print(f"📚 Indexing documents from: {docs_dir}")
-    loader = DirectoryLoader(docs_dir, glob="**/*.*")
-    documents = loader.load()
-
-    if not documents:
-        print("⚠️  No documents found to index. Skipping vector store.")
-        return state
-
-    splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
-    chunks = splitter.split_documents(documents)
-
-    if os.path.exists(VECTOR_STORE_DIR) and os.listdir(VECTOR_STORE_DIR):
-        db = Chroma(persist_directory=VECTOR_STORE_DIR, embedding_function=embeddings)
-        db.add_documents(chunks)
-    else:
-        db = Chroma.from_documents(chunks, embeddings, persist_directory=VECTOR_STORE_DIR)
-
-    print("✅ Vector store updated.")
-    return state
-
-# =========================
-# Test Generation
-# =========================
-CY_PROMPT_TEMPLATE = """You are a senior automation engineer.
-Write a Cypress test in JavaScript for the following requirement:
-
-Requirement:
-{requirement}
-
-Constraints:
+GUIDELINES:
 - Use Cypress best practices.
 - Use `describe` and `it` blocks.
 - Prefer **real, working selectors from the page** (id, class, name) over non-existent data-testid.
@@ -141,102 +66,355 @@ Constraints:
 - Include both a positive and a negative path when applicable.
 - Do not include explanations or markdown; return ONLY runnable JavaScript code.
 - Ensure the code is ready to run in a standard Cypress setup.
-"""
 
-def generate_cypress_test(requirement: str) -> str:
-    prompt = CY_PROMPT_TEMPLATE.format(requirement=requirement)
-    result = llm.invoke(prompt)
-    code = (getattr(result, "content", None) or str(result)).strip()
-    return code
+Generate ONLY the test code, no explanations."""
 
-def generate_tests(state: QAState) -> QAState:
-    out_dir = state["out_dir"]
-    ensure_dir(out_dir)
+    def create_prompt_powered_test_prompt(self) -> str:
+        """Prompt for generating cy.prompt() enabled tests"""
+        return """You are an expert Cypress test automation engineer with cy.prompt() expertise.
 
-    generated_files: List[str] = []
-    for idx, req in enumerate(state["requirements"], start=1):
-        try:
-            print(f"\n[>] Generating for requirement {idx}: {req}")
-            code = generate_cypress_test(req)
-            slug = slugify(req)[:60]
-            filename = f"{idx:02d}_{slug}_{now_stamp()}.cy.js"
-            filepath = str(Path(out_dir) / filename)
-            with open(filepath, "w", encoding="utf-8") as f:
-                f.write(f"// Requirement: {req}\n")
-                f.write(code if code.endswith("\n") else code + "\n")
-            print(f"✅ Saved: {filepath}")
-            generated_files.append(filepath)
-        except Exception as e:
-            err = f"Failed to generate for requirement {idx}: {e}"
-            print(f"❌ {err}")
-            state.setdefault("errors", []).append(err)
+Generate a Cypress test file using cy.prompt() for self-healing capabilities.
 
-    state["generated_files"] = generated_files
-    return state
+REQUIREMENT: {requirement}
 
-# =========================
-# Cypress Runner
-# =========================
-def run_cypress(state: QAState) -> QAState:
-    if not state.get("run_cypress"):
-        return state
+CONTEXT (if available): {context}
 
-    specs = state.get("generated_files", [])
-    if not specs:
-        print("⚠️  No generated specs to run.")
-        return state
+GUIDELINES FOR cy.prompt():
+- Use cy.prompt() with natural language step arrays
+- Each step should be clear and descriptive
+- Include verification steps
+- Use natural language like "Visit the login page", "Click the submit button"
+- Group related steps logically
+- Add fallback traditional Cypress commands for critical assertions
 
-    print("\n▶️  Running Cypress on generated specs...")
-    try:
-        spec_arg = ",".join(specs)
-        subprocess.run(
-            ["npx", "cypress", "run", "--spec", spec_arg],
-            check=True
+EXAMPLE STRUCTURE:
+```javascript
+describe('User Login Tests', () => {{
+    const baseUrl = 'https://the-internet.herokuapp.com/login';
+
+    beforeEach(() => {{
+        cy.visit(baseUrl);
+    }});
+
+    it('should successfully log in with valid credentials', () => {{
+        cy.get('input[type="text"]').type('tomsmith');
+        cy.get('input[type="password"]').type('SuperSecretPassword!');
+        cy.get('button[type="submit"]').click();
+
+        cy.url().should('include', '/secure');
+        cy.get('.flash.success').should('be.visible').and('contain', 'You logged into a secure area!');
+    }});
+}});
+```
+
+Generate ONLY the test code using cy.prompt(), no explanations."""
+
+    def generate_test_content(
+        self, 
+        requirement: str, 
+        context: str = "", 
+        use_prompt: bool = False
+    ) -> str:
+        """Generate test content using AI"""
+        
+        template = (
+            self.create_prompt_powered_test_prompt() 
+            if use_prompt 
+            else self.create_traditional_test_prompt()
         )
-        print("✅ Cypress run completed successfully.")
-    except subprocess.CalledProcessError as e:
-        msg = f"Error running Cypress: {e}"
-        print(f"❌ {msg}")
-        state.setdefault("errors", []).append(msg)
+        
+        prompt = ChatPromptTemplate.from_template(template)
+        chain = prompt | self.llm
+        
+        response = chain.invoke({
+            "requirement": requirement,
+            "context": context or "No additional context provided"
+        })
+        
+        # Extract code from response
+        content = response.content
+        
+        # Remove markdown code blocks if present
+        if "```javascript" in content:
+            content = content.split("```javascript")[1].split("```")[0].strip()
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0].strip()
+            
+        return content
+
+    def slugify(self, text: str) -> str:
+        """Convert text to slug format"""
+        text = text.lower()
+        text = re.sub(r'[^\w\s-]', '', text)
+        text = re.sub(r'[-\s]+', '-', text)
+        return text[:50]  # Limit length
+
+    def save_test_file(
+        self, 
+        content: str, 
+        requirement: str, 
+        output_dir: str,
+        use_prompt: bool,
+        index: int
+    ) -> Dict[str, Any]:
+        """Save generated test to file"""
+        
+        # Simple: Choose folder based on test type
+        if use_prompt:
+            folder = f"{output_dir}/prompt-powered"
+        else:
+            folder = f"{output_dir}/generated"
+        
+        # Create folder if it doesn't exist
+        os.makedirs(folder, exist_ok=True)
+        
+        # Simple filename
+        slug = self.slugify(requirement)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{index:02d}_{slug}_{timestamp}.cy.js"
+        filepath = f"{folder}/{filename}"
+        
+        # Write file
+        with open(filepath, 'w') as f:
+            f.write(f"// Requirement: {requirement}\n")
+            f.write(f"// Test Type: {'cy.prompt()' if use_prompt else 'Traditional'}\n\n")
+            f.write(content)
+        
+        return {
+            "requirement": requirement,
+            "filepath": filepath,
+            "filename": filename
+        }
+
+
+class DocumentContextLoader:
+    """Load and process documentation for context"""
+    
+    def __init__(self, embeddings):
+        self.embeddings = embeddings
+        self.text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000,
+            chunk_overlap=200
+        )
+    
+    def load_documents(self, docs_dir: str) -> List[Document]:
+        """Load documents from directory"""
+        docs = []
+        docs_path = Path(docs_dir)
+        
+        if not docs_path.exists():
+            return docs
+            
+        for file_path in docs_path.rglob("*"):
+            if file_path.is_file() and file_path.suffix in ['.txt', '.md', '.json']:
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        docs.append(Document(
+                            page_content=content,
+                            metadata={"source": str(file_path)}
+                        ))
+                except Exception as e:
+                    print(f"Error loading {file_path}: {e}")
+                    
+        return docs
+    
+    def create_vector_store(self, docs: List[Document], persist_dir: str = "./vector_store"):
+        """Create vector store from documents"""
+        if not docs:
+            return None
+            
+        splits = self.text_splitter.split_documents(docs)
+        vector_store = Chroma.from_documents(
+            documents=splits,
+            embedding=self.embeddings,
+            persist_directory=persist_dir
+        )
+        return vector_store
+    
+    def get_relevant_context(self, vector_store, query: str, k: int = 3) -> str:
+        """Retrieve relevant context for a query"""
+        if not vector_store:
+            return ""
+            
+        results = vector_store.similarity_search(query, k=k)
+        context = "\n\n".join([doc.page_content for doc in results])
+        return context
+
+
+def parse_cli_node(state: TestGenerationState) -> TestGenerationState:
+    """Parse CLI arguments - initial node"""
+    test_type = "cy.prompt()" if state.use_prompt else "Traditional"
+    print(f"Generating {len(state.requirements)} test(s) - Type: {test_type}")
     return state
 
-# =========================
-# LangGraph Workflow
-# =========================
-def create_workflow():
-    graph = StateGraph(QAState)
-    graph.add_node("ParseCLI", parse_cli_args)
-    graph.add_node("BuildVectorStore", create_or_update_vector_store)
-    graph.add_node("GenerateTests", generate_tests)
-    graph.add_node("RunCypress", run_cypress)
 
-    graph.set_entry_point("ParseCLI")
-    graph.add_edge("ParseCLI", "BuildVectorStore")
-    graph.add_edge("BuildVectorStore", "GenerateTests")
-    graph.add_edge("GenerateTests", "RunCypress")
-    graph.add_edge("RunCypress", END)
-    return graph.compile()
+def load_context_node(state: TestGenerationState) -> TestGenerationState:
+    """Load documentation context if provided"""
+    # This is a placeholder - context loading happens in main
+    return state
 
-# =========================
-# Main
-# =========================
-if __name__ == "__main__":
-    print("🚀 Starting CLI-driven QA Test Generation Workflow")
+
+def generate_tests_node(state: TestGenerationState) -> TestGenerationState:
+    """Generate test files"""
+    generator = HybridTestGenerator()
+    generated = []
+    
+    for idx, requirement in enumerate(state.requirements, 1):
+        print(f"\n Generating test {idx}/{len(state.requirements)}...")
+        
+        try:
+            # Generate test
+            content = generator.generate_test_content(
+                requirement=requirement,
+                context=state.docs_context or "",
+                use_prompt=state.use_prompt
+            )
+            
+            # Save test
+            result = generator.save_test_file(
+                content=content,
+                requirement=requirement,
+                output_dir=state.output_dir,
+                use_prompt=state.use_prompt,
+                index=idx
+            )
+            
+            generated.append(result)
+            print(f"Saved: {result['filename']}")
+            
+        except Exception as e:
+            print(f"Error: {e}")
+            state.error = str(e)
+    
+    state.generated_tests = generated
+    return state
+
+
+def run_cypress_node(state: TestGenerationState) -> TestGenerationState:
+    """Run Cypress tests if requested"""
+    if not state.run_tests or not state.generated_tests:
+        return state
+    
+    print("\n Running tests...")
+    
+    # Choose which tests to run
+    if state.use_prompt:
+        tests = "cypress/e2e/prompt-powered/**/*.cy.js"
+    else:
+        tests = "cypress/e2e/generated/**/*.cy.js"
+    
+    # Run Cypress
+    cmd = f"npx cypress run --spec '{tests}'"
+    
     try:
-        app = create_workflow()
-        state = QAState()
-
-        state = app.invoke(state)
-
-        print("\n✅ Done.")
-        if state.get("errors"):
-            print("⚠️ Completed with warnings/errors:")
-            for e in state["errors"]:
-                print(f" - {e}")
-
-    except SystemExit:
-        raise
+        os.system(cmd)
+        print("Tests completed")
     except Exception as e:
-        print(f"❌ Workflow failed: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"Error: {e}")
+        state.error = str(e)
+    
+    return state
+
+
+def create_workflow() -> StateGraph:
+    """Create LangGraph workflow"""
+    workflow = StateGraph(TestGenerationState)
+    
+    # Add nodes
+    workflow.add_node("parse_cli", parse_cli_node)
+    workflow.add_node("load_context", load_context_node)
+    workflow.add_node("generate_tests", generate_tests_node)
+    workflow.add_node("run_cypress", run_cypress_node)
+    
+    # Define edges
+    workflow.set_entry_point("parse_cli")
+    workflow.add_edge("parse_cli", "load_context")
+    workflow.add_edge("load_context", "generate_tests")
+    workflow.add_edge("generate_tests", "run_cypress")
+    workflow.add_edge("run_cypress", END)
+    
+    return workflow.compile()
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate Cypress tests")
+    
+    # Required: Test requirements
+    parser.add_argument('requirements', nargs='+', help='What to test')
+    
+    # Optional: Where to save
+    parser.add_argument('--out', default='cypress/e2e', help='Output folder')
+    
+    # Optional: Use cy.prompt() for self-healing
+    parser.add_argument('--use-prompt', action='store_true', help='Enable self-healing tests')
+    
+    # Optional: Run tests after generating
+    parser.add_argument('--run', action='store_true', help='Run tests after generation')
+    
+    # Optional: Add documentation context
+    parser.add_argument('--docs', help='Documentation folder for context')
+    
+    args = parser.parse_args()
+    
+    # Load documentation context if provided
+    docs_context = None
+    if args.docs:
+        print(f"Loading documentation from: {args.docs}")
+        loader = DocumentContextLoader(OpenAIEmbeddings())
+        docs = loader.load_documents(args.docs)
+        if docs:
+            vector_store = loader.create_vector_store(docs)
+            # Get context for all requirements combined
+            combined_query = " ".join(args.requirements)
+            docs_context = loader.get_relevant_context(vector_store, combined_query)
+            print(f"Loaded context from {len(docs)} document(s)")
+    
+    # Create initial state
+    initial_state = TestGenerationState(
+        requirements=args.requirements,
+        output_dir=args.out,
+        use_prompt=args.use_prompt,
+        docs_context=docs_context,
+        generated_tests=[],
+        run_tests=args.run,
+        error=None
+    )
+    
+    # Run workflow
+    print("\n" + "="*50)
+    print("Starting Test Generation")
+    print("="*50)
+    
+    workflow = create_workflow()
+    result = workflow.invoke(initial_state)
+    
+    # Print summary
+    print("\n" + "="*50)
+    print("DONE!")
+    print("="*50)
+    
+    test_count = len(result['generated_tests'])
+    test_type = "cy.prompt()" if args.use_prompt else "Traditional"
+    
+    print(f"Generated: {test_count} test(s)")
+    print(f"Type: {test_type}")
+    print(f"Location: {args.out}")
+    
+    if result['generated_tests']:
+        print("\nFiles:")
+        for test in result['generated_tests']:
+            print(f"  - {test['filename']}")
+    
+    if result['error']:
+        print(f"\n Error: {result['error']}")
+    
+    print("\nNext step:")
+    if args.use_prompt:
+        print("  npm run cypress:run:prompt")
+    else:
+        print("  npm run cypress:run:traditional")
+
+
+if __name__ == "__main__":
+    main()
