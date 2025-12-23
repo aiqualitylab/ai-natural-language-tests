@@ -1,689 +1,705 @@
 ---
 name: langgraph-workflow-development
-description: Guide for building and debugging LangGraph workflows for AI orchestration. Use this when creating, modifying, or troubleshooting LangGraph state machines and workflow graphs.
+description: Guide for building and debugging LangGraph workflows for AI orchestration with dual-mode test generation. Use this when creating, modifying, or troubleshooting LangGraph state machines and workflow graphs for traditional and cy.prompt() test generation.
 license: MIT
 ---
 
 # LangGraph Workflow Development Skill
 
-This skill provides specialized knowledge for working with LangGraph workflows in the context of AI-powered test automation. Use this skill when building or modifying the orchestration layer that manages the test generation pipeline.
+This skill provides specialized knowledge for working with LangGraph workflows in the context of AI-powered test automation with dual-mode support (traditional Cypress tests and self-healing cy.prompt() tests). Use this skill when building or modifying the orchestration layer that manages the test generation pipeline.
 
 ## When to Use This Skill
 
 Use this skill when you need to:
-- Create new LangGraph workflow nodes
-- Modify the workflow state schema
-- Add conditional branching to the workflow
-- Debug workflow execution issues
-- Optimize workflow performance
-- Add error handling and retry logic
-- Integrate new tools or APIs into the workflow
+- Create new LangGraph workflow nodes for dual-mode test generation
+- Modify the workflow state schema to support both test types
+- Add conditional branching based on test type selection
+- Debug workflow execution issues in either mode
+- Optimize workflow performance for different test types
+- Add error handling and retry logic for both modes
+- Integrate new tools or APIs into the dual-mode workflow
+- Understand state flow with the `use_prompt` flag
 
 ## LangGraph Core Concepts
 
-### State Management
+### State Management with Dual-Mode Support
 
-LangGraph uses typed dictionaries to manage state flow:
+LangGraph uses dataclasses to manage state flow with test type selection:
 
 ```python
-from typing import TypedDict, Optional, List, Any
+from typing import List, Dict, Any, Optional
+from dataclasses import dataclass
 
-class AutomationState(TypedDict):
+@dataclass
+class TestGenerationState:
+    """State for test generation workflow with dual-mode support"""
     # Input parameters
     requirements: List[str]
     output_dir: str
+    use_prompt: bool              # KEY: Toggle between traditional and cy.prompt
+    docs_context: Optional[str]
     run_tests: bool
-    docs_dir: Optional[str]
-    persist_vstore: bool
-    
-    # Intermediate state
-    vectorstore: Optional[Any]
-    generated_code: Optional[str]
     
     # Output state
-    generated_files: List[str]
-    execution_results: Optional[dict]
+    generated_tests: List[Dict[str, Any]]
+    error: Optional[str]
 ```
 
-**Best Practices for State Design**:
-- Use `TypedDict` for type safety and IDE support
+**Key Addition**: The `use_prompt` boolean flag determines whether to generate traditional Cypress tests or self-healing cy.prompt() tests. This flag flows through the entire workflow.
+
+**Best Practices for Dual-Mode State Design**:
+- Use `@dataclass` for clean, typed state management
+- The `use_prompt` flag should be immutable after CLI parsing
 - Mark optional fields with `Optional[Type]`
-- Group related fields logically (inputs, intermediate, outputs)
-- Use descriptive field names that reflect the workflow domain
-- Avoid deeply nested structures - flatten when possible
+- Group related fields logically (inputs, outputs)
+- Use descriptive field names that reflect both modes
+- Document which fields are affected by `use_prompt`
 
-### Workflow Nodes
+### Workflow Nodes with Dual-Mode Logic
 
-Nodes are pure functions that transform state:
+Nodes are pure functions that transform state and respect the test type:
 
 ```python
-def node_name(state: AutomationState) -> AutomationState:
+def parse_cli_node(state: TestGenerationState) -> TestGenerationState:
     """
-    Brief description of what this node does.
-    
-    Args:
-        state: Current workflow state
-        
-    Returns:
-        Updated state with modifications
+    Parse CLI arguments - initial node with test type identification.
     """
-    # Validate inputs
-    if not state.get("required_field"):
-        raise ValueError("Missing required_field")
-    
-    # Perform transformation
-    result = process_data(state["input_data"])
-    
-    # Update and return state
-    state["output_data"] = result
+    test_type = "cy.prompt()" if state.use_prompt else "Traditional"
+    print(f"Generating {len(state.requirements)} test(s) - Type: {test_type}")
     return state
 ```
 
-**Node Development Guidelines**:
+**Node Development Guidelines for Dual Mode**:
 - Keep nodes focused on single responsibilities
 - Always return the complete state object
+- Use `state.use_prompt` to determine behavior
 - Add validation at the start of each node
-- Include comprehensive docstrings
+- Include comprehensive docstrings mentioning test types
 - Handle errors gracefully with try-except
-- Log important state transitions
+- Log test type for debugging
 
-### Building the Workflow Graph
+### Building the Dual-Mode Workflow Graph
 
 ```python
-from langgraph.graph import StateGraph
+from langgraph.graph import StateGraph, END
 
-# Initialize graph with state schema
-workflow = StateGraph(AutomationState)
-
-# Add nodes
-workflow.add_node("parse_input", parse_input_node)
-workflow.add_node("process_data", process_data_node)
-workflow.add_node("generate_output", generate_output_node)
-
-# Define sequential flow
-workflow.add_edge("parse_input", "process_data")
-workflow.add_edge("process_data", "generate_output")
-
-# Set entry point
-workflow.set_entry_point("parse_input")
-
-# Compile the graph
-app = workflow.compile()
+def create_workflow() -> StateGraph:
+    """Create LangGraph workflow with dual-mode support"""
+    workflow = StateGraph(TestGenerationState)
+    
+    # Add nodes
+    workflow.add_node("parse_cli", parse_cli_node)
+    workflow.add_node("load_context", load_context_node)
+    workflow.add_node("generate_tests", generate_tests_node)
+    workflow.add_node("run_cypress", run_cypress_node)
+    
+    # Define edges (sequential flow)
+    workflow.set_entry_point("parse_cli")
+    workflow.add_edge("parse_cli", "load_context")
+    workflow.add_edge("load_context", "generate_tests")
+    workflow.add_edge("generate_tests", "run_cypress")
+    workflow.add_edge("run_cypress", END)
+    
+    return workflow.compile()
 ```
 
 ## Common Workflow Patterns
 
-### Pattern 1: Sequential Processing
+### Pattern 1: Sequential Processing with Mode Selection
 
-Simple linear workflow for straightforward pipelines:
-
-```python
-workflow = StateGraph(AutomationState)
-
-workflow.add_node("step1", step1_function)
-workflow.add_node("step2", step2_function)
-workflow.add_node("step3", step3_function)
-
-workflow.add_edge("step1", "step2")
-workflow.add_edge("step2", "step3")
-
-workflow.set_entry_point("step1")
-```
-
-**When to use**: Simple pipelines with no branching or conditional logic
-
-### Pattern 2: Conditional Branching
-
-Workflow that routes based on state:
+Linear workflow that adapts based on test type:
 
 ```python
-def should_use_vectorstore(state: AutomationState) -> str:
-    """Decide whether to build vector store."""
-    if state.get("docs_dir"):
-        return "build_vectorstore"
-    return "generate_tests"
-
-workflow = StateGraph(AutomationState)
-
-workflow.add_node("parse_cli", parse_cli)
-workflow.add_node("build_vectorstore", build_vectorstore)
-workflow.add_node("generate_tests", generate_tests)
-
-# Add conditional edge
-workflow.add_conditional_edges(
-    "parse_cli",
-    should_use_vectorstore,
-    {
-        "build_vectorstore": "build_vectorstore",
-        "generate_tests": "generate_tests"
-    }
-)
-
-workflow.add_edge("build_vectorstore", "generate_tests")
-workflow.set_entry_point("parse_cli")
-```
-
-**When to use**: Workflows with optional steps or different execution paths
-
-### Pattern 3: Parallel Processing
-
-Execute multiple nodes concurrently (advanced):
-
-```python
-from langgraph.graph import StateGraph
-from typing import List
-
-class ParallelState(TypedDict):
-    requirements: List[str]
-    results: List[dict]
-
-def parallel_process(state: ParallelState) -> ParallelState:
-    """Process multiple requirements in parallel."""
-    from concurrent.futures import ThreadPoolExecutor
+def generate_tests_node(state: TestGenerationState) -> TestGenerationState:
+    """Generate tests based on selected mode"""
+    generator = HybridTestGenerator()
+    generated = []
     
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        futures = [
-            executor.submit(process_requirement, req)
-            for req in state["requirements"]
-        ]
-        results = [f.result() for f in futures]
+    for idx, requirement in enumerate(state.requirements, 1):
+        try:
+            # Generate test - mode selected by use_prompt flag
+            content = generator.generate_test_content(
+                requirement=requirement,
+                context=state.docs_context or "",
+                use_prompt=state.use_prompt  # KEY parameter
+            )
+            
+            # Save test to appropriate folder
+            result = generator.save_test_file(
+                content=content,
+                requirement=requirement,
+                output_dir=state.output_dir,
+                use_prompt=state.use_prompt,  # Determines folder
+                index=idx
+            )
+            
+            generated.append(result)
+            
+        except Exception as e:
+            state.error = str(e)
     
-    state["results"] = results
+    state.generated_tests = generated
     return state
 ```
 
-**When to use**: Independent operations that can run concurrently
+**When to use**: All dual-mode workflows need this pattern
 
-### Pattern 4: Loop with Conditional Exit
+### Pattern 2: Conditional Test Execution
 
-Workflow that repeats until a condition is met:
+Workflow that routes test execution based on test type:
 
 ```python
-def should_continue(state: AutomationState) -> str:
-    """Check if we should retry generation."""
-    if state.get("validation_passed"):
-        return "complete"
-    if state["retry_count"] >= 3:
-        return "complete"
-    return "generate_tests"
-
-workflow.add_conditional_edges(
-    "validate_tests",
-    should_continue,
-    {
-        "generate_tests": "generate_tests",
-        "complete": "complete"
-    }
-)
+def run_cypress_node(state: TestGenerationState) -> TestGenerationState:
+    """Run Cypress tests if requested, targeting correct folder"""
+    if not state.run_tests or not state.generated_tests:
+        return state
+    
+    # Choose spec pattern based on test type
+    if state.use_prompt:
+        tests = "cypress/e2e/prompt-powered/**/*.cy.js"
+    else:
+        tests = "cypress/e2e/generated/**/*.cy.js"
+    
+    cmd = f"npx cypress run --spec '{tests}'"
+    
+    try:
+        os.system(cmd)
+    except Exception as e:
+        state.error = str(e)
+    
+    return state
 ```
 
-**When to use**: Retry logic or iterative refinement
+**When to use**: When test execution depends on test type
+
+### Pattern 3: Prompt Template Selection
+
+Dynamic template selection based on mode:
+
+```python
+def generate_test_content(
+    self,
+    requirement: str,
+    context: str = "",
+    use_prompt: bool = False
+) -> str:
+    """Generate test content using appropriate template"""
+    
+    # Select template based on mode
+    if use_prompt:
+        template = self.create_prompt_powered_test_prompt()
+    else:
+        template = self.create_traditional_test_prompt()
+    
+    prompt = ChatPromptTemplate.from_template(template)
+    chain = prompt | self.llm
+    
+    response = chain.invoke({
+        "requirement": requirement,
+        "context": context or "No additional context provided"
+    })
+    
+    # Extract and clean code
+    content = response.content
+    if "```javascript" in content:
+        content = content.split("```javascript")[1].split("```")[0].strip()
+    elif "```" in content:
+        content = content.split("```")[1].split("```")[0].strip()
+    
+    return content
+```
+
+**When to use**: Core generation logic with mode-specific prompts
+
+### Pattern 4: File Organization by Test Type
+
+Organize output files based on test type:
+
+```python
+def save_test_file(
+    self,
+    content: str,
+    requirement: str,
+    output_dir: str,
+    use_prompt: bool,
+    index: int
+) -> Dict[str, Any]:
+    """Save test file to appropriate folder"""
+    
+    # Conditional for folder selection
+    if use_prompt:
+        folder = f"{output_dir}/prompt-powered"
+    else:
+        folder = f"{output_dir}/generated"
+    
+    # Create folder if needed
+    os.makedirs(folder, exist_ok=True)
+    
+    # Generate filename
+    slug = self.slugify(requirement)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"{index:02d}_{slug}_{timestamp}.cy.js"
+    filepath = f"{folder}/{filename}"
+    
+    # Write file with header comment
+    with open(filepath, 'w') as f:
+        test_type = 'cy.prompt()' if use_prompt else 'Traditional'
+        f.write(f"// Requirement: {requirement}\n")
+        f.write(f"// Test Type: {test_type}\n\n")
+        f.write(content)
+    
+    return {
+        "requirement": requirement,
+        "filepath": filepath,
+        "filename": filename,
+        "test_type": test_type
+    }
+```
+
+**When to use**: File operations that depend on test type
 
 ## Error Handling Strategies
 
-### Strategy 1: Try-Except in Nodes
+### Strategy 1: Mode-Specific Error Handling
 
-Handle expected errors within nodes:
+Handle errors specific to each test type:
 
 ```python
-def generate_tests(state: AutomationState) -> AutomationState:
-    """Generate tests with error handling."""
-    try:
-        llm = ChatOpenAI(model="gpt-4", temperature=0)
-        response = llm.invoke(state["prompt"])
-        state["generated_code"] = response.content
-        state["error"] = None
+def generate_tests_node(state: TestGenerationState) -> TestGenerationState:
+    """Generate tests with mode-specific error handling"""
+    generator = HybridTestGenerator()
+    generated = []
+    
+    for requirement in state.requirements:
+        try:
+            content = generator.generate_test_content(
+                requirement=requirement,
+                context=state.docs_context,
+                use_prompt=state.use_prompt
+            )
+            
+            # Validate generated content
+            if state.use_prompt:
+                # Check for cy.prompt() syntax
+                if 'cy.prompt' not in content:
+                    raise ValueError("cy.prompt() not found in generated test")
+            else:
+                # Check for traditional Cypress commands
+                if 'cy.get' not in content and 'cy.visit' not in content:
+                    raise ValueError("No Cypress commands found")
+            
+            result = generator.save_test_file(
+                content=content,
+                requirement=requirement,
+                output_dir=state.output_dir,
+                use_prompt=state.use_prompt,
+                index=len(generated) + 1
+            )
+            
+            generated.append(result)
+            
+        except Exception as e:
+            test_type = "cy.prompt()" if state.use_prompt else "traditional"
+            print(f"Error generating {test_type} test: {e}")
+            state.error = str(e)
+    
+    state.generated_tests = generated
+    return state
+```
+
+### Strategy 2: Configuration Validation
+
+Validate required configuration for cy.prompt():
+
+```python
+def validate_config_node(state: TestGenerationState) -> TestGenerationState:
+    """Validate configuration based on test type"""
+    
+    if state.use_prompt:
+        # Check Cypress config for cy.prompt support
+        config_path = "./cypress.config.js"
         
-    except Exception as e:
-        state["generated_code"] = None
-        state["error"] = str(e)
-        print(f"ERROR in generate_tests: {e}")
+        if not os.path.exists(config_path):
+            state.error = "cypress.config.js not found"
+            return state
+        
+        with open(config_path, 'r') as f:
+            config_content = f.read()
+            
+        if 'experimentalCypressPrompt' not in config_content:
+            print("Warning: experimentalCypressPrompt not enabled")
     
     return state
 ```
 
-### Strategy 2: Error Recovery Nodes
+### Strategy 3: Graceful Degradation
 
-Dedicated nodes for error handling:
+Fallback to traditional tests if cy.prompt fails:
 
 ```python
-def handle_error(state: AutomationState) -> AutomationState:
-    """Handle errors from previous nodes."""
-    error = state.get("error")
+def generate_with_fallback(state: TestGenerationState) -> TestGenerationState:
+    """Generate with fallback to traditional if cy.prompt fails"""
     
-    if "rate_limit" in error:
-        print("Rate limit hit, waiting 60 seconds...")
-        time.sleep(60)
-        state["should_retry"] = True
+    if state.use_prompt:
+        try:
+            result = generate_prompt_tests(state)
+        except Exception as e:
+            print(f"cy.prompt generation failed: {e}")
+            print("Falling back to traditional tests")
+            state.use_prompt = False
+            result = generate_traditional_tests(state)
     else:
-        print(f"Unrecoverable error: {error}")
-        state["should_retry"] = False
+        result = generate_traditional_tests(state)
     
-    state["error"] = None
-    return state
-
-def should_retry(state: AutomationState) -> str:
-    """Determine if we should retry after error."""
-    if state.get("should_retry"):
-        return "retry"
-    return "fail"
-
-workflow.add_conditional_edges(
-    "error_handler",
-    should_retry,
-    {"retry": "generate_tests", "fail": "end"}
-)
-```
-
-### Strategy 3: Validation Nodes
-
-Validate state before proceeding:
-
-```python
-def validate_state(state: AutomationState) -> AutomationState:
-    """Validate state contains required fields."""
-    required_fields = ["requirements", "output_dir"]
-    
-    for field in required_fields:
-        if field not in state or not state[field]:
-            raise ValueError(f"Missing required field: {field}")
-    
-    # Validate types
-    if not isinstance(state["requirements"], list):
-        raise TypeError("requirements must be a list")
-    
-    return state
+    return result
 ```
 
 ## Integration Patterns
 
-### LLM Integration
+### LLM Integration with Dual Templates
 
-Best practices for integrating LLMs into workflows:
+Best practices for integrating LLMs with mode-specific prompts:
 
 ```python
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 
-def llm_generate_node(state: AutomationState) -> AutomationState:
-    """Generate content using LLM."""
-    # Initialize LLM
-    llm = ChatOpenAI(
-        model="gpt-4",
-        temperature=0,  # Deterministic for code generation
-        max_tokens=2000,
-        timeout=30
-    )
+class HybridTestGenerator:
+    """Generate both traditional and cy.prompt() tests"""
     
-    # Create prompt template
-    prompt_template = ChatPromptTemplate.from_messages([
-        ("system", "You are a test automation expert."),
-        ("user", "{requirement}")
-    ])
+    def __init__(self):
+        self.llm = ChatOpenAI(
+            model="gpt-4o-mini",
+            temperature=0  # Deterministic for code generation
+        )
     
-    # Create chain
-    chain = prompt_template | llm
+    def create_traditional_test_prompt(self) -> str:
+        """Prompt for traditional Cypress tests"""
+        return """You are an expert Cypress test automation engineer.
+
+Generate a complete Cypress test file.
+
+REQUIREMENT: {requirement}
+CONTEXT: {context}
+
+GUIDELINES:
+- Use Cypress best practices
+- Use explicit selectors
+- Include clear assertions
+- Return ONLY JavaScript code
+
+Generate ONLY the test code, no explanations."""
     
-    # Generate for each requirement
-    generated = []
-    for req in state["requirements"]:
-        try:
-            response = chain.invoke({"requirement": req})
-            generated.append(response.content)
-        except Exception as e:
-            print(f"Error generating for '{req}': {e}")
-            generated.append(None)
+    def create_prompt_powered_test_prompt(self) -> str:
+        """Prompt for cy.prompt() tests"""
+        return """You are an expert with cy.prompt() expertise.
+
+Generate a Cypress test using cy.prompt().
+
+REQUIREMENT: {requirement}
+CONTEXT: {context}
+
+GUIDELINES FOR cy.prompt():
+- Use natural language step arrays
+- Example: "Visit the login page", "Click submit"
+- Add critical assertions with traditional Cypress
+
+Generate ONLY the test code, no explanations."""
     
-    state["generated_code"] = generated
-    return state
+    def generate_test_content(
+        self,
+        requirement: str,
+        context: str = "",
+        use_prompt: bool = False
+    ) -> str:
+        """Generate test using appropriate template"""
+        
+        # Select template
+        template = (
+            self.create_prompt_powered_test_prompt()
+            if use_prompt
+            else self.create_traditional_test_prompt()
+        )
+        
+        prompt = ChatPromptTemplate.from_template(template)
+        chain = prompt | self.llm
+        
+        response = chain.invoke({
+            "requirement": requirement,
+            "context": context or "No additional context"
+        })
+        
+        return self._clean_response(response.content)
+    
+    def _clean_response(self, content: str) -> str:
+        """Remove markdown code blocks"""
+        if "```javascript" in content:
+            content = content.split("```javascript")[1].split("```")[0].strip()
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0].strip()
+        return content
 ```
 
 **Key Points**:
-- Use appropriate temperature (0 for code, higher for creative tasks)
-- Set reasonable timeouts
-- Handle per-item errors gracefully
-- Use chains for reusable prompt logic
+- Maintain separate prompt templates for each mode
+- Use temperature=0 for deterministic code generation
+- Clean responses consistently regardless of mode
+- Handle both template types with same method signature
 
-### Vector Store Integration
+### Vector Store Integration (Mode-Agnostic)
 
-Integrate ChromaDB for context retrieval:
+Vector store works the same for both test types:
 
 ```python
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.document_loaders import DirectoryLoader
 
-def build_vectorstore(state: AutomationState) -> AutomationState:
-    """Build vector store from documentation."""
-    docs_dir = state.get("docs_dir")
+class DocumentContextLoader:
+    """Load and process documentation for context"""
     
-    if not docs_dir:
-        state["vectorstore"] = None
-        return state
-    
-    # Check if persisted store exists
-    persist_dir = "./vector_store"
-    
-    if os.path.exists(persist_dir) and not state.get("persist_vstore"):
-        # Load existing store
-        embeddings = OpenAIEmbeddings()
-        vectorstore = Chroma(
-            persist_directory=persist_dir,
-            embedding_function=embeddings
-        )
-    else:
-        # Create new store
-        loader = DirectoryLoader(docs_dir, glob="**/*")
-        documents = loader.load()
+    def load_documents(self, docs_dir: str) -> List[Document]:
+        """Load documents from directory"""
+        docs = []
+        docs_path = Path(docs_dir)
         
-        embeddings = OpenAIEmbeddings()
-        vectorstore = Chroma.from_documents(
-            documents=documents,
-            embedding=embeddings,
+        if not docs_path.exists():
+            return docs
+        
+        for file_path in docs_path.rglob("*"):
+            if file_path.is_file() and file_path.suffix in ['.txt', '.md', '.json']:
+                try:
+                    with open(file_path, 'r') as f:
+                        content = f.read()
+                        docs.append(Document(
+                            page_content=content,
+                            metadata={"source": str(file_path)}
+                        ))
+                except Exception as e:
+                    print(f"Error loading {file_path}: {e}")
+        
+        return docs
+    
+    def create_vector_store(self, docs, persist_dir="./vector_store"):
+        """Create vector store from documents"""
+        if not docs:
+            return None
+        
+        splits = self.text_splitter.split_documents(docs)
+        vector_store = Chroma.from_documents(
+            documents=splits,
+            embedding=self.embeddings,
             persist_directory=persist_dir
         )
-    
-    state["vectorstore"] = vectorstore
-    return state
-
-def retrieve_context(state: AutomationState) -> AutomationState:
-    """Retrieve relevant context for requirements."""
-    vectorstore = state.get("vectorstore")
-    
-    if not vectorstore:
-        state["context"] = [""] * len(state["requirements"])
-        return state
-    
-    contexts = []
-    for req in state["requirements"]:
-        docs = vectorstore.similarity_search(req, k=3)
-        context = "\n\n".join([doc.page_content for doc in docs])
-        contexts.append(context)
-    
-    state["context"] = contexts
-    return state
+        return vector_store
 ```
 
-### External Tool Integration
+**Note**: Vector store context is used identically for both test types.
 
-Call external tools like Cypress:
+### External Tool Integration with Mode Awareness
+
+Execute Cypress tests based on test type:
 
 ```python
 import subprocess
-from pathlib import Path
 
-def run_cypress(state: AutomationState) -> AutomationState:
-    """Execute generated Cypress tests."""
-    if not state.get("run_tests"):
-        state["execution_results"] = None
+def run_cypress_node(state: TestGenerationState) -> TestGenerationState:
+    """Execute generated Cypress tests with mode awareness"""
+    if not state.run_tests or not state.generated_tests:
         return state
     
-    results = []
-    for filepath in state["generated_files"]:
-        try:
-            result = subprocess.run(
-                ["npx", "cypress", "run", "--spec", filepath],
-                capture_output=True,
-                text=True,
-                timeout=300
-            )
-            
-            results.append({
-                "file": filepath,
-                "exit_code": result.returncode,
-                "stdout": result.stdout,
-                "stderr": result.stderr,
-                "passed": result.returncode == 0
-            })
-            
-        except subprocess.TimeoutExpired:
-            results.append({
-                "file": filepath,
-                "error": "Test execution timeout"
-            })
-        except Exception as e:
-            results.append({
-                "file": filepath,
-                "error": str(e)
-            })
+    # Determine spec pattern based on test type
+    if state.use_prompt:
+        spec_pattern = "cypress/e2e/prompt-powered/**/*.cy.js"
+        test_type = "cy.prompt()"
+    else:
+        spec_pattern = "cypress/e2e/generated/**/*.cy.js"
+        test_type = "traditional"
     
-    state["execution_results"] = results
+    cmd = f"npx cypress run --spec '{spec_pattern}'"
+    
+    try:
+        result = subprocess.run(
+            cmd,
+            shell=True,
+            capture_output=True,
+            timeout=300
+        )
+        
+        state.execution_results = {
+            "exit_code": result.returncode,
+            "test_type": test_type,
+            "passed": result.returncode == 0
+        }
+        
+    except Exception as e:
+        state.error = str(e)
+    
     return state
 ```
 
 ## Debugging Workflows
 
-### Enable Verbose Logging
+### Enable Mode-Specific Logging
 
 ```python
 import logging
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.DEBUG)
 
-def debug_node(state: AutomationState) -> AutomationState:
-    """Node with debug logging."""
-    logging.debug(f"Entering debug_node with state keys: {state.keys()}")
-    logging.debug(f"Requirements: {state.get('requirements')}")
+def debug_node(state: TestGenerationState) -> TestGenerationState:
+    """Node with debug logging including test type"""
+    test_type = "cy.prompt()" if state.use_prompt else "Traditional"
+    logging.debug(f"Test type: {test_type}")
+    logging.debug(f"Requirements: {state.requirements}")
     
-    # Process
     result = process(state)
     
-    logging.debug(f"Exiting debug_node, added keys: {result.keys() - state.keys()}")
+    logging.debug(f"Generated: {len(result.generated_tests)} tests")
     return result
 ```
 
-### State Inspection
+### State Inspection with Mode Info
 
 ```python
-def inspect_state(state: AutomationState) -> AutomationState:
-    """Debugging node to inspect state."""
-    print("=" * 80)
-    print("STATE INSPECTION")
-    print("=" * 80)
-    
-    for key, value in state.items():
-        if isinstance(value, (str, int, bool)):
-            print(f"{key}: {value}")
-        elif isinstance(value, list):
-            print(f"{key}: List with {len(value)} items")
-        else:
-            print(f"{key}: {type(value).__name__}")
-    
-    print("=" * 80)
+def inspect_state(state: TestGenerationState) -> TestGenerationState:
+    """Debugging node to inspect state with test type"""
+    test_type = "cy.prompt()" if state.use_prompt else "Traditional"
+    print(f"Test Type: {test_type}")
+    print(f"Requirements: {state.requirements}")
+    print(f"Generated Tests: {len(state.generated_tests)}")
     return state
-
-# Add to workflow for debugging
-workflow.add_node("inspect", inspect_state)
-workflow.add_edge("some_node", "inspect")
-workflow.add_edge("inspect", "next_node")
-```
-
-### Visualization
-
-Generate visual representation of the workflow:
-
-```python
-# After compiling the workflow
-app = workflow.compile()
-
-# Generate Mermaid diagram
-mermaid_diagram = app.get_graph().draw_mermaid()
-print(mermaid_diagram)
-
-# Save to file
-with open("workflow_diagram.mmd", "w") as f:
-    f.write(mermaid_diagram)
 ```
 
 ## Performance Optimization
 
-### Caching Expensive Operations
+### Mode-Specific Optimizations
+
+```python
+def optimized_generate(state: TestGenerationState) -> TestGenerationState:
+    """Optimized generation based on test type"""
+    
+    if state.use_prompt:
+        # cy.prompt tests: Runtime AI calls happen during execution
+        generator = HybridTestGenerator()
+        generator.llm.temperature = 0
+    else:
+        # Traditional tests: No runtime AI, generation must be perfect
+        generator = HybridTestGenerator()
+        generator.llm.temperature = 0
+        generator.llm.max_tokens = 2000
+    
+    return state
+```
+
+### Caching by Test Type
 
 ```python
 from functools import lru_cache
 
 @lru_cache(maxsize=128)
-def load_vectorstore(persist_dir: str):
-    """Cached vector store loading."""
-    embeddings = OpenAIEmbeddings()
-    return Chroma(
-        persist_directory=persist_dir,
-        embedding_function=embeddings
-    )
-
-def use_cached_vectorstore(state: AutomationState) -> AutomationState:
-    """Use cached vector store instance."""
-    vectorstore = load_vectorstore("./vector_store")
-    state["vectorstore"] = vectorstore
-    return state
-```
-
-### Batch Processing
-
-```python
-def batch_generate(state: AutomationState) -> AutomationState:
-    """Generate tests in batches for better performance."""
-    requirements = state["requirements"]
-    batch_size = 5
-    
-    all_generated = []
-    
-    for i in range(0, len(requirements), batch_size):
-        batch = requirements[i:i + batch_size]
-        
-        # Process batch
-        batch_prompt = create_batch_prompt(batch)
-        response = llm.invoke(batch_prompt)
-        
-        # Parse response into individual tests
-        generated = parse_batch_response(response.content, len(batch))
-        all_generated.extend(generated)
-    
-    state["generated_code"] = all_generated
-    return state
+def get_prompt_template(use_prompt: bool) -> str:
+    """Cached prompt template retrieval"""
+    generator = HybridTestGenerator()
+    if use_prompt:
+        return generator.create_prompt_powered_test_prompt()
+    else:
+        return generator.create_traditional_test_prompt()
 ```
 
 ## Testing Workflows
 
-### Unit Testing Nodes
+### Unit Testing Dual-Mode Nodes
 
 ```python
-import pytest
+def test_parse_cli_traditional():
+    """Test CLI parsing for traditional mode"""
+    state = TestGenerationState(
+        requirements=["Test login"],
+        output_dir="cypress/e2e",
+        use_prompt=False,
+        docs_context=None,
+        generated_tests=[],
+        run_tests=False,
+        error=None
+    )
+    
+    result = parse_cli_node(state)
+    assert result.use_prompt is False
 
-def test_parse_cli_node():
-    """Test CLI parsing node."""
-    # Arrange
-    initial_state = {
-        "raw_args": ["Test login", "--run"],
-        "requirements": [],
-        "run_tests": False
-    }
-    
-    # Act
-    result = parse_cli(initial_state)
-    
-    # Assert
-    assert result["requirements"] == ["Test login"]
-    assert result["run_tests"] is True
 
-def test_generate_tests_node():
-    """Test test generation node."""
-    state = {
-        "requirements": ["Test button click"],
-        "output_dir": "/tmp/test",
-        "generated_files": []
-    }
+def test_generate_tests_traditional():
+    """Test traditional test generation"""
+    state = TestGenerationState(
+        requirements=["Test button click"],
+        output_dir="/tmp/test",
+        use_prompt=False,
+        docs_context=None,
+        generated_tests=[],
+        run_tests=False,
+        error=None
+    )
     
-    result = generate_tests(state)
-    
-    assert len(result["generated_files"]) == 1
-    assert result["generated_files"][0].endswith(".cy.js")
-```
-
-### Integration Testing
-
-```python
-def test_full_workflow():
-    """Test complete workflow execution."""
-    # Setup
-    workflow = create_workflow()
-    app = workflow.compile()
-    
-    initial_state = {
-        "requirements": ["Test sample scenario"],
-        "output_dir": "./test_output",
-        "run_tests": False,
-        "docs_dir": None,
-        "persist_vstore": False,
-        "generated_files": []
-    }
-    
-    # Execute
-    final_state = app.invoke(initial_state)
-    
-    # Verify
-    assert len(final_state["generated_files"]) > 0
-    assert os.path.exists(final_state["generated_files"][0])
+    result = generate_tests_node(state)
+    assert "generated" in result.generated_tests[0]['filepath']
 ```
 
 ## Best Practices Summary
 
-1. **State Design**: Keep state flat and well-typed
-2. **Node Functions**: Single responsibility, pure functions
-3. **Error Handling**: Graceful degradation, informative errors
-4. **Logging**: Strategic logging for debugging
-5. **Testing**: Unit test nodes, integration test workflows
-6. **Performance**: Cache expensive operations, batch when possible
-7. **Documentation**: Clear docstrings and comments
+1. **State Design**: Include `use_prompt` flag for mode selection
+2. **Node Functions**: Respect test type throughout workflow
+3. **Error Handling**: Handle mode-specific errors gracefully
+4. **Logging**: Include test type in all log messages
+5. **Testing**: Unit test both modes separately
+6. **Performance**: Optimize based on test type characteristics
 
 ## Common Pitfalls
 
-### Pitfall 1: Mutating Shared Objects
+### Pitfall 1: Ignoring use_prompt Flag
 
 ```python
-# BAD - Mutates shared list
-def bad_node(state: AutomationState) -> AutomationState:
-    shared_list = state["shared_list"]
-    shared_list.append("new_item")  # Mutates original
+# BAD - Doesn't check test type
+def bad_save(state):
+    folder = f"{state.output_dir}/tests"  # Wrong!
     return state
 
-# GOOD - Creates new list
-def good_node(state: AutomationState) -> AutomationState:
-    state["shared_list"] = state["shared_list"] + ["new_item"]
+# GOOD - Respects test type
+def good_save(state):
+    if state.use_prompt:
+        folder = f"{state.output_dir}/prompt-powered"
+    else:
+        folder = f"{state.output_dir}/generated"
     return state
 ```
 
-### Pitfall 2: Missing State Updates
+### Pitfall 2: Wrong Template Selection
 
 ```python
-# BAD - Forgets to update state
-def bad_node(state: AutomationState) -> AutomationState:
-    result = expensive_operation()
-    return state  # Lost the result!
+# BAD - Always uses same template
+def bad_generate(state):
+    template = TRADITIONAL_TEMPLATE  # Ignores mode!
+    return state
 
-# GOOD - Updates state with result
-def good_node(state: AutomationState) -> AutomationState:
-    result = expensive_operation()
-    state["result"] = result
+# GOOD - Selects appropriate template
+def good_generate(state):
+    template = (
+        PROMPT_TEMPLATE if state.use_prompt 
+        else TRADITIONAL_TEMPLATE
+    )
     return state
 ```
 
-### Pitfall 3: Blocking Operations
+### Pitfall 3: Modifying use_prompt During Workflow
 
 ```python
-# BAD - Blocks for long time
-def bad_node(state: AutomationState) -> AutomationState:
-    time.sleep(300)  # 5 minute sleep
+# BAD - Changes test type mid-workflow
+def bad_node(state):
+    state.use_prompt = not state.use_prompt  # Don't do this!
     return state
 
-# GOOD - Async or timeout
-import asyncio
-
-async def good_node(state: AutomationState) -> AutomationState:
-    await asyncio.sleep(0.1)  # Non-blocking
+# GOOD - use_prompt is immutable after CLI parsing
+def good_node(state):
+    test_type = "cy.prompt()" if state.use_prompt else "Traditional"
+    # Work with the chosen type
     return state
 ```
 
@@ -691,4 +707,5 @@ async def good_node(state: AutomationState) -> AutomationState:
 
 - **LangGraph Documentation**: https://langchain-ai.github.io/langgraph/
 - **LangChain Guides**: https://python.langchain.com/docs/use_cases
+- **Cypress cy.prompt() Docs**: https://docs.cypress.io/api/commands/prompt
 - **State Machine Patterns**: https://en.wikipedia.org/wiki/Finite-state_machine
