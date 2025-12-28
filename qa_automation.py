@@ -2,12 +2,14 @@
 """
 Hybrid Cypress Test Generator with cy.prompt() Integration
 Combines LangGraph orchestration with Cypress's native AI capabilities
+AI Failure Analyzer (OpenRouter LLM)
 """
 
 import os
 import re
-import json
+import sys
 import argparse
+import requests
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any, Optional
@@ -24,6 +26,26 @@ from langchain_core.documents import Document
 # Environment setup
 from dotenv import load_dotenv
 load_dotenv()
+
+# FAILURE ANALYZER 
+
+def analyze_failure(log: str) -> str:
+    """Send log to OpenRouter free LLM, get reason + fix."""
+    response = requests.post(
+        url="https://openrouter.ai/api/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": "deepseek/deepseek-r1-0528:free",
+            "messages": [{"role": "user", "content": f"Analyze this Cypress test failure. Reply ONLY:\nREASON: (one line)\nFIX: (one line)\n\n{log}"}],
+            "max_tokens": 150
+        }
+    )
+    return response.json()["choices"][0]["message"]["content"] if response.ok else f"Error: {response.text}"
+
+# TEST GENERATION
 
 @dataclass
 class TestGenerationState:
@@ -339,24 +361,49 @@ def create_workflow() -> StateGraph:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate Cypress tests")
+    parser = argparse.ArgumentParser(
+        description="Cypress Test Generator & Failure Analyzer",
+        epilog="""
+EXAMPLES:
+  Generate:  python qa_automation.py "Test login" "Test logout"
+  Analyze:   python qa_automation.py --analyze "CypressError: Element not found"
+  From file: python qa_automation.py --analyze -f error.log
+        """
+    )
     
-    # Required: Test requirements
-    parser.add_argument('requirements', nargs='+', help='What to test')
+    # Analyze mode (NEW)
+    parser.add_argument('--analyze', '-a', nargs='?', const='', help='Analyze failure')
+    parser.add_argument('--file', '-f', help='Log file to analyze')
     
-    # Optional: Where to save
+    # Generate mode (existing)
+    parser.add_argument('requirements', nargs='*', help='What to test')
     parser.add_argument('--out', default='cypress/e2e', help='Output folder')
-    
-    # Optional: Use cy.prompt() for self-healing
     parser.add_argument('--use-prompt', action='store_true', help='Enable self-healing tests')
-    
-    # Optional: Run tests after generating
     parser.add_argument('--run', action='store_true', help='Run tests after generation')
-    
-    # Optional: Add documentation context
     parser.add_argument('--docs', help='Documentation folder for context')
     
     args = parser.parse_args()
+    
+    # === ANALYZE MODE ===
+    if args.analyze is not None or args.file:
+        if args.file:
+            with open(args.file) as f:
+                log = f.read()
+        elif args.analyze:
+            log = args.analyze
+        elif not sys.stdin.isatty():
+            log = sys.stdin.read()
+        else:
+            print("Usage: --analyze 'error' or -f log.txt")
+            sys.exit(1)
+        print("\n Analyzing...\n")
+        print(analyze_failure(log))
+        return
+    
+    # === GENERATE MODE ===
+    if not args.requirements:
+        parser.print_help()
+        return
     
     # Load documentation context if provided
     docs_context = None
