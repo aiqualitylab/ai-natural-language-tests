@@ -46,9 +46,53 @@ python qa_automation.py "Test login functionality" --use-prompt
 
 ---
 
+## 🔍 AI Failure Analyzer - NEW!
+
+Analyze test failures instantly using **FREE LLM** via OpenRouter!
+
+### How It Works
+
+<p align="center">
+  <img src=".github/images/Analyzer.png" alt="AI Failure Analyzer" width="450"/>
+</p>
+
+### Usage
+
+```bash
+# Direct error message
+python qa_automation.py --analyze "CypressError: Timed out retrying: Expected to find element: #submit-btn"
+
+# From log file
+python qa_automation.py --analyze -f cypress/logs/error.log
+
+# Pipe from stdin
+cat error.log | python qa_automation.py --analyze
+```
+
+### Example Output
+
+```
+🔍 Analyzing...
+
+REASON: Element #submit-btn not found - selector changed or page not fully loaded
+FIX: Use cy.get('[data-testid="submit"]') or add cy.wait() before clicking
+```
+
+### Why Use It?
+
+| Feature | Benefit |
+|---------|---------|
+| 🆓 **FREE** | Uses OpenRouter's free DeepSeek R1 model |
+| ⚡ **Fast** | Get answers in seconds |
+| 🎯 **Actionable** | Returns specific REASON + FIX |
+| 🔧 **Simple** | One command, instant results |
+
+---
+
 ## Features
 
 * 🤖 **AI-Powered**: Converts natural language requirements into working Cypress tests
+* 🔍 **AI Failure Analyzer**: Instantly diagnose test failures with FREE LLM
 * 🔄 **Dual Mode**: Traditional tests OR self-healing cy.prompt() tests
 * 📚 **Document Context**: Optional vector store integration for additional context from documentation
 * 🔄 **Workflow Management**: Uses LangGraph for structured test generation pipeline
@@ -60,6 +104,7 @@ python qa_automation.py "Test login functionality" --use-prompt
 * **Node.js** (v14 or higher)
 * **Python** (v3.8 or higher)
 * **OpenAI API Key**
+* **OpenRouter API Key** (for failure analysis)
 * **Cypress** (v15.8.1 for cy.prompt support)
 
 ## Installation
@@ -96,7 +141,10 @@ Create a `.env` file in the project root:
 
 ```
 OPENAI_API_KEY=your_openai_api_key_here
+OPENROUTER_API_KEY=your_openrouter_api_key_here
 ```
+
+> 💡 Get your FREE OpenRouter API key at [openrouter.ai](https://openrouter.ai)
 
 ### 4. Initialize Cypress
 
@@ -119,6 +167,16 @@ python qa_automation.py "Test user login with valid credentials"
 python qa_automation.py "Test user login with valid credentials" --use-prompt
 ```
 
+### Analyze Test Failures
+
+```bash
+# Analyze error directly
+python qa_automation.py --analyze "CypressError: Element not found"
+
+# Analyze from log file
+python qa_automation.py --analyze -f error.log
+```
+
 ### Command Line Arguments
 
 | Argument | Description | Default |
@@ -128,6 +186,8 @@ python qa_automation.py "Test user login with valid credentials" --use-prompt
 | `--use-prompt` | Generate self-healing tests with cy.prompt() | `false` |
 | `--run` | Run Cypress tests after generation | `false` |
 | `--docs` | Directory with additional context documents | `None` |
+| `--analyze`, `-a` | Analyze test failure | - |
+| `--file`, `-f` | Log file to analyze | - |
 
 ---
 
@@ -177,6 +237,12 @@ python qa_automation.py \
   --run
 ```
 
+### 6. Analyze Failed Test
+
+```bash
+python qa_automation.py --analyze "AssertionError: expected true to equal false"
+```
+
 ---
 
 ## 📁 Output Structure
@@ -208,6 +274,13 @@ cypress/e2e/
 <p align="center">
   <img src=".github/images/cicd-pipeline.png" alt="CI/CD Pipeline Flow" width="350"/>
 </p>
+
+### Option 3: AI Failure Analysis
+
+<p align="center">
+  <img src=".github/images/Analysis.png" alt="AI Failure Analysis" width="350"/>
+</p>
+
 
 ---
 
@@ -258,6 +331,7 @@ describe('User Login', () => {
 | Exploratory testing | cy.prompt() |
 | Regression suite | Traditional |
 | Rapid prototyping | cy.prompt() |
+| **Test failed?** | **--analyze** |
 
 ---
 
@@ -353,6 +427,7 @@ The tool uses LangGraph to orchestrate the following steps:
 2. **LoadContext** - Index documentation (if provided)
 3. **GenerateTests** - Create Cypress tests using AI (traditional or cy.prompt)
 4. **RunCypress** - Execute tests (if requested)
+5. **NEW**: `--analyze` mode bypasses the workflow and directly calls OpenRouter for instant failure analysis.
 
 ---
 
@@ -365,6 +440,8 @@ The tool uses LangGraph to orchestrate the following steps:
 | `python qa_automation.py "Test X" --run` | Generate and run |
 | `python qa_automation.py "Test X" --docs ./docs` | Use documentation context |
 | `python qa_automation.py "Test X" --use-prompt --run` | Generate cy.prompt test and run |
+| `python qa_automation.py --analyze "error"` | Analyze failure *(NEW!)* |
+| `python qa_automation.py --analyze -f log.txt` | Analyze from file *(NEW!)* |
 
 ---
 
@@ -405,6 +482,12 @@ This project generates Cypress E2E tests automatically from natural language req
 **Medium**: [AQE Publication](https://medium.com/ai-in-quality-assurance) / [Let's Automate Medium](https://aiqualityengineer.com/)
 
 ---
+
+## 🆕 What's New in v2.1
+
+- ✅ **AI Failure Analyzer**: Instantly diagnose test failures with FREE LLM
+- ✅ **OpenRouter Integration**: Uses DeepSeek R1 (FREE) for failure analysis
+- ✅ **Simple CLI**: `--analyze` flag for quick debugging
 
 ## 🆕 What's New in v2.0
 
