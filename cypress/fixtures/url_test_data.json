@@ -1,0 +1,22 @@
+{
+  "url": "https://the-internet.herokuapp.com/login",
+  "selectors": {
+    "username": "#username",
+    "password": "#password",
+    "submit": "button[type='submit']"
+  },
+  "test_cases": [
+    {
+      "name": "valid_test",
+      "username": "tomsmith",
+      "password": "SuperSecretPassword!",
+      "expected": "success"
+    },
+    {
+      "name": "invalid_test",
+      "username": "wrong",
+      "password": "wrong",
+      "expected": "error"
+    }
+  ]
+}

@@ -1,8 +1,8 @@
-# Cypress test generation framework driven by natural-language requirements using AI
+# Cypress Test Generation Framework - Natural Language to E2E Tests
 
-An AI-powered tool that generates Cypress end-to-end tests from natural language requirements using OpenAI's GPT-4 and LangGraph workflows.
+An AI-powered tool that generates Cypress end-to-end tests from natural language requirements using OpenAI and LangGraph workflows.
 
-## 📊 Visual Workflow
+## Visual Workflow
 
 ### Complete End-to-End Process
 
@@ -14,7 +14,7 @@ This framework transforms natural language requirements into production-ready Cy
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 <p align="center">
   <img src=".github/images/architecture.png" alt="System Architecture" width="450"/>
@@ -22,31 +22,87 @@ This framework transforms natural language requirements into production-ready Cy
 
 ---
 
-## 🆕 cy.prompt() Integration - NEW!
+## cy.prompt() Integration
 
-This framework now supports **two test generation modes**:
+This framework supports **two test generation modes**:
 
-### 🔹 Traditional Cypress Tests
+### Traditional Cypress Tests
 ```bash
-python qa_automation.py "Test login functionality"
+python qa_automation.py "Test login functionality" --url https://example.com/login
 ```
-- ✅ Fast execution
-- ✅ Explicit selectors
-- ✅ Deterministic
-- ✅ No runtime AI calls
+- Fast execution
+- Explicit selectors
+- Deterministic
+- No runtime AI calls
+- Uses fixture data from URL analysis
 
-### 🔹 Self-Healing Tests (cy.prompt)
+### Self-Healing Tests (cy.prompt)
 ```bash
 python qa_automation.py "Test login functionality" --use-prompt
 ```
-- ✅ Auto-adapting selectors
-- ✅ Natural language steps
-- ✅ Self-healing when UI changes
-- ✅ Visible in Command Log
+- Auto-adapting selectors
+- Natural language steps
+- Self-healing when UI changes
+- Visible in Command Log
 
 ---
 
-## 🔍 AI Failure Analyzer - NEW!
+## Test Data Options
+
+The framework provides two ways to supply test data:
+
+### Option 1: Live URL Analysis (--url)
+
+Automatically fetch and analyze any URL to generate test data:
+
+```bash
+python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login
+```
+
+This will:
+1. Fetch the URL and analyze the HTML
+2. Extract real selectors (#id, .class, [name=x])
+3. Generate test cases (valid_test + invalid_test)
+4. Save fixture to `cypress/fixtures/url_test_data.json`
+5. Generate tests using the extracted data
+
+### Option 2: JSON Test Data (--data)
+
+Use an existing JSON file with test data:
+
+```bash
+python qa_automation.py "Test login" --data cypress/fixtures/login_data.json
+```
+
+**JSON Structure:**
+```json
+{
+  "url": "https://the-internet.herokuapp.com/login",
+  "selectors": {
+    "username": "#username",
+    "password": "#password",
+    "submit": "button[type=\"submit\"]"
+  },
+  "test_cases": [
+    {
+      "name": "valid_test",
+      "username": "tomsmith",
+      "password": "SuperSecretPassword!",
+      "expected": "success"
+    },
+    {
+      "name": "invalid_test",
+      "username": "invaliduser",
+      "password": "wrongpassword",
+      "expected": "error"
+    }
+  ]
+}
+```
+
+---
+
+## AI Failure Analyzer
 
 Analyze test failures instantly using **FREE LLM** via OpenRouter!
 
@@ -72,7 +128,7 @@ cat error.log | python qa_automation.py --analyze
 ### Example Output
 
 ```
-🔍 Analyzing...
+Analyzing...
 
 REASON: Element #submit-btn not found - selector changed or page not fully loaded
 FIX: Use cy.get('[data-testid="submit"]') or add cy.wait() before clicking
@@ -82,22 +138,24 @@ FIX: Use cy.get('[data-testid="submit"]') or add cy.wait() before clicking
 
 | Feature | Benefit |
 |---------|---------|
-| 🆓 **FREE** | Uses OpenRouter's free DeepSeek R1 model |
-| ⚡ **Fast** | Get answers in seconds |
-| 🎯 **Actionable** | Returns specific REASON + FIX |
-| 🔧 **Simple** | One command, instant results |
+| **FREE** | Uses OpenRouter's free DeepSeek R1 model |
+| **Fast** | Get answers in seconds |
+| **Actionable** | Returns specific REASON + FIX |
+| **Simple** | One command, instant results |
 
 ---
 
 ## Features
 
-* 🤖 **AI-Powered**: Converts natural language requirements into working Cypress tests
-* 🔍 **AI Failure Analyzer**: Instantly diagnose test failures with FREE LLM
-* 🔄 **Dual Mode**: Traditional tests OR self-healing cy.prompt() tests
-* 📚 **Document Context**: Optional vector store integration for additional context from documentation
-* 🔄 **Workflow Management**: Uses LangGraph for structured test generation pipeline
-* ⚡ **Auto-Run**: Optionally runs generated tests immediately with Cypress
-* 📁 **Organized Output**: Generates timestamped, descriptively named test files in separate directories
+* **AI-Powered**: Converts natural language requirements into working Cypress tests
+* **AI Failure Analyzer**: Instantly diagnose test failures with FREE LLM
+* **Dual Mode**: Traditional tests OR self-healing cy.prompt() tests
+* **URL Analysis**: Automatically fetch and analyze live URLs to generate test data and selectors
+* **JSON Data Support**: Use existing test data files for consistent test generation
+* **Document Context**: Optional vector store integration for additional context from documentation
+* **Workflow Management**: Uses LangGraph for structured test generation pipeline
+* **Auto-Run**: Optionally runs generated tests immediately with Cypress
+* **Organized Output**: Generates timestamped, descriptively named test files in separate directories
 
 ## Prerequisites
 
@@ -133,18 +191,19 @@ langchain-community
 langchain
 chromadb
 python-dotenv
+requests
 ```
 
 ### 3. Setup Environment Variables
 
 Create a `.env` file in the project root:
 
-```
+```bash
 OPENAI_API_KEY=your_openai_api_key_here
 OPENROUTER_API_KEY=your_openrouter_api_key_here
 ```
 
-> 💡 Get your FREE OpenRouter API key at [openrouter.ai](https://openrouter.ai)
+> Get your FREE OpenRouter API key at [openrouter.ai](https://openrouter.ai)
 
 ### 4. Initialize Cypress
 
@@ -160,8 +219,11 @@ npx cypress open  # Initial setup
 Generate Cypress tests from natural language requirements:
 
 ```bash
-# Traditional tests
-python qa_automation.py "Test user login with valid credentials"
+# Traditional tests with URL analysis
+python qa_automation.py "Test user login with valid credentials" --url https://example.com/login
+
+# Traditional tests with JSON data
+python qa_automation.py "Test user login" --data cypress/fixtures/login_data.json
 
 # Self-healing tests with cy.prompt()
 python qa_automation.py "Test user login with valid credentials" --use-prompt
@@ -182,6 +244,8 @@ python qa_automation.py --analyze -f error.log
 | Argument | Description | Default |
 | --- | --- | --- |
 | `requirements` | One or more test requirements (positional) | Required |
+| `--url`, `-u` | Live URL to fetch and generate test data | `None` |
+| `--data`, `-d` | JSON file with test data | `None` |
 | `--out` | Output directory for generated specs | `cypress/e2e` |
 | `--use-prompt` | Generate self-healing tests with cy.prompt() | `false` |
 | `--run` | Run Cypress tests after generation | `false` |
@@ -191,17 +255,27 @@ python qa_automation.py --analyze -f error.log
 
 ---
 
-## 📖 Examples
+## Examples
 
-### 1. Basic Test Generation (Traditional)
+### 1. Basic Test Generation with URL Analysis
 
 ```bash
-python qa_automation.py "Test login page"
+python qa_automation.py "Test login page" --url https://the-internet.herokuapp.com/login
+```
+
+**Output**: 
+- `cypress/fixtures/url_test_data.json` (auto-generated test data)
+- `cypress/e2e/generated/01_test-login-page_20241223_100000.cy.js`
+
+### 2. Test Generation with JSON Data
+
+```bash
+python qa_automation.py "Test login page" --data cypress/fixtures/login_data.json
 ```
 
 **Output**: `cypress/e2e/generated/01_test-login-page_20241223_100000.cy.js`
 
-### 2. Self-Healing Test with cy.prompt()
+### 3. Self-Healing Test with cy.prompt()
 
 ```bash
 python qa_automation.py "Test login page" --use-prompt
@@ -209,35 +283,35 @@ python qa_automation.py "Test login page" --use-prompt
 
 **Output**: `cypress/e2e/prompt-powered/01_test-login-page_20241223_100000.cy.js`
 
-### 3. Multiple Requirements
+### 4. Multiple Requirements with URL Analysis
 
 ```bash
 python qa_automation.py \
   "Test successful login with valid credentials" \
   "Test login failure with invalid password" \
   "Test login form validation for empty fields" \
-  --use-prompt
+  --url https://the-internet.herokuapp.com/login
 ```
 
-### 4. With Documentation Context
+### 5. With Documentation Context
 
 ```bash
 python qa_automation.py \
   "Test the checkout process" \
   --docs ./api-docs \
-  --use-prompt
+  --url https://example.com/checkout
 ```
 
-### 5. Generate and Run Tests
+### 6. Generate and Run Tests
 
 ```bash
 python qa_automation.py \
   "Test user profile update" \
-  --use-prompt \
+  --url https://example.com/profile \
   --run
 ```
 
-### 6. Analyze Failed Test
+### 7. Analyze Failed Test
 
 ```bash
 python qa_automation.py --analyze "AssertionError: expected true to equal false"
@@ -245,23 +319,26 @@ python qa_automation.py --analyze "AssertionError: expected true to equal false"
 
 ---
 
-## 📁 Output Structure
+## Output Structure
 
-Tests are now organized by type:
+Tests and fixtures are organized by type:
 
 ```
-cypress/e2e/
-├── generated/              # Traditional Cypress tests
-│   ├── 01_test-login_20241223_100000.cy.js
-│   └── 02_test-signup_20241223_100001.cy.js
-└── prompt-powered/         # cy.prompt() self-healing tests
-    ├── 01_test-checkout_20241223_100000.cy.js
-    └── 02_test-cart_20241223_100001.cy.js
+cypress/
+├── e2e/
+│   ├── generated/              # Traditional Cypress tests
+│   │   ├── 01_test-login_20241223_100000.cy.js
+│   │   └── 02_test-signup_20241223_100001.cy.js
+│   └── prompt-powered/         # cy.prompt() self-healing tests
+│       ├── 01_test-checkout_20241223_100000.cy.js
+│       └── 02_test-cart_20241223_100001.cy.js
+└── fixtures/
+    └── url_test_data.json      # Auto-generated from --url
 ```
 
 ---
 
-## 🔄 How It Works
+## How It Works
 
 ### Option 1: Local Development
 
@@ -284,53 +361,72 @@ cypress/e2e/
 
 ---
 
-## 📊 Test Comparison
+## Test Comparison
 
-### Traditional Cypress Test
+### Traditional Cypress Test (with fixtures)
 ```javascript
 // cypress/e2e/generated/01_test-login_*.cy.js
-describe('User Login', () => {
-  it('should login successfully', () => {
-    cy.visit('https://the-internet.herokuapp.com/login');
-    cy.get('#username').type('tomsmith');
-    cy.get('#password').type('SuperSecretPassword!');
-    cy.get('button[type="submit"]').click();
-    cy.get('.flash.success').should('contain', 'You logged into a secure area!');
-  });
+describe('Login Tests', function () {
+    beforeEach(function () {
+        cy.fixture('url_test_data').then((data) => {
+            this.testData = data;
+        });
+    });
+
+    it('should login successfully with valid credentials', function () {
+        cy.visit(this.testData.url);
+        const valid = this.testData.test_cases.find(tc => tc.name === 'valid_test');
+        cy.get('#username').type(valid.username);
+        cy.get('#password').type(valid.password);
+        cy.get('button[type="submit"]').click();
+        cy.url().should('include', '/secure');
+    });
+
+    it('should show error with invalid credentials', function () {
+        cy.visit(this.testData.url);
+        const invalid = this.testData.test_cases.find(tc => tc.name === 'invalid_test');
+        cy.get('#username').type(invalid.username);
+        cy.get('#password').type(invalid.password);
+        cy.get('button[type="submit"]').click();
+        cy.get('#flash').should('contain', 'invalid');
+    });
 });
 ```
 
 ### cy.prompt() Self-Healing Test
 ```javascript
 // cypress/e2e/prompt-powered/01_test-login_*.cy.js
-describe('User Login', () => {
-  it('should login successfully', () => {
-    cy.prompt([
-      'Visit the login page at https://the-internet.herokuapp.com/login',
-      'Type "tomsmith" in the username field',
-      'Type "SuperSecretPassword!" in the password field',
-      'Click the login button',
-      'Verify success message appears'
-    ]);
-    
-    // Critical assertion
-    cy.url().should('include', '/secure');
-  });
+describe('User Login Tests', () => {
+    const baseUrl = 'https://the-internet.herokuapp.com/login';
+
+    beforeEach(() => {
+        cy.visit(baseUrl);
+    });
+
+    it('should successfully log in with valid credentials', () => {
+        cy.get('input[type="text"]').type('tomsmith');
+        cy.get('input[type="password"]').type('SuperSecretPassword!');
+        cy.get('button[type="submit"]').click();
+
+        cy.url().should('include', '/secure');
+        cy.get('.flash.success').should('be.visible').and('contain', 'You logged into a secure area!');
+    });
 });
 ```
 
 ---
 
-## 🎯 When to Use Each Mode
+## When to Use Each Mode
 
 | Scenario | Use This |
 |----------|----------|
-| Stable application | Traditional |
+| Stable application | Traditional + --url |
 | Active development | cy.prompt() |
-| CI/CD pipeline | Traditional |
+| CI/CD pipeline | Traditional + --data |
 | Exploratory testing | cy.prompt() |
-| Regression suite | Traditional |
+| Regression suite | Traditional + --data |
 | Rapid prototyping | cy.prompt() |
+| New application | Traditional + --url |
 | **Test failed?** | **--analyze** |
 
 ---
@@ -350,28 +446,15 @@ module.exports = defineConfig({
 });
 ```
 
-### Customizing the Base URL
+### LLM Configuration
 
-Edit the prompt templates in `qa_automation.py`:
-
-```python
-- Use `cy.visit('https://your-app.com')` as the base URL.
-```
-
-### Adjusting LLM Settings
-
-Modify the LLM configuration in `qa_automation.py`:
-
-```python
-llm = ChatOpenAI(
-    model="gpt-4o-mini",  # or "gpt-4", "gpt-3.5-turbo"
-    temperature=0  # 0 for deterministic, higher for creativity
-)
-```
+The framework uses these models:
+- **Test Generation**: OpenAI `gpt-4o-mini` (temperature=0)
+- **Failure Analysis**: OpenRouter `deepseek/deepseek-r1-0528:free`
 
 ---
 
-## 🎬 Running Tests
+## Running Tests
 
 ### Run All Tests
 ```bash
@@ -415,7 +498,7 @@ When using `--docs`, the tool:
 2. Creates/updates a Chroma vector store in `./vector_store`
 3. Uses document context to improve test generation accuracy
 
-**Supported document formats**: `.txt`, `.md`, `.json`, `.js`, `.html`, etc.
+**Supported document formats**: `.txt`, `.md`, `.json`
 
 ---
 
@@ -423,25 +506,26 @@ When using `--docs`, the tool:
 
 The tool uses LangGraph to orchestrate the following steps:
 
-1. **ParseCLI** - Parse command line arguments
-2. **LoadContext** - Index documentation (if provided)
-3. **GenerateTests** - Create Cypress tests using AI (traditional or cy.prompt)
-4. **RunCypress** - Execute tests (if requested)
-5. **NEW**: `--analyze` mode bypasses the workflow and directly calls OpenRouter for instant failure analysis.
+1. **parse_cli_node** - Parse command line arguments
+2. **load_context_node** - Index documentation (if provided)
+3. **generate_tests_node** - Create Cypress tests using AI (traditional or cy.prompt)
+4. **run_cypress_node** - Execute tests (if requested)
+
+The `--analyze` mode bypasses the workflow and directly calls OpenRouter for instant failure analysis.
 
 ---
 
-## 🎓 Command Reference
+## Command Reference
 
 | Command | Description |
 |---------|-------------|
-| `python qa_automation.py "Test X"` | Generate traditional test |
+| `python qa_automation.py "Test X" --url URL` | Generate with live URL analysis |
+| `python qa_automation.py "Test X" --data file.json` | Generate with JSON test data |
 | `python qa_automation.py "Test X" --use-prompt` | Generate self-healing test |
 | `python qa_automation.py "Test X" --run` | Generate and run |
 | `python qa_automation.py "Test X" --docs ./docs` | Use documentation context |
-| `python qa_automation.py "Test X" --use-prompt --run` | Generate cy.prompt test and run |
-| `python qa_automation.py --analyze "error"` | Analyze failure *(NEW!)* |
-| `python qa_automation.py --analyze -f log.txt` | Analyze from file *(NEW!)* |
+| `python qa_automation.py --analyze "error"` | Analyze failure |
+| `python qa_automation.py --analyze -f log.txt` | Analyze from file |
 
 ---
 
@@ -484,28 +568,28 @@ This project generates Cypress E2E tests automatically from natural language req
 
 ---
 
-## 🆕 What's New in v2.1
+## What's New in v2.1
 
-- ✅ **AI Failure Analyzer**: Instantly diagnose test failures with FREE LLM
-- ✅ **OpenRouter Integration**: Uses DeepSeek R1 (FREE) for failure analysis
-- ✅ **Simple CLI**: `--analyze` flag for quick debugging
+- **AI Failure Analyzer**: Instantly diagnose test failures with FREE LLM
+- **OpenRouter Integration**: Uses DeepSeek R1 (FREE) for failure analysis
+- **URL Analysis**: `--url` flag to auto-generate test data from live pages
+- **JSON Data Support**: `--data` flag to use existing test data files
+- **Fixture Pattern**: Traditional tests now use `cy.fixture()` with `this.testData`
 
-## 🆕 What's New in v2.0
+## What's New in v2.0
 
-- ✅ **cy.prompt() Integration**: Self-healing test support
-- ✅ **Dual Mode Generation**: Choose traditional or cy.prompt tests
-- ✅ **Organized Output**: Separate folders for different test types
-- ✅ **Simplified Code**: Clean, maintainable implementation
-- ✅ **Enhanced CLI**: New `--use-prompt` flag
+- **cy.prompt() Integration**: Self-healing test support
+- **Dual Mode Generation**: Choose traditional or cy.prompt tests
+- **Organized Output**: Separate folders for different test types
+- **Simplified Code**: Clean, maintainable implementation
+- **Enhanced CLI**: New `--use-prompt` flag
 
 ---
 
-🎁 **And this is just the beginning!** I have tons of awesome upgrades planned that will take this framework to the next level.
+**And this is just the beginning!** More features are planned to take this framework to the next level.
 
-Since I'm building this solo, new features will roll out in phases — but I promise, **I won't disappoint my followers!** 💪
-
-⭐ **Star** and 🍴 **Fork** this repo to stay updated!
+Star and Fork this repo to stay updated!
 
 Follow my Medium profile for feature announcements, tutorials, and behind-the-scenes updates: [Let's Automate Medium](https://aiqualityengineer.com/) / [AQE Publication](https://medium.com/ai-in-quality-assurance)
 
-**Happy Testing!** 🎉
+**Happy Testing!**

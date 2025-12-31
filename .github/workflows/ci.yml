@@ -11,6 +11,18 @@ on:
         description: 'Test requirements (comma separated)'
         required: true
         default: 'Test user login with valid credentials, Test login with invalid credentials, Test login form validation'
+      target_url:
+        description: 'Target URL to analyze and test (optional)'
+        required: false
+        default: ''
+      use_prompt:
+        description: 'Use cy.prompt() self-healing tests'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 jobs:
   test:
@@ -45,18 +57,40 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             REQS="${{ github.event.inputs.requirements }}"
+            URL_FLAG=""
+            PROMPT_FLAG=""
+            
+            if [ -n "${{ github.event.inputs.target_url }}" ]; then
+              URL_FLAG="--url ${{ github.event.inputs.target_url }}"
+            fi
+            
+            if [ "${{ github.event.inputs.use_prompt }}" == "true" ]; then
+              PROMPT_FLAG="--use-prompt"
+            fi
           else
             REQS="Test user login with valid credentials, Test login with invalid credentials, Test login form validation"
+            URL_FLAG="--url https://the-internet.herokuapp.com/login"
+            PROMPT_FLAG=""
           fi
           
-          python qa_automation.py $(echo "$REQS" | sed 's/,/" "/g' | sed 's/^/"/' | sed 's/$/"/')
+          # Convert comma-separated requirements to quoted arguments
+          QUOTED_REQS=$(echo "$REQS" | sed 's/,/" "/g' | sed 's/^/"/' | sed 's/$/"/')
+          
+          # Run test generation
+          eval python qa_automation.py $QUOTED_REQS $URL_FLAG $PROMPT_FLAG
 
       # 5. Run tests
       - name: Run Cypress tests
         id: tests
         continue-on-error: true
         run: |
-          npx cypress run --spec "cypress/e2e/generated/**/*.cy.js" 2>&1 | tee test-output.log
+          if [ "${{ github.event.inputs.use_prompt }}" == "true" ]; then
+            SPEC_PATH="cypress/e2e/prompt-powered/**/*.cy.js"
+          else
+            SPEC_PATH="cypress/e2e/generated/**/*.cy.js"
+          fi
+          
+          npx cypress run --spec "$SPEC_PATH" 2>&1 | tee test-output.log
 
       # 6. AI Failure Analysis
       - name: AI Failure Analysis
@@ -75,6 +109,8 @@ jobs:
           name: test-results
           path: |
             cypress/e2e/generated/
+            cypress/e2e/prompt-powered/
+            cypress/fixtures/
             cypress/screenshots/
             cypress/videos/
             test-output.log

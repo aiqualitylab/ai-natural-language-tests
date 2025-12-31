@@ -45,6 +45,82 @@ def analyze_failure(log: str) -> str:
     )
     return response.json()["choices"][0]["message"]["content"] if response.ok else f"Error: {response.text}"
 
+
+# URL-BASED TEST DATA GENERATOR (GENERIC FOR ANY URL!)
+
+def generate_test_data_from_url(url: str, requirements: list) -> tuple:
+    """
+    Fetch any URL, analyze HTML, generate test data.
+    Returns: (context_string, json_data, filepath)
+    """
+    import json as json_module
+    
+    # Fetch page
+    print(f"   Fetching {url}...")
+    try:
+        resp = requests.get(url, timeout=10, headers={'User-Agent': 'Mozilla/5.0'})
+        if not resp.ok:
+            return (f"Could not fetch URL ({resp.status_code})", None, None)
+        html = resp.text[:5000]
+        print(f"   Fetched {len(resp.text)} bytes")
+    except Exception as e:
+        return (f"Could not fetch: {e}", None, None)
+    
+    # Analyze with AI
+    print(f"   Analyzing...")
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    
+    prompt = f"""Analyze this HTML and generate test data for automation.
+
+URL: {url}
+HTML:
+{html}
+
+Return ONLY valid JSON:
+{{"url": "{url}",
+  "selectors": {{"field1": "#selector1", "field2": "#selector2", "submit": "button selector"}},
+  "test_cases": [
+    {{"name": "valid_test", "field1": "valid_value", "field2": "valid_value", "expected": "success"}},
+    {{"name": "invalid_test", "field1": "wrong", "field2": "wrong", "expected": "error"}}
+  ]
+}}
+
+Rules:
+- Use REAL selectors from HTML (#id, .class, [name=x])
+- Use field names that match form inputs (username, password, email, etc.)
+- test_cases MUST have names: "valid_test" and "invalid_test"
+- NO empty values
+- Return ONLY JSON"""
+
+    try:
+        content = llm.invoke(prompt).content.strip()
+        if "```" in content:
+            content = content.split("```")[1].replace("json", "").split("```")[0].strip()
+        
+        test_data = json_module.loads(content)
+        
+        # Save fixture
+        os.makedirs("cypress/fixtures", exist_ok=True)
+        filepath = "cypress/fixtures/url_test_data.json"
+        with open(filepath, 'w') as f:
+            json_module.dump(test_data, f, indent=2)
+        print(f"   Saved: {filepath}")
+        
+        context = f"""
+FIXTURE: cypress/fixtures/url_test_data.json
+URL: {url}
+SELECTORS: {test_data.get('selectors', {})}
+TEST_CASES: {test_data.get('test_cases', [])}
+
+Use cy.fixture('url_test_data.json') with function() and this.testData"""
+        
+        return (context, test_data, filepath)
+        
+    except Exception as e:
+        print(f"   Error: {e}")
+        return (f"Error: {e}", None, None)
+
+
 # TEST GENERATION
 
 @dataclass
@@ -80,15 +156,47 @@ REQUIREMENT: {requirement}
 CONTEXT (if available): {context}
 
 GUIDELINES:
-- Use Cypress best practices.
-- Use `describe` and `it` blocks.
-- Prefer **real, working selectors from the page** (id, class, name) over non-existent data-testid.
-- Include clear assertions for both success and error messages.
-- Handle forms, buttons, and navigation.
-- Use `cy.visit('https://the-internet.herokuapp.com/login')` as the base URL.
-- Include both a positive and a negative path when applicable.
-- Do not include explanations or markdown; return ONLY runnable JavaScript code.
-- Ensure the code is ready to run in a standard Cypress setup.
+- Use Cypress best practices
+- Use REAL selectors from the context
+- Generate TWO test cases: valid + invalid (NOT empty)
+- Use cy.fixture() with this context pattern
+- Return ONLY runnable JavaScript code
+
+USE THIS EXACT PATTERN FROM CYPRESS DOCS:
+
+```javascript
+describe('Login Tests', function () {{
+    beforeEach(function () {{
+        cy.fixture('url_test_data').then((data) => {{
+            this.testData = data;
+        }});
+    }});
+
+    it('should login successfully with valid credentials', function () {{
+        cy.visit(this.testData.url);
+        const valid = this.testData.test_cases.find(tc => tc.name === 'valid_test');
+        cy.get('#username').type(valid.username);
+        cy.get('#password').type(valid.password);
+        cy.get('button[type="submit"]').click();
+        cy.url().should('include', '/secure');
+    }});
+
+    it('should show error with invalid credentials', function () {{
+        cy.visit(this.testData.url);
+        const invalid = this.testData.test_cases.find(tc => tc.name === 'invalid_test');
+        cy.get('#username').type(invalid.username);
+        cy.get('#password').type(invalid.password);
+        cy.get('button[type="submit"]').click();
+        cy.get('#flash').should('contain', 'invalid');
+    }});
+}});
+```
+
+CRITICAL:
+- Use function() NOT arrow => for describe, beforeEach, it
+- Store fixture in this.testData inside .then()
+- Access this.testData in it() blocks
+- Use selectors from CONTEXT
 
 Generate ONLY the test code, no explanations."""
 
@@ -140,11 +248,11 @@ Generate ONLY the test code using cy.prompt(), no explanations."""
     ) -> str:
         """Generate test content using AI"""
         
-        template = (
-            self.create_prompt_powered_test_prompt() 
-            if use_prompt 
-            else self.create_traditional_test_prompt()
-        )
+        # Choose the right prompt template
+        if use_prompt:
+            template = self.create_prompt_powered_test_prompt()
+        else:
+            template = self.create_traditional_test_prompt()
         
         prompt = ChatPromptTemplate.from_template(template)
         chain = prompt | self.llm
@@ -284,7 +392,7 @@ def generate_tests_node(state: TestGenerationState) -> TestGenerationState:
     generated = []
     
     for idx, requirement in enumerate(state.requirements, 1):
-        print(f"\n Generating test {idx}/{len(state.requirements)}...")
+        print(f"\nGenerating test {idx}/{len(state.requirements)}...")
         
         try:
             # Generate test
@@ -319,7 +427,7 @@ def run_cypress_node(state: TestGenerationState) -> TestGenerationState:
     if not state.run_tests or not state.generated_tests:
         return state
     
-    print("\n Running tests...")
+    print("\nRunning tests...")
     
     # Choose which tests to run
     if state.use_prompt:
@@ -365,22 +473,26 @@ def main():
         description="Cypress Test Generator & Failure Analyzer",
         epilog="""
 EXAMPLES:
-  Generate:  python qa_automation.py "Test login" "Test logout"
-  Analyze:   python qa_automation.py --analyze "CypressError: Element not found"
-  From file: python qa_automation.py --analyze -f error.log
+  Traditional:      python qa_automation.py "Test login" --url https://example.com/login
+  From JSON:        python qa_automation.py "Test login" --data testdata.json
+  Analyze failure:  python qa_automation.py --analyze "CypressError: Element not found"
         """
     )
     
-    # Analyze mode (NEW)
+    # Analyze mode
     parser.add_argument('--analyze', '-a', nargs='?', const='', help='Analyze failure')
     parser.add_argument('--file', '-f', help='Log file to analyze')
     
-    # Generate mode (existing)
+    # Generate mode
     parser.add_argument('requirements', nargs='*', help='What to test')
     parser.add_argument('--out', default='cypress/e2e', help='Output folder')
     parser.add_argument('--use-prompt', action='store_true', help='Enable self-healing tests')
     parser.add_argument('--run', action='store_true', help='Run tests after generation')
     parser.add_argument('--docs', help='Documentation folder for context')
+    
+    # Test data options
+    parser.add_argument('--url', '-u', help='Live URL to fetch and generate test data')
+    parser.add_argument('--data', '-d', help='JSON file with test data')
     
     args = parser.parse_args()
     
@@ -396,7 +508,7 @@ EXAMPLES:
         else:
             print("Usage: --analyze 'error' or -f log.txt")
             sys.exit(1)
-        print("\n Analyzing...\n")
+        print("\nAnalyzing...\n")
         print(analyze_failure(log))
         return
     
@@ -404,6 +516,29 @@ EXAMPLES:
     if not args.requirements:
         parser.print_help()
         return
+    
+    test_data_context = ""
+    saved_test_data_file = None
+    
+    # Option 1: Fetch REAL live URL
+    if args.url:
+        print(f"Fetching live URL: {args.url}")
+        context, test_data, filepath = generate_test_data_from_url(args.url, args.requirements)
+        test_data_context += context
+        if filepath:
+            saved_test_data_file = filepath
+    
+    # Option 2: Load from JSON file
+    if args.data:
+        try:
+            import json as json_module
+            with open(args.data, 'r') as f:
+                test_data = json_module.load(f)
+            test_data_context += f"\n\nTEST DATA FROM FILE:\n```json\n{json_module.dumps(test_data, indent=2)}\n```"
+            print(f"Loaded test data from: {args.data}")
+            saved_test_data_file = args.data
+        except Exception as e:
+            print(f"Could not load test data: {e}")
     
     # Load documentation context if provided
     docs_context = None
@@ -413,17 +548,19 @@ EXAMPLES:
         docs = loader.load_documents(args.docs)
         if docs:
             vector_store = loader.create_vector_store(docs)
-            # Get context for all requirements combined
             combined_query = " ".join(args.requirements)
             docs_context = loader.get_relevant_context(vector_store, combined_query)
             print(f"Loaded context from {len(docs)} document(s)")
+    
+    # Combine contexts
+    full_context = (docs_context or "") + test_data_context
     
     # Create initial state
     initial_state = TestGenerationState(
         requirements=args.requirements,
         output_dir=args.out,
         use_prompt=args.use_prompt,
-        docs_context=docs_context,
+        docs_context=full_context if full_context else None,
         generated_tests=[],
         run_tests=args.run,
         error=None
@@ -443,11 +580,17 @@ EXAMPLES:
     print("="*50)
     
     test_count = len(result['generated_tests'])
-    test_type = "cy.prompt()" if args.use_prompt else "Traditional"
+    if args.use_prompt:
+        test_type = "cy.prompt()"
+    else:
+        test_type = "Traditional"
     
     print(f"Generated: {test_count} test(s)")
     print(f"Type: {test_type}")
     print(f"Location: {args.out}")
+    
+    if saved_test_data_file:
+        print(f"\nTest Data: {saved_test_data_file}")
     
     if result['generated_tests']:
         print("\nFiles:")
@@ -455,7 +598,7 @@ EXAMPLES:
             print(f"  - {test['filename']}")
     
     if result['error']:
-        print(f"\n Error: {result['error']}")
+        print(f"\nError: {result['error']}")
     
     print("\nNext step:")
     if args.use_prompt:
