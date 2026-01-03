@@ -16,12 +16,6 @@ from pathlib import Path
 from typing import List, Dict, Optional
 from dataclasses import dataclass, field
 
-# Suppress warnings
-warnings.filterwarnings('ignore', category=UserWarning)
-warnings.filterwarnings('ignore', message='.*PyTorch.*')
-warnings.filterwarnings('ignore', message='.*TensorFlow.*')
-os.environ['TOKENIZERS_PARALLELISM'] = 'false'
-
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_chroma import Chroma
@@ -485,4 +479,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()
