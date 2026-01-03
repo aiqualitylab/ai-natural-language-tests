@@ -217,4 +217,4 @@ Components:
 ---
 
 **Author**: [@aiqualitylab](https://github.com/aiqualitylab)  
-**Medium**: [AQE Publication](https://medium.com/ai-in-quality-assurance)
+**Medium**: [Let's Automate](https://aiqualityengineer.com/)
