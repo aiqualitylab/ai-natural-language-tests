@@ -215,6 +215,4 @@ Components:
 **v2.0** - cy.prompt() support
 
 ---
-
-**Author**: [@aiqualitylab](https://github.com/aiqualitylab)  
 **Medium**: [Let's Automate](https://aiqualityengineer.com/)
