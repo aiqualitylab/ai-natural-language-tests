@@ -139,8 +139,8 @@ python qa_automation.py --analyze -f error.log
 ## Setup
 
 ```bash
-git clone https://github.com/aiqualitylab/cypress-natural-language-tests.git
-cd cypress-natural-language-tests
+git clone https://github.com/aiqualitylab/ai-natural-language-tests.git
+cd ai-natural-language-tests
 
 pip install -r requirements.txt
 
