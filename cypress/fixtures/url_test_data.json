@@ -6,7 +6,7 @@
     "password": "#password",
     "submit": "button[type='submit']",
     "error_container": "#flash-messages",
-    "success_container": "#flash-messages"
+    "success_container": ""
   },
   "element_types": {
     "username": "text",
@@ -15,11 +15,13 @@
   "validations": {
     "username": {
       "required": true,
-      "type": "text"
+      "type": "text",
+      "pattern": ""
     },
     "password": {
       "required": true,
-      "type": "password"
+      "type": "password",
+      "pattern": ""
     }
   },
   "test_cases": [

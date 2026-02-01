@@ -184,6 +184,12 @@ def step_2_fetch_test_data(state):
     logger.info("STEP 2: Fetch Test Data")
     
     url = state.url
+    
+    # Skip if no URL provided
+    if not url:
+        logger.info("No URL provided, skipping HTML analysis")
+        return state
+    
     logger.info(f"Fetching URL: {url}")
     
     # Fetch HTML from URL
@@ -534,7 +540,7 @@ def main():
     if analyze_mode:
         log_text = open(args.file).read() if args.file else args.analyze or sys.stdin.read()
         result = analyze_test_failure(log_text)
-        print(result)
+        logger.info(result)
         return
     
     if list_mode:
