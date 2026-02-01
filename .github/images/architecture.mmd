@@ -1,0 +1,46 @@
+graph TB
+    subgraph "User Input"
+        A[Natural Language<br/>Requirements]
+        B[URL/HTML Data<br/>--url flag]
+        C[JSON Test Data<br/>--data flag]
+    end
+
+    subgraph "AI & Workflow Engine"
+        D[LangGraph Workflow<br/>5-Step Process]
+        E[OpenAI GPT-4o-mini<br/>Text Generation]
+        F[Vector Store<br/>Pattern Learning<br/>Chroma DB]
+    end
+
+    subgraph "Framework Generation"
+        G{Cypress Framework}
+        H{Playwright Framework}
+        I[Cypress Tests<br/>.cy.js files<br/>Traditional & cy prompt]
+        J[Playwright Tests<br/>.spec.ts files<br/>TypeScript]
+    end
+
+    subgraph "Execution & Analysis"
+        K[Cypress Runner<br/>npx cypress run]
+        L[Playwright Runner<br/>npx playwright test]
+        M[AI Failure Analyzer<br/>--analyze flag<br/>OpenRouter DeepSeek R1]
+    end
+
+    A --> D
+    B --> D
+    C --> D
+    D --> E
+    E --> F
+    F --> D
+    D --> G
+    D --> H
+    G --> I
+    H --> J
+    I --> K
+    J --> L
+    K --> M
+    L --> M
+
+    style D fill:#e3f2fd
+    style E fill:#f3e5f5
+    style F fill:#fff3e0
+    style G fill:#c8e6c9
+    style H fill:#ffcdd2

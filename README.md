@@ -1,6 +1,6 @@
-# AI-Powered Cypress Test Generator with LangGraph and Vector Store
+# AI-Powered E2E Test Generation from Natural Language
 
-Generate Cypress tests from plain English using AI, LangGraph workflows, and pattern learning.
+An AI-powered tool that generates **Cypress** and **Playwright** end-to-end tests from natural language requirements using OpenAI's GPT-4, LangChain, LangGraph workflows, and vector store pattern learning.
 
 ## Workflow Overview
 
@@ -20,7 +20,24 @@ Supports local development and CI/CD pipelines.
 
 ---
 
-## New in v3.0
+## New in v3.1 — Playwright Support
+
+- 🎭 **Multi-Framework**: Generate tests for Cypress (JavaScript) or Playwright (TypeScript) with `--framework`
+- 🧠 **Smart Prompt**: Playwright prompt covers all Playwright methods — locators, actions, assertions, network interception, dialogs, multi-tab, and more
+- 🔒 **Cypress Unchanged**: Default is still `cypress`. All existing commands work as before
+- ⚠️ **cy.prompt() is Cypress-only**: `--use-prompt` is ignored with a warning when used with `--framework playwright`
+
+### Framework Comparison
+
+| | Cypress | Playwright |
+|---|---|---|
+| Language | JavaScript (`.cy.js`) | TypeScript (`.spec.ts`) |
+| Output directory | `cypress/e2e/generated/` | `tests/generated/` |
+| cy.prompt() support | ✅ Yes | ❌ No |
+| Run command | `npx cypress run` | `npx playwright test` |
+| Prompt file | `test_generation_traditional.txt` | `test_generation_playwright.txt` |
+
+---
 
 ### LangGraph Workflow
 
@@ -33,7 +50,7 @@ Five workflow steps:
 2. Fetch Test Data - Pull HTML and extract selectors  
 3. Search Similar Patterns - Query past test patterns
 4. Generate Tests - Build test with AI and patterns
-5. Run Tests - Execute via Cypress (optional)
+5. Run Tests - Execute via Cypress or Playwright (optional)
 
 ### Pattern Learning
 
@@ -131,6 +148,18 @@ echo "OPENAI_API_KEY=sk-your-key" > .env
 echo "OPENROUTER_API_KEY=sk-your-key" >> .env
 
 npm install cypress@15.8.1 --save-dev
+
+# Playwright (optional)
+npm install --save-dev @playwright/test
+npx playwright install chromium
+```
+
+---
+
+## Environment Variables
+
+```bash
+OPENAI_API_KEY=your_key
 ```
 
 ---
@@ -146,11 +175,27 @@ python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/lo
 ```bash
 python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --use-prompt
 ```
+### Playwright — Standard Generation
+```bash
+python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright
+```
+
+### Multiple Requirements — Playwright
+```bash
+python qa_automation.py \
+  "Test successful login with valid credentials" \
+  "Test login failure with invalid password" \
+  "Test login form validation for empty fields" \
+  --url https://the-internet.herokuapp.com/login \
+  --framework playwright
 
 ### Generate and Execute
 ```bash
+# Cypress
 python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --run
-```
+
+# Playwright
+python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright --run
 
 ### View Patterns
 ```bash
@@ -162,26 +207,80 @@ python qa_automation.py --list-patterns
 python qa_automation.py --analyze "CypressError: Element not found"
 ```
 
+Returns: `CATEGORY: SELECTOR REASON: ... FIX: ...` (via OpenAI GPT-4o-mini)
+
+### Command Line Arguments
+
+| Argument | Description | Default |
+|---|---|---|
+| `requirements` | One or more test requirements (positional) | Required |
+| `--framework` | Target framework: `cypress` or `playwright` | `cypress` |
+| `--url`, `-u` | URL to analyze for selectors and test data | None |
+| `--out` | Output directory for generated specs | Framework default |
+| `--use-prompt` | Use cy.prompt() style (Cypress only) | `false` |
+| `--run` | Run tests after generation | `false` |
+| `--analyze`, `-a` | Analyze a test failure log | — |
+| `--file`, `-f` | Log file to analyze | — |
+| `--list-patterns` | List all stored patterns in vector store | — |
+
+## Running Generated Tests
+
+### Cypress
+```bash
+# Run all generated tests
+npx cypress run --spec 'cypress/e2e/generated/**/*.cy.js'
+
+# Run cy.prompt() tests
+npx cypress run --spec 'cypress/e2e/prompt-powered/**/*.cy.js'
+
+# Open Cypress UI
+npx cypress open
+```
+
+### Playwright
+```bash
+# Run all generated tests
+npx playwright test tests/generated/
+
+# Run with visible browser
+npx playwright test --headed
+
+# Run only Chromium
+npx playwright test --project=chromium
+
+# View HTML report
+npx playwright show-report
+```
+
 ---
 
 ## Directory Structure
 
 ```
-cypress/
-├── e2e/
-│   ├── generated/              # Standard tests
-│   └── prompt-powered/         # cy.prompt() tests
-└── fixtures/
-    └── url_test_data.json
-
-vector_db/                       # Pattern storage
-└── chroma.sqlite3
-
-prompts/
-├── html_analysis.txt
-├── failure_analysis.txt
-├── test_generation_traditional.txt
-└── test_generation_prompt_powered.txt
+ai-natural-language-tests/
+├── cypress/
+│   ├── e2e/
+│   │   ├── generated/                        # Standard Cypress tests
+│   │   └── prompt-powered/                   # cy.prompt() Cypress tests
+│   └── fixtures/
+│       └── url_test_data.json
+├── tests/
+│   └── generated/                            # Playwright tests
+├── prompts/
+│   ├── html_analysis.txt
+│   ├── test_generation_traditional.txt
+│   ├── test_generation_prompt_powered.txt
+│   └── test_generation_playwright.txt        # NEW
+├── vector_db/                                # Pattern storage
+│   └── chroma.sqlite3
+├── .env
+├── .gitignore
+├── cypress.config.js
+├── playwright.config.ts                      # NEW
+├── package.json
+├── qa_automation.py
+├── requirements.txt
+└── README.md
 ```
 
 ---
@@ -190,29 +289,69 @@ prompts/
 
 Pattern:
 ```
-{sequence}_{slugified-requirement}_{timestamp}.cy.js
+{sequence}_{slugified-requirement}_{timestamp}.{ext}
 ```
 
 Examples:
 ```
-01_test-login_20250103_142530.cy.js
-02_test-signup_20250103_142545.cy.js
+01_test-login_20250103_142530.cy.js        # Cypress
+02_test-signup_20250103_142545.cy.js        # Cypress
+01_test-login_20250103_142530.spec.ts       # Playwright
 ```
 
 Components:
 - sequence: 01, 02, 03...
 - requirement: URL-safe requirement text
 - timestamp: YYYYMMDD_HHMMSS
-- .cy.js: Cypress file extension
+- `.cy.js` for Cypress, `.spec.ts` for Playwright
+
+---
+
+## Adding a New Framework
+
+Add an entry to `FRAMEWORK_CONFIG` in `qa_automation.py`:
+
+```python
+FRAMEWORK_CONFIG = {
+    # ... existing entries ...
+    "selenium": {
+        "name": "Selenium",
+        "file_ext": ".test.py",
+        "default_output": "selenium_tests",
+        "run_cmd": "pytest",
+        "code_fence": "python",
+        "prompt_file_standard": "test_generation_selenium.txt",
+        "supports_prompt_mode": False,
+    },
+}
+```
+
+Then create `prompts/test_generation_selenium.txt`.
+
+---
+
+## Capabilities
+
+- LangGraph workflow engine
+- Vector-based pattern storage
+- Semantic pattern matching
+- Natural language to test code
+- URL-based test generation
+- AI-powered failure diagnosis
+- Traditional and cy.prompt() modes (Cypress)
+- Playwright TypeScript test generation
+- Multi-framework support via `FRAMEWORK_CONFIG`
+- Pattern library management
 
 ---
 
 ## Releases
 
-**v3.0** - LangGraph workflows, vector pattern learning  
-**v2.2** - Dynamic test generation  
-**v2.1** - AI failure analyzer  
-**v2.0** - cy.prompt() support
+**v3.1** — Playwright support, multi-framework architecture  
+**v3.0** — LangGraph workflows, vector pattern learning  
+**v2.2** — Dynamic test generation  
+**v2.1** — AI failure analyzer  
+**v2.0** — cy.prompt() support
 
 ---
 **Medium**: [Let's Automate](https://aiqualityengineer.com/)

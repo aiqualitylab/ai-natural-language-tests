@@ -1,4 +1,4 @@
-name: AI-Powered Cypress Test Generation and Execution
+name: AI-Powered Cypress & Playwright Test Generation and Execution
 
 on:
   push:
@@ -15,8 +15,16 @@ on:
         description: 'Target URL to analyze and test (optional)'
         required: false
         default: ''
+      framework:
+        description: 'Test framework'
+        required: true
+        default: 'cypress'
+        type: choice
+        options:
+          - 'cypress'
+          - 'playwright'
       use_prompt:
-        description: 'Use cy.prompt() self-healing tests'
+        description: 'Use cy.prompt() self-healing tests (Cypress only)'
         required: false
         default: 'false'
         type: choice
@@ -49,14 +57,26 @@ jobs:
         run: |
           pip install -r requirements.txt
           npm install
+          
+          # Install Playwright if framework is playwright
+          FRAMEWORK="${{ github.event.inputs.framework }}"
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            FRAMEWORK="cypress"
+          fi
+          
+          if [ "$FRAMEWORK" == "playwright" ]; then
+            npm install --save-dev @playwright/test
+            npx playwright install chromium
+          fi
 
       # 4. Generate tests
-      - name: Generate Cypress tests
+      - name: Generate tests
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             REQS="${{ github.event.inputs.requirements }}"
+            FRAMEWORK="${{ github.event.inputs.framework }}"
             URL_FLAG=""
             PROMPT_FLAG=""
             
@@ -64,11 +84,12 @@ jobs:
               URL_FLAG="--url ${{ github.event.inputs.target_url }}"
             fi
             
-            if [ "${{ github.event.inputs.use_prompt }}" == "true" ]; then
+            if [ "$FRAMEWORK" == "cypress" ] && [ "${{ github.event.inputs.use_prompt }}" == "true" ]; then
               PROMPT_FLAG="--use-prompt"
             fi
           else
             REQS="Test user login with valid credentials, Test login with invalid credentials, Test login form validation"
+            FRAMEWORK="cypress"
             URL_FLAG="--url https://the-internet.herokuapp.com/login"
             PROMPT_FLAG=""
           fi
@@ -77,28 +98,37 @@ jobs:
           QUOTED_REQS=$(echo "$REQS" | sed 's/,/" "/g' | sed 's/^/"/' | sed 's/$/"/')
           
           # Run test generation
-          eval python qa_automation.py $QUOTED_REQS $URL_FLAG $PROMPT_FLAG
+          eval python qa_automation.py --framework $FRAMEWORK $QUOTED_REQS $URL_FLAG $PROMPT_FLAG
 
       # 5. Run tests
-      - name: Run Cypress tests
+      - name: Run tests
         id: tests
         continue-on-error: true
         run: |
-          if [ "${{ github.event.inputs.use_prompt }}" == "true" ]; then
-            SPEC_PATH="cypress/e2e/prompt-powered/**/*.cy.js"
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            FRAMEWORK="${{ github.event.inputs.framework }}"
           else
-            SPEC_PATH="cypress/e2e/generated/**/*.cy.js"
+            FRAMEWORK="cypress"
           fi
           
-          npx cypress run --spec "$SPEC_PATH" 2>&1 | tee test-output.log
+          if [ "$FRAMEWORK" == "playwright" ]; then
+            npx playwright test tests/generated/ 2>&1 | tee test-output.log
+          else
+            if [ "${{ github.event.inputs.use_prompt }}" == "true" ]; then
+              SPEC_PATH="cypress/e2e/prompt-powered/**/*.cy.js"
+            else
+              SPEC_PATH="cypress/e2e/generated/**/*.cy.js"
+            fi
+            npx cypress run --spec "$SPEC_PATH" 2>&1 | tee test-output.log
+          fi
 
       # 6. AI Failure Analysis
       - name: AI Failure Analysis
         if: steps.tests.outcome == 'failure'
         env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          echo "Analyzing failures with AI..."
+          echo "Analyzing test failures with AI..."
           python qa_automation.py --analyze -f test-output.log
 
       # 7. Upload results
@@ -113,4 +143,5 @@ jobs:
             cypress/fixtures/
             cypress/screenshots/
             cypress/videos/
+            tests/generated/
             test-output.log

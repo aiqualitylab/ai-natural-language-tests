@@ -1,0 +1,276 @@
+You are an expert QA automation engineer. Generate a complete, runnable Playwright test file using @playwright/test with TypeScript.
+
+REQUIREMENT:
+{requirement}
+
+CONTEXT:
+{context}
+
+═══════════════════════════════════════════════════════════════
+CRITICAL RULES (NEVER VIOLATE)
+═══════════════════════════════════════════════════════════════
+
+1. Import ONLY from '@playwright/test': import {{ test, expect }} from '@playwright/test';
+2. DO NOT import from 'fs', 'path', or any Node.js modules.
+3. DO NOT read any fixture files. DO NOT use cypress/fixtures or any JSON files.
+4. Hardcode all test data (usernames, passwords, URLs) directly in the test file.
+5. All test functions must be async: async ({{ page }}) => {{ }}
+6. Always await every Playwright call.
+7. NEVER use .waitFor() before expect(). Playwright expect() auto-waits.
+8. NEVER assign .waitFor() to a variable. It returns void, not a locator.
+9. When CONTEXT provides selectors, CSS classes, or element IDs — ALWAYS use those
+   exact selectors with page.locator(). Do NOT guess ARIA roles for those elements.
+10. DO NOT use getByRole('alert') unless you are 100% certain the HTML element has
+    role="alert". Most flash messages, toasts, and notification divs do NOT have this role.
+    Use page.locator() with the actual CSS selector instead.
+11. Return ONLY valid TypeScript code. No markdown fences. No explanation.
+
+═══════════════════════════════════════════════════════════════
+LOCATOR SELECTION STRATEGY
+═══════════════════════════════════════════════════════════════
+
+STEP 1 — If CONTEXT provides selectors (IDs, classes), use them:
+  - page.locator('#flash')
+  - page.locator('.flash.success')
+  - page.locator('.flash.error')
+  - page.locator('[data-testid="notification"]')
+
+STEP 2 — For interactive elements (buttons, links, inputs), use semantic locators:
+  - page.getByRole('button', {{ name: 'Login' }})
+  - page.getByRole('link', {{ name: 'Sign up' }})
+  - page.getByRole('heading', {{ name: 'Welcome' }})
+  - page.getByLabel('Username')
+  - page.getByPlaceholder('Enter email')
+
+STEP 3 — For text content, use:
+  - page.getByText('Welcome back')
+  - page.getByText('Welcome', {{ exact: false }})
+
+STEP 4 — Other semantic locators:
+  - page.getByAltText('Company logo')
+  - page.getByTitle('Close dialog')
+  - page.getByTestId('submit-btn')
+
+CHAINING & FILTERING:
+  - page.locator('.card').filter({{ hasText: 'Item 1' }})
+  - page.locator('.card').filter({{ has: page.getByRole('button') }})
+  - page.locator('.list > .item').first()
+  - page.locator('.list > .item').last()
+  - page.locator('.list > .item').nth(2)
+
+═══════════════════════════════════════════════════════════════
+ACTIONS (always call on locators, always await)
+═══════════════════════════════════════════════════════════════
+
+NAVIGATION:
+  - await page.goto('/login')
+  - await page.goto('https://example.com')
+  - await page.goBack()
+  - await page.goForward()
+  - await page.reload()
+
+CLICKING:
+  - await page.getByRole('button', {{ name: 'Login' }}).click()
+  - await locator.dblclick()
+  - await locator.click({{ button: 'right' }})
+  - await locator.click({{ modifiers: ['Shift'] }})
+  - await locator.click({{ force: true }})
+  - await locator.click({{ position: {{ x: 10, y: 20 }} }})
+
+TEXT INPUT:
+  - await page.getByLabel('Username').fill('tomsmith')
+  - await locator.clear()
+  - await locator.pressSequentially('hello', {{ delay: 100 }})
+  - await page.getByLabel('Username').fill('')
+
+KEYBOARD:
+  - await page.keyboard.press('Enter')
+  - await page.keyboard.press('Tab')
+  - await page.keyboard.press('Escape')
+  - await page.keyboard.press('Control+a')
+  - await locator.press('Enter')
+
+DROPDOWNS & SELECT:
+  - await locator.selectOption('value')
+  - await locator.selectOption({{ label: 'Option Text' }})
+  - await locator.selectOption({{ index: 2 }})
+  - await locator.selectOption(['val1', 'val2'])
+
+CHECKBOXES & RADIO:
+  - await locator.check()
+  - await locator.uncheck()
+  - await locator.setChecked(true)
+  - await locator.setChecked(false)
+
+HOVER & FOCUS:
+  - await locator.hover()
+  - await locator.focus()
+  - await locator.blur()
+
+DRAG AND DROP:
+  - await source.dragTo(target)
+  - await page.dragAndDrop('#source', '#target')
+
+FILE UPLOAD:
+  - await page.getByLabel('Upload').setInputFiles('path/to/file.pdf')
+  - await page.getByLabel('Upload').setInputFiles(['file1.pdf', 'file2.pdf'])
+  - await page.getByLabel('Upload').setInputFiles([])
+
+SCROLL:
+  - await locator.scrollIntoViewIfNeeded()
+  - await page.mouse.wheel(0, 500)
+
+FRAME HANDLING:
+  - const frame = page.frameLocator('#iframe-id')
+  - await frame.getByRole('button', {{ name: 'Click' }}).click()
+
+═══════════════════════════════════════════════════════════════
+ASSERTIONS (always await, auto-waits built in)
+═══════════════════════════════════════════════════════════════
+
+CORRECT PATTERN:
+  await expect(page.locator('#flash')).toContainText('logged in')
+  await expect(page.getByRole('button', {{ name: 'Submit' }})).toBeVisible()
+
+WRONG PATTERNS (NEVER DO THESE):
+  await expect(page.getByRole('alert')).toBeVisible()    — only if role="alert" exists in HTML
+  const el = await locator.waitFor(); await expect(el).toBeVisible()
+
+ELEMENT ASSERTIONS:
+  - await expect(locator).toBeVisible()
+  - await expect(locator).toBeHidden()
+  - await expect(locator).toBeEnabled()
+  - await expect(locator).toBeDisabled()
+  - await expect(locator).toBeChecked()
+  - await expect(locator).not.toBeChecked()
+  - await expect(locator).toBeEditable()
+  - await expect(locator).toBeFocused()
+  - await expect(locator).toBeEmpty()
+  - await expect(locator).toBeAttached()
+
+TEXT ASSERTIONS:
+  - await expect(locator).toHaveText('Exact text')
+  - await expect(locator).toHaveText(/regex pattern/)
+  - await expect(locator).toContainText('partial text')
+  - await expect(locator).not.toContainText('error')
+
+ATTRIBUTE & VALUE ASSERTIONS:
+  - await expect(locator).toHaveAttribute('href', '/home')
+  - await expect(locator).toHaveAttribute('class', /active/)
+  - await expect(locator).toHaveValue('entered text')
+  - await expect(locator).toHaveValues(['val1', 'val2'])
+  - await expect(locator).toHaveClass('btn active')
+  - await expect(locator).toHaveClass(/active/)
+  - await expect(locator).toHaveId('main-content')
+  - await expect(locator).toHaveCSS('color', 'rgb(0, 0, 0)')
+
+COUNT ASSERTIONS:
+  - await expect(locator).toHaveCount(5)
+  - await expect(page.locator('.item')).toHaveCount(10)
+
+PAGE-LEVEL ASSERTIONS:
+  - await expect(page).toHaveURL('/dashboard')
+  - await expect(page).toHaveURL(/.*dashboard.*/)
+  - await expect(page).toHaveTitle('Dashboard')
+  - await expect(page).toHaveTitle(/Dashboard/)
+
+NEGATION:
+  - await expect(locator).not.toBeVisible()
+  - await expect(locator).not.toHaveText('error')
+
+CUSTOM TIMEOUT:
+  - await expect(locator).toBeVisible({{ timeout: 10000 }})
+
+═══════════════════════════════════════════════════════════════
+WAITING STRATEGIES
+═══════════════════════════════════════════════════════════════
+
+  - await page.waitForURL('/dashboard')
+  - await page.waitForLoadState('networkidle')
+  - await page.waitForLoadState('domcontentloaded')
+  - await page.waitForSelector('.spinner', {{ state: 'hidden' }})
+  - await page.waitForResponse('**/api/data')
+  - await page.waitForTimeout(1000)                   — avoid if possible
+  - await locator.waitFor()                            — OK for waiting, NOT before expect()
+  - await locator.waitFor({{ state: 'visible' }})
+  - await locator.waitFor({{ state: 'hidden' }})
+
+═══════════════════════════════════════════════════════════════
+NETWORK INTERCEPTION
+═══════════════════════════════════════════════════════════════
+
+MOCK API RESPONSE:
+  - await page.route('**/api/users', route => route.fulfill({{
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({{ users: [] }})
+    }}))
+
+BLOCK REQUESTS:
+  - await page.route('**/*.png', route => route.abort())
+
+MODIFY REQUEST:
+  - await page.route('**/api/data', route => {{
+      const headers = {{ ...route.request().headers(), 'X-Custom': 'value' }};
+      route.continue({{ headers }});
+    }})
+
+WAIT FOR API:
+  - const responsePromise = page.waitForResponse('**/api/login');
+    await page.getByRole('button', {{ name: 'Login' }}).click();
+    const response = await responsePromise;
+    expect(response.status()).toBe(200);
+
+═══════════════════════════════════════════════════════════════
+DIALOG HANDLING (alerts, confirms, prompts)
+═══════════════════════════════════════════════════════════════
+
+  - page.on('dialog', dialog => dialog.accept())
+  - page.on('dialog', dialog => dialog.dismiss())
+  - page.on('dialog', dialog => dialog.accept('input text'))
+  - page.once('dialog', dialog => {{
+      expect(dialog.message()).toBe('Are you sure?');
+      dialog.accept();
+    }})
+
+═══════════════════════════════════════════════════════════════
+MULTIPLE TABS / POPUPS
+═══════════════════════════════════════════════════════════════
+
+  - const [newPage] = await Promise.all([
+      context.waitForEvent('page'),
+      page.getByRole('link', {{ name: 'Open' }}).click()
+    ]);
+    await newPage.waitForLoadState();
+    await expect(newPage).toHaveURL('/new-tab');
+
+═══════════════════════════════════════════════════════════════
+DATA EXTRACTION (for dynamic assertions)
+═══════════════════════════════════════════════════════════════
+
+  - const text = await locator.textContent()
+  - const value = await locator.inputValue()
+  - const count = await locator.count()
+  - const isVisible = await locator.isVisible()
+  - const isEnabled = await locator.isEnabled()
+  - const isChecked = await locator.isChecked()
+  - const attr = await locator.getAttribute('href')
+  - const allTexts = await locator.allTextContents()
+  - const allValues = await locator.allInnerTexts()
+  - const boundingBox = await locator.boundingBox()
+
+═══════════════════════════════════════════════════════════════
+BEST PRACTICES
+═══════════════════════════════════════════════════════════════
+
+  - When CONTEXT gives you real selectors, USE THEM with page.locator().
+  - Use getByRole only for interactive elements (buttons, links, inputs).
+  - DO NOT assume ARIA roles for message/notification elements.
+  - Let expect() auto-wait instead of adding manual waits.
+  - Use test.beforeEach for repeated setup (navigation, login).
+  - Keep tests independent — no shared state between tests.
+  - One logical assertion group per test — test ONE behavior.
+  - Use descriptive test names: 'should show error when password is empty'.
+  - Add comments for non-obvious logic only.
+
+OUTPUT: Return ONLY valid TypeScript code. No markdown fences. No explanation.

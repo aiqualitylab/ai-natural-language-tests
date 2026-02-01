@@ -1,0 +1,15 @@
+flowchart TD
+    A[Start: User Input<br/>Requirements + Framework] --> B[Step 1: Initialize Vector Store<br/>Load/Create Chroma DB<br/>Pattern Database]
+    B --> C[Step 2: Fetch Test Data<br/>Analyze URL/HTML<br/>Extract Selectors<br/>Generate Fixtures]
+    C --> D[Step 3: Search Similar Patterns<br/>Query Vector Store<br/>Find Matching Test Patterns<br/>From Past Generations]
+    D --> E[Step 4: Generate Tests<br/>Use AI + Patterns<br/>Create Framework-Specific Code<br/>Cypress .cy.js or Playwright .spec.ts]
+    E --> F[Step 5: Run Tests<br/>Execute via Framework Runner<br/>Optional --run flag]
+    F --> G[End: Tests Executed<br/>Ready for CI/CD]
+
+    style A fill:#e1f5fe
+    style B fill:#fff3e0
+    style C fill:#c8e6c9
+    style D fill:#ffcdd2
+    style E fill:#f3e5f5
+    style F fill:#e8f5e8
+    style G fill:#f3e5f5

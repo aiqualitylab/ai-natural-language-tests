@@ -1,0 +1,25 @@
+{
+  "name": "playwright-ai-test-generation",
+  "version": "1.0.0",
+  "description": "AI-powered Playwright test generation from natural language",
+  "author": "AI Quality Engineer",
+  "license": "MIT",
+  "tags": ["playwright", "testing", "ai", "automation", "e2e"],
+  "framework": "playwright",
+  "language": "typescript",
+  "entrypoint": "qa_automation.py",
+  "dependencies": [
+    "playwright",
+    "@playwright/test",
+    "openai",
+    "langchain",
+    "langgraph"
+  ],
+  "capabilities": [
+    "Generate Playwright tests from natural language",
+    "AI-powered test failure analysis",
+    "Multi-browser testing support",
+    "Pattern-based test generation"
+  ],
+  "usage": "python qa_automation.py \"Test login functionality\" --framework playwright --url https://example.com"
+}

@@ -1,17 +1,20 @@
 {
-  "name": "cypress-natural-language-tests",
+  "name": "ai-natural-language-tests",
   "version": "2.0.0",
-  "description": "AI-powered Cypress test generation with cy.prompt() integration",
+  "description": "AI-powered Cypress and Playwright test generation from natural language",
   "scripts": {
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
     "cypress:run:prompt": "cypress run --spec 'cypress/e2e/prompt-powered/**/*.cy.js'",
     "cypress:run:traditional": "cypress run --spec 'cypress/e2e/generated/**/*.cy.js'",
-    "test:all": "cypress run",
-    "generate:traditional": "python qa_prompt_hybrid.py",
-    "generate:hybrid": "python qa_prompt_hybrid.py"
+    "playwright:install": "npx playwright install",
+    "playwright:test": "npx playwright test tests/generated/",
+    "playwright:test:headed": "npx playwright test --headed tests/generated/",
+    "playwright:report": "npx playwright show-report",
+    "test:all": "npm run cypress:run && npm run playwright:test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.1",
     "cypress": "^15.8.1"
   },
   "dependencies": {

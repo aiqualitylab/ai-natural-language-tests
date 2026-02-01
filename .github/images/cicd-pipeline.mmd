@@ -1,0 +1,19 @@
+flowchart TD
+    A[Code Changes<br/>Pushed to Repo] --> B[CI/CD Pipeline<br/>Triggers]
+    B --> C[Install Dependencies<br/>pip install -r requirements.txt<br/>npm install]
+    C --> D[Generate Tests<br/>python qa_automation.py<br/>--url or --data]
+    D --> E[Run Tests<br/>npx cypress run<br/>or npx playwright test]
+    E --> F{Tests Pass?}
+    F -->|Yes| G[Deploy Application<br/>Success]
+    F -->|No| H[AI Failure Analysis<br/>--analyze in pipeline]
+    H --> I[Auto-Fix & Regenerate<br/>If possible]
+    I --> E
+    H --> J[Notify Developers<br/>Manual intervention]
+
+    style A fill:#e1f5fe
+    style B fill:#fff3e0
+    style C fill:#c8e6c9
+    style D fill:#ffcdd2
+    style E fill:#f3e5f5
+    style G fill:#e8f5e8
+    style J fill:#ffebee

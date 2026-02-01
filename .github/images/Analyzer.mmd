@@ -1,0 +1,13 @@
+flowchart TD
+    A[Test Failure Occurs<br/>Cypress or Playwright Error] --> B[Run qa_automation.py --analyze<br/>With error message or -f log file]
+    B --> C[Send to OpenAI GPT-4o-mini<br/>AI Model for Analysis]
+    C --> D[AI Analyzes Error<br/>Context from logs & patterns]
+    D --> E[Generate Output<br/>CATEGORY: SELECTOR<br/>REASON: ...<br/>FIX: ...]
+    E --> F[Apply Fix<br/>Regenerate Tests<br/>Or Manual Code Changes]
+
+    style A fill:#ffebee
+    style B fill:#fff3e0
+    style C fill:#e3f2fd
+    style D fill:#c8e6c9
+    style E fill:#f3e5f5
+    style F fill:#e8f5e8

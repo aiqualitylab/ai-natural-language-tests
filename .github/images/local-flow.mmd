@@ -1,0 +1,18 @@
+flowchart TD
+    A[Developer Writes<br/>Natural Language Requirements] --> B[Run qa_automation.py<br/>with --url or --data]
+    B --> C[LangGraph Workflow<br/>Processes Request]
+    C --> D[AI Generates Tests<br/>Based on Patterns & Prompts]
+    D --> E[Test Files Created<br/>Cypress: cypress/e2e/<br/>Playwright: tests/]
+    E --> F[Run Tests Locally<br/>npx cypress run<br/>or npx playwright test]
+    F --> G{Tests Pass?}
+    G -->|Yes| H[Commit & Push<br/>Ready for CI/CD]
+    G -->|No| I[Debug & Analyze<br/>Use --analyze flag]
+    I --> J[AI Provides Fixes<br/>Regenerate Tests]
+    J --> F
+
+    style A fill:#e1f5fe
+    style B fill:#fff3e0
+    style C fill:#c8e6c9
+    style D fill:#ffcdd2
+    style F fill:#f3e5f5
+    style H fill:#e8f5e8

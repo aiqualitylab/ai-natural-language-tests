@@ -1,0 +1,19 @@
+flowchart TD
+    A[Test Execution<br/>Fails] --> B[Collect Error Details<br/>Stack trace, selectors, logs]
+    B --> C[Input to AI Analyzer<br/>qa_automation.py --analyze]
+    C --> D[Pattern Matching<br/>Search Vector Store<br/>for Similar Failures]
+    D --> E[AI Diagnosis<br/>GPT-4o-mini Model<br/>Analyze root cause]
+    E --> F[Generate Recommendations<br/>CATEGORY: SELECTOR<br/>REASON: Element selector changed<br/>FIX: Update selector in fixture]
+    F --> G[Apply Fix<br/>Regenerate test code<br/>Update fixtures]
+    G --> H[Re-run Tests<br/>Verify fix]
+    H --> I{Success?}
+    I -->|Yes| J[Tests Pass<br/>Pattern saved to DB]
+    I -->|No| K[Iterate Analysis<br/>Refine fix]
+
+    style A fill:#ffebee
+    style B fill:#fff3e0
+    style C fill:#e3f2fd
+    style D fill:#c8e6c9
+    style E fill:#ffcdd2
+    style F fill:#f3e5f5
+    style J fill:#e8f5e8

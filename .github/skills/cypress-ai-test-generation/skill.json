@@ -1,0 +1,25 @@
+{
+  "name": "cypress-ai-test-generation",
+  "version": "1.0.0",
+  "description": "AI-powered Cypress test generation from natural language with cy.prompt() support",
+  "author": "AI Quality Engineer",
+  "license": "MIT",
+  "tags": ["cypress", "testing", "ai", "automation", "e2e", "cy.prompt"],
+  "framework": "cypress",
+  "language": "javascript",
+  "entrypoint": "qa_automation.py",
+  "dependencies": [
+    "cypress",
+    "openai",
+    "langchain",
+    "langgraph"
+  ],
+  "capabilities": [
+    "Generate Cypress tests from natural language",
+    "cy.prompt() self-healing tests",
+    "AI-powered test failure analysis",
+    "Pattern-based test generation",
+    "Traditional and prompt-powered modes"
+  ],
+  "usage": "python qa_automation.py \"Test login functionality\" --framework cypress --url https://example.com"
+}

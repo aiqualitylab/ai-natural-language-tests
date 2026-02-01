@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AI-Powered Cypress Test Generator with LangGraph & Vector Store
+AI-Powered Cypress & Playwright Test Generator with LangGraph & Vector Store
 """
 
 import os
@@ -32,6 +32,30 @@ logger = logging.getLogger(__name__)
 
 PROMPT_DIR = Path(__file__).parent / "prompts"
 VECTOR_DB_DIR = Path(__file__).parent / "vector_db"
+
+# ── FRAMEWORK CONFIG ─────────────────────────────────────────────────────
+
+FRAMEWORK_CONFIG = {
+    "cypress": {
+        "name": "Cypress",
+        "file_ext": ".cy.js",
+        "default_output": "cypress/e2e",
+        "run_cmd": "npx cypress run --spec",
+        "code_fence": "javascript",
+        "prompt_file_standard": "test_generation_traditional.txt",
+        "prompt_file_prompt": "test_generation_prompt_powered.txt",
+        "supports_prompt_mode": True,
+    },
+    "playwright": {
+        "name": "Playwright",
+        "file_ext": ".spec.ts",
+        "default_output": "tests",
+        "run_cmd": "npx playwright test",
+        "code_fence": "typescript",
+        "prompt_file_standard": "test_generation_playwright.txt",
+        "supports_prompt_mode": False,
+    },
+}
 
 # VECTOR STORE - Stores and searches test patterns
 
@@ -112,6 +136,7 @@ class TestState:
     requirements: List[str]
     output_dir: str
     use_prompt: bool
+    framework: str = "cypress"
     url: Optional[str] = None
     run_tests: bool = False
     
@@ -230,6 +255,18 @@ def step_4_generate_tests(state):
     """Step 4: Generate test files"""
     logger.info("STEP 4: Generate Tests")
     
+    # ── Get framework config ──
+    fw = FRAMEWORK_CONFIG[state.framework]
+    logger.info(f"Framework: {fw['name']}")
+    
+    # ── Check if --use-prompt is valid for this framework ──
+    use_prompt_mode = state.use_prompt and fw["supports_prompt_mode"]
+    if state.use_prompt and not fw["supports_prompt_mode"]:
+        logger.warning(
+            f"--use-prompt ignored: {fw['name']} does not have a prompt feature like cy.prompt(). "
+            f"Generating standard {fw['name']} tests instead."
+        )
+    
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
     generated_tests = []
     
@@ -237,8 +274,11 @@ def step_4_generate_tests(state):
     for index, requirement in enumerate(state.requirements, 1):
         logger.info(f"Generating test {index}/{len(state.requirements)}: {requirement}")
         
-        # Choose prompt file
-        prompt_file = "test_generation_prompt_powered.txt" if state.use_prompt else "test_generation_traditional.txt"
+        # ── Choose prompt file ──
+        if use_prompt_mode:
+            prompt_file = fw["prompt_file_prompt"]
+        else:
+            prompt_file = fw["prompt_file_standard"]
         
         # Load prompt
         prompt = load_prompt_file(prompt_file, requirement=requirement, context=state.context)
@@ -247,19 +287,30 @@ def step_4_generate_tests(state):
         ai_response = llm.invoke(prompt)
         content = ai_response.content
         
-        # Extract JavaScript code
-        if "```javascript" in content:
+        # ── Extract code from markdown fences ──
+        if "```typescript" in content:
+            content = content.split("```typescript")[1].split("```")[0].strip()
+        elif "```javascript" in content:
             content = content.split("```javascript")[1].split("```")[0].strip()
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0].strip()
         
-        # Prepare file paths
-        folder_name = "prompt-powered" if state.use_prompt else "generated"
-        folder = f"{state.output_dir}/{folder_name}"
+        # ── Prepare output folder ──
+        # Cypress: prompt-powered / generated subfolder
+        # Playwright: always generated subfolder
+        if state.framework == "cypress":
+            folder_name = "prompt-powered" if use_prompt_mode else "generated"
+        else:
+            folder_name = "generated"
+        
+        output_base = state.output_dir if state.output_dir != "cypress/e2e" else fw["default_output"]
+        folder = f"{output_base}/{folder_name}"
         os.makedirs(folder, exist_ok=True)
         
-        # Create filename
+        # ── Create filename with framework-specific extension ──
         slug = re.sub(r'[^\w\s-]', '', requirement.lower()).replace(' ', '-')[:50]
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{index:02d}_{slug}_{timestamp}.cy.js"
+        filename = f"{index:02d}_{slug}_{timestamp}{fw['file_ext']}"
         filepath = f"{folder}/{filename}"
         
         # Save test file
@@ -273,7 +324,7 @@ def step_4_generate_tests(state):
             test_code=content,
             requirement=requirement,
             url=state.url or "",
-            test_type="prompt_powered" if state.use_prompt else "traditional",
+            test_type=f"{state.framework}_{'prompt_powered' if use_prompt_mode else 'traditional'}",
             filepath=filepath
         )
         
@@ -294,14 +345,21 @@ def step_5_run_tests(state):
     """Step 5: Run the generated tests"""
     logger.info("STEP 5: Run Tests")
     
-    # Build test path
-    folder_name = "prompt-powered" if state.use_prompt else "generated"
-    test_path = f"cypress/e2e/{folder_name}/**/*.cy.js"
+    fw = FRAMEWORK_CONFIG[state.framework]
+    use_prompt_mode = state.use_prompt and fw["supports_prompt_mode"]
     
-    logger.info(f"Running tests: {test_path}")
+    # ── Framework-aware test runner ──
+    if state.framework == "playwright":
+        output_base = state.output_dir if state.output_dir != "cypress/e2e" else fw["default_output"]
+        test_path = f"{output_base}/generated"
+        cmd = f"npx playwright test {test_path}"
+    else:
+        folder_name = "prompt-powered" if use_prompt_mode else "generated"
+        test_path = f"cypress/e2e/{folder_name}/**/*.cy.js"
+        cmd = f"npx cypress run --spec '{test_path}'"
     
-    # Run Cypress
-    exit_code = os.system(f"npx cypress run --spec '{test_path}'")
+    logger.info(f"Running: {cmd}")
+    exit_code = os.system(cmd)
     
     # Save results
     state.test_results = {
@@ -363,17 +421,25 @@ def analyze_test_failure(log_text):
     """Analyze why a test failed"""
     logger.info("Analyzing test failure")
     
+    # Load the analysis prompt
+    prompt_path = PROMPT_DIR / "failure_analysis.txt"
+    with open(prompt_path, 'r') as f:
+        prompt_template = f.read()
+    
+    # Format the prompt with the log
+    prompt = prompt_template.replace("{log}", log_text)
+    
     # Ask AI to analyze
     response = requests.post(
-        url="https://openrouter.ai/api/v1/chat/completions",
+        url="https://api.openai.com/v1/chat/completions",
         headers={
-            "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
+            "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}",
             "Content-Type": "application/json"
         },
         json={
-            "model": "deepseek/deepseek-r1-0528:free",
-            "messages": [{"role": "user", "content": f"Analyze this Cypress test failure. Reply ONLY:\nREASON: (one line)\nFIX: (one line)\n\n{log_text}"}],
-            "max_tokens": 150
+            "model": "gpt-4o-mini",
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 300
         }
     )
     
@@ -405,12 +471,14 @@ def list_all_patterns():
 def generate_tests_action(args):
     """Generate tests using workflow"""
     logger.info("Starting test generation")
+    logger.info(f"Framework: {args.framework.upper()}")
     
     # Create initial state
     state = TestState(
         requirements=args.requirements,
         output_dir=args.out,
         use_prompt=args.use_prompt,
+        framework=args.framework,
         url=args.url,
         run_tests=args.run
     )
@@ -423,6 +491,7 @@ def generate_tests_action(args):
     logger.info("="*50)
     logger.info("GENERATION COMPLETE")
     logger.info("="*50)
+    logger.info(f"Framework: {args.framework.upper()}")
     logger.info(f"Generated tests: {len(final_state['generated_tests'])}")
     logger.info(f"Output location: {args.out}")
     logger.info(f"Similar patterns used: {len(final_state['similar_patterns'])}")
@@ -437,20 +506,22 @@ def generate_tests_action(args):
 # MAIN - Entry point
 
 def main():
-    logger.info("AI-Powered Cypress Test Generator")
+    logger.info("AI-Powered Test Generator (Cypress & Playwright)")
     logger.info("With LangGraph Workflows and Vector Store Learning")
     
     # Setup command line arguments
-    parser = argparse.ArgumentParser(description="AI Cypress Test Generator")
+    parser = argparse.ArgumentParser(description="AI Test Generator — Cypress & Playwright")
     
     parser.add_argument('--analyze', '-a', nargs='?', const='', help='Analyze test failure')
     parser.add_argument('--file', '-f', help='Log file to analyze')
     parser.add_argument('requirements', nargs='*', help='Test requirements')
     parser.add_argument('--out', default='cypress/e2e', help='Output directory')
-    parser.add_argument('--use-prompt', action='store_true', help='Use cy.prompt()')
+    parser.add_argument('--use-prompt', action='store_true', help='Use cy.prompt() style (Cypress only)')
     parser.add_argument('--run', action='store_true', help='Run tests after generation')
     parser.add_argument('--url', '-u', help='URL to analyze')
     parser.add_argument('--list-patterns', action='store_true', help='List stored patterns')
+    parser.add_argument('--framework', choices=['cypress', 'playwright'], default='cypress',
+                        help='Target framework: cypress (default) or playwright')
     
     args = parser.parse_args()
     
@@ -463,7 +534,7 @@ def main():
     if analyze_mode:
         log_text = open(args.file).read() if args.file else args.analyze or sys.stdin.read()
         result = analyze_test_failure(log_text)
-        logger.info(result)
+        print(result)
         return
     
     if list_mode:

@@ -1,33 +1,39 @@
-# GitHub Copilot Instructions for Cypress Natural Language Tests
+# GitHub Copilot Instructions for AI Natural Language Tests
 
 ## Project Overview
 
-Generate Cypress E2E tests from natural language using OpenAI GPT-4o-mini and LangGraph.
+Generate Cypress and Playwright E2E tests from natural language using OpenAI GPT-4o-mini and LangGraph.
 
 ## CLI Quick Reference
 
 | Flag | Purpose |
 |------|---------|
 | `requirements` | Test descriptions (positional) |
+| `--framework`, `-f` | Target framework: `cypress` or `playwright` (default: cypress) |
 | `--url`, `-u` | Fetch URL, analyze HTML, generate fixture |
 | `--data`, `-d` | Load JSON test data file |
-| `--use-prompt` | Generate cy.prompt() self-healing tests |
+| `--use-prompt` | Generate cy.prompt() self-healing tests (Cypress only) |
 | `--run` | Execute tests after generation |
 | `--docs` | Add documentation context |
 | `--analyze`, `-a` | Diagnose test failure with AI |
-| `--file`, `-f` | Log file to analyze |
+| `--file` | Log file to analyze |
 
-## Two Test Modes
+## Three Test Modes
 
-**Traditional** (`cypress/e2e/generated/`)
+**Cypress Traditional** (`cypress/e2e/generated/`)
 - Uses fixture data from `--url` or `--data`
 - MUST use `function()` syntax for `this.testData`
 - Fast, deterministic, best for CI/CD
 
-**cy.prompt()** (`cypress/e2e/prompt-powered/`)
+**Cypress cy.prompt()** (`cypress/e2e/prompt-powered/`)
 - Self-healing with natural language
 - Requires Cypress 15.8.1+ and `experimentalCypressPrompt: true`
 - Best for development
+
+**Playwright Standard** (`tests/generated/`)
+- TypeScript tests with modern async/await
+- Multi-browser support (Chromium, Firefox, WebKit)
+- Intelligent locator strategies
 
 ## Test Data Options
 
@@ -87,35 +93,40 @@ describe('Tests', function () {
 
 ```bash
 python qa_automation.py --analyze "CypressError: Element not found"
+python qa_automation.py --analyze "page.locator('#username').waitFor() timed out"
 ```
 
-Returns: `REASON: ... FIX: ...` (FREE via OpenRouter DeepSeek R1)
+Returns: `CATEGORY: SELECTOR REASON: ... FIX: ...` (via OpenAI GPT-4o-mini)
 
 ## Environment Variables
 
 ```bash
 OPENAI_API_KEY=your_key
-OPENROUTER_API_KEY=your_key  # For --analyze
 ```
 
 ## Common Issues
 
 | Problem | Solution |
 |---------|----------|
-| `this.testData` undefined | Use `function()` not arrow functions |
+| `this.testData` undefined | Use `function()` not arrow functions (Cypress) |
 | Wrong selectors | Use `--url` to fetch real selectors |
-| cy.prompt() not working | Enable `experimentalCypressPrompt: true` |
+| cy.prompt() not working | Enable `experimentalCypressPrompt: true` (Cypress only) |
 | Tests only work for one URL | Use dynamic selector pattern (v2.2) |
+| Playwright locator timeouts | Use `page.waitForLoadState('networkidle')` before locating elements |
+| Browser context issues | Ensure proper `await` usage in Playwright tests |
 
 ## File Organization
 
 ```
 cypress/
 ├── e2e/
-│   ├── generated/       # Traditional tests
-│   └── prompt-powered/  # cy.prompt() tests
+│   ├── generated/       # Traditional Cypress tests
+│   └── prompt-powered/  # cy.prompt() Cypress tests
 └── fixtures/
     └── url_test_data.json
+
+tests/
+└── generated/          # Playwright tests
 ```
 
 ## Code Style
@@ -125,3 +136,5 @@ cypress/
 - No hardcoded URLs or selectors
 - No emojis in output
 - Simple if/else, no complex ternaries
+- Use async/await for Playwright tests
+- Prefer semantic locators in Playwright (getByRole, getByText, etc.)
