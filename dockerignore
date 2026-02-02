@@ -1,0 +1,18 @@
+# Dependencies (rebuilt inside container)
+node_modules
+__pycache__
+*.pyc
+
+# Secrets (injected at runtime via env_file)
+.env
+
+# Git history (not needed in image)
+.git
+
+# Test artifacts (generated at runtime)
+cypress/videos
+cypress/screenshots
+test-results
+
+# Vector store (mounted as volume at runtime)
+vector_db

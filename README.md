@@ -20,6 +20,13 @@ Supports local development and CI/CD pipelines.
 
 ---
 
+## New in v3.2 — Docker Support
+
+- 🐳 **Docker Compose**: Single command to build and run — no local Python or Node.js needed
+- 📦 **Tagged Images**: `docker compose build` creates `ai-natural-language-tests:v3.2`
+- 🔒 **Secrets Safe**: API keys injected at runtime, never baked into the image
+- 💾 **Persistent Patterns**: Vector store mounted as volume, patterns survive across runs
+
 ## New in v3.1 — Playwright Support
 
 - 🎭 **Multi-Framework**: Generate tests for Cypress (JavaScript) or Playwright (TypeScript) with `--framework`
@@ -131,12 +138,17 @@ python qa_automation.py --analyze -f error.log
 - Natural language to test code
 - URL-based test generation
 - AI-powered failure diagnosis
-- Traditional and cy.prompt() modes
+- Traditional and cy.prompt() modes (Cypress)
+- Playwright TypeScript test generation
+- Multi-framework support via `FRAMEWORK_CONFIG`
 - Pattern library management
+- Docker support for zero-install usage
 
 ---
 
 ## Setup
+
+### Local Setup
 
 ```bash
 git clone https://github.com/aiqualitylab/ai-natural-language-tests.git
@@ -153,6 +165,63 @@ npm install cypress@15.8.1 --save-dev
 npm install --save-dev @playwright/test
 npx playwright install chromium
 ```
+
+### Docker Setup
+
+No local Python or Node.js required — only [Docker](https://docs.docker.com/get-docker/) (Docker Compose is included with Docker Desktop).
+
+**Step 1** — Clone and create `.env`
+
+```bash
+git clone https://github.com/aiqualitylab/ai-natural-language-tests.git
+cd ai-natural-language-tests
+echo "OPENAI_API_KEY=sk-your-key" > .env
+```
+
+**Step 2** — Build the image
+
+```bash
+docker compose build
+```
+
+**Step 3** — Generate tests
+
+```bash
+# Cypress test (default)
+docker compose run --rm test-generator \
+  "Test login" --url https://the-internet.herokuapp.com/login
+
+# Playwright test
+docker compose run --rm test-generator \
+  "Test login" --url https://the-internet.herokuapp.com/login --framework playwright
+
+# cy.prompt() test (Cypress only)
+docker compose run --rm test-generator \
+  "Test login" --url https://the-internet.herokuapp.com/login --use-prompt
+
+# Multiple requirements
+docker compose run --rm test-generator \
+  "Test successful login with valid credentials" \
+  "Test login failure with invalid password" \
+  "Test login form validation for empty fields" \
+  --url https://the-internet.herokuapp.com/login --framework playwright
+
+# Failure analysis
+docker compose run --rm test-generator \
+  --analyze "CypressError: Element not found"
+
+# List stored patterns
+docker compose run --rm test-generator --list-patterns
+```
+
+Generated tests appear in the same output directories as local setup. Pattern learning persists across runs via volume mounts.
+
+| Volume Mount                  | Purpose                              |
+|-------------------------------|--------------------------------------|
+| `cypress/e2e/generated/`     | Generated Cypress standard tests      |
+| `cypress/e2e/prompt-powered/`| Generated cy.prompt() tests           |
+| `tests/generated/`           | Generated Playwright tests            |
+| `vector_db/`                 | ChromaDB pattern store persists here  |
 
 ---
 
@@ -188,6 +257,7 @@ python qa_automation.py \
   "Test login form validation for empty fields" \
   --url https://the-internet.herokuapp.com/login \
   --framework playwright
+```
 
 ### Generate and Execute
 ```bash
@@ -196,6 +266,7 @@ python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/lo
 
 # Playwright
 python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright --run
+```
 
 ### View Patterns
 ```bash
@@ -270,13 +341,16 @@ ai-natural-language-tests/
 │   ├── html_analysis.txt
 │   ├── test_generation_traditional.txt
 │   ├── test_generation_prompt_powered.txt
-│   └── test_generation_playwright.txt        # NEW
+│   └── test_generation_playwright.txt
 ├── vector_db/                                # Pattern storage
 │   └── chroma.sqlite3
 ├── .env
 ├── .gitignore
+├── .dockerignore                             # NEW in v3.2
 ├── cypress.config.js
-├── playwright.config.ts                      # NEW
+├── docker-compose.yml                        # NEW in v3.2
+├── Dockerfile                                # NEW in v3.2
+├── playwright.config.ts
 ├── package.json
 ├── qa_automation.py
 ├── requirements.txt
@@ -330,23 +404,9 @@ Then create `prompts/test_generation_selenium.txt`.
 
 ---
 
-## Capabilities
-
-- LangGraph workflow engine
-- Vector-based pattern storage
-- Semantic pattern matching
-- Natural language to test code
-- URL-based test generation
-- AI-powered failure diagnosis
-- Traditional and cy.prompt() modes (Cypress)
-- Playwright TypeScript test generation
-- Multi-framework support via `FRAMEWORK_CONFIG`
-- Pattern library management
-
----
-
 ## Releases
 
+**v3.2** — Docker support, docker-compose setup  
 **v3.1** — Playwright support, multi-framework architecture  
 **v3.0** — LangGraph workflows, vector pattern learning  
 **v2.2** — Dynamic test generation  

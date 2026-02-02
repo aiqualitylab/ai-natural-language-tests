@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  test-generator:
+    build: .
+    image: ai-natural-language-tests:v3.2
+    env_file: .env
+    volumes:
+      - ./cypress/e2e/generated:/app/cypress/e2e/generated
+      - ./cypress/e2e/prompt-powered:/app/cypress/e2e/prompt-powered
+      - ./tests/generated:/app/tests/generated
+      - ./vector_db:/app/vector_db
