@@ -22,6 +22,16 @@ from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from dotenv import load_dotenv
 
+try:
+    from langchain_anthropic import ChatAnthropic
+except ImportError:
+    ChatAnthropic = None
+
+try:
+    from langchain_google_genai import ChatGoogleGenerativeAI
+except ImportError:
+    ChatGoogleGenerativeAI = None
+
 load_dotenv()
 
 logging.basicConfig(
@@ -33,7 +43,51 @@ logger = logging.getLogger(__name__)
 PROMPT_DIR = Path(__file__).parent / "prompts"
 VECTOR_DB_DIR = Path(__file__).parent / "vector_db"
 
-# ── FRAMEWORK CONFIG ─────────────────────────────────────────────────────
+LLM_CONFIG = {
+    "openai": {
+        "name": "OpenAI (ChatGPT)",
+        "model": "gpt-4o-mini",
+        "provider": "openai",
+    },
+    "anthropic": {
+        "name": "Anthropic (Claude)",
+        "model": "claude-3-5-sonnet-20241022",
+        "provider": "anthropic",
+    },
+    "google": {
+        "name": "Google (Gemini)",
+        "model": "gemini-2.0-flash",
+        "provider": "google",
+    },
+}
+
+DEFAULT_LLM = "openai"
+
+def get_llm(provider: str = DEFAULT_LLM):
+    """Get LLM instance for the specified provider"""
+    if provider not in LLM_CONFIG:
+        logger.warning(f"Unknown provider '{provider}', using default {DEFAULT_LLM}")
+        provider = DEFAULT_LLM
+    
+    config = LLM_CONFIG[provider]
+    
+    if provider == "openai":
+        return ChatOpenAI(model=config["model"], temperature=0)
+    
+    elif provider == "anthropic":
+        if ChatAnthropic is None:
+            logger.warning("Anthropic provider not installed, falling back to OpenAI")
+            return ChatOpenAI(model=LLM_CONFIG[DEFAULT_LLM]["model"], temperature=0)
+        return ChatAnthropic(model=config["model"], temperature=0)
+    
+    elif provider == "google":
+        if ChatGoogleGenerativeAI is None:
+            logger.warning("Google provider not installed, falling back to OpenAI")
+            return ChatOpenAI(model=LLM_CONFIG[DEFAULT_LLM]["model"], temperature=0)
+        return ChatGoogleGenerativeAI(model=config["model"], temperature=0)
+    
+    return ChatOpenAI(model=LLM_CONFIG[DEFAULT_LLM]["model"], temperature=0)
+
 
 FRAMEWORK_CONFIG = {
     "cypress": {
@@ -139,6 +193,7 @@ class TestState:
     framework: str = "cypress"
     url: Optional[str] = None
     run_tests: bool = False
+    llm_provider: str = DEFAULT_LLM
     
     # Processing data
     test_data: Optional[Dict] = None
@@ -191,6 +246,7 @@ def step_2_fetch_test_data(state):
         return state
     
     logger.info(f"Fetching URL: {url}")
+    logger.info(f"Using LLM provider: {LLM_CONFIG[state.llm_provider]['name']}")
     
     # Fetch HTML from URL
     response = requests.get(url, timeout=15, headers={'User-Agent': 'Mozilla/5.0'})
@@ -201,7 +257,7 @@ def step_2_fetch_test_data(state):
     # Analyze HTML with AI
     logger.info("Asking AI to analyze HTML")
     
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    llm = get_llm(state.llm_provider)
     prompt = load_prompt_file("html_analysis.txt", url=url, html=html)
     
     ai_response = llm.invoke(prompt)
@@ -260,6 +316,7 @@ def step_3_search_similar_patterns(state):
 def step_4_generate_tests(state):
     """Step 4: Generate test files"""
     logger.info("STEP 4: Generate Tests")
+    logger.info(f"Using LLM provider: {LLM_CONFIG[state.llm_provider]['name']}")
     
     # ── Get framework config ──
     fw = FRAMEWORK_CONFIG[state.framework]
@@ -273,7 +330,7 @@ def step_4_generate_tests(state):
             f"Generating standard {fw['name']} tests instead."
         )
     
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    llm = get_llm(state.llm_provider)
     generated_tests = []
     
     # Generate each test
@@ -478,6 +535,7 @@ def generate_tests_action(args):
     """Generate tests using workflow"""
     logger.info("Starting test generation")
     logger.info(f"Framework: {args.framework.upper()}")
+    logger.info(f"LLM Provider: {LLM_CONFIG[args.llm]['name']}")
     
     # Create initial state
     state = TestState(
@@ -486,7 +544,8 @@ def generate_tests_action(args):
         use_prompt=args.use_prompt,
         framework=args.framework,
         url=args.url,
-        run_tests=args.run
+        run_tests=args.run,
+        llm_provider=args.llm
     )
     
     # Run workflow
@@ -528,6 +587,8 @@ def main():
     parser.add_argument('--list-patterns', action='store_true', help='List stored patterns')
     parser.add_argument('--framework', choices=['cypress', 'playwright'], default='cypress',
                         help='Target framework: cypress (default) or playwright')
+    parser.add_argument('--llm', choices=list(LLM_CONFIG.keys()), default=DEFAULT_LLM,
+                        help=f'LLM provider: {" or ".join(LLM_CONFIG.keys())} (default: {DEFAULT_LLM})')
     
     args = parser.parse_args()
     

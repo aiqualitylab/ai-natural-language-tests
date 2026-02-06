@@ -7,7 +7,7 @@ graph TB
 
     subgraph "AI & Workflow Engine"
         D[LangGraph Workflow<br/>5-Step Process]
-        E[OpenAI GPT-4o-mini<br/>Text Generation]
+        E[Multi-Provider LLM<br/>OpenAI / Anthropic / Google]
         F[Vector Store<br/>Pattern Learning<br/>Chroma DB]
     end
 
@@ -21,7 +21,7 @@ graph TB
     subgraph "Execution & Analysis"
         K[Cypress Runner<br/>npx cypress run]
         L[Playwright Runner<br/>npx playwright test]
-        M[AI Failure Analyzer<br/>--analyze flag<br/>OpenRouter DeepSeek R1]
+        M[AI Failure Analyzer<br/>--analyze flag<br/>Multi-Provider LLM]
     end
 
     A --> D

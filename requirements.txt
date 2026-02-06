@@ -5,3 +5,6 @@ langchain-core
 chromadb
 python-dotenv
 requests
+langchain-anthropic
+langchain-google-genai
+protobuf~=5.29.3

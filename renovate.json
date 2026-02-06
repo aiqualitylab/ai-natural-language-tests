@@ -1,0 +1,50 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base"
+  ],
+  "timezone": "Europe",
+  "schedule": ["before 9am on Monday"],
+  "labels": ["dependencies"],
+  "pip_requirements": {
+    "fileMatch": ["(^|/)requirements\\.txt$"]
+  },
+  "npm": {
+    "fileMatch": ["(^|/)package\\.json$"]
+  },
+  "packageRules": [
+    {
+      "matchPackageNames": ["cypress"],
+      "automerge": false
+    },
+    {
+      "matchPackageNames": ["playwright", "@playwright/test"],
+      "automerge": false
+    },
+    {
+      "matchPackageNames": ["python-dotenv", "requests"],
+      "automerge": true,
+      "automergeType": "pr",
+      "matchUpdateTypes": ["patch", "minor"]
+    },
+    {
+      "matchPackageNames": ["langchain-openai", "langgraph", "langchain-chroma", "langchain-core", "chromadb"],
+      "automerge": false
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true,
+      "automergeType": "pr",
+      "excludePackageNames": ["cypress", "playwright", "@playwright/test"]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "enabled": true
+  },
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 5,
+  "separateMinorPatch": true,
+  "separateMajorMinor": true
+}

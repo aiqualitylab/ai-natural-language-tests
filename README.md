@@ -20,6 +20,14 @@ Supports local development and CI/CD pipelines.
 
 ---
 
+## New in v3.3 — Multi-Provider LLM Support
+
+- 🤖 **3 LLM Providers**: OpenAI (ChatGPT), Anthropic (Claude), Google (Gemini)
+- ⚡ **ChatGPT Default**: No flag needed, uses `gpt-4o-mini` by default
+- 🔄 **Graceful Fallback**: Missing providers automatically fall back to OpenAI
+- 🆕 **Simple CLI**: Just add `--llm openai|anthropic|google`
+- 📦 **Optional Packages**: Install only providers you need
+
 ## New in v3.2 — Docker Support
 
 - 🐳 **Docker Compose**: Single command to build and run — no local Python or Node.js needed
@@ -137,11 +145,12 @@ python qa_automation.py --analyze -f error.log
 - Semantic pattern matching
 - Natural language to test code
 - URL-based test generation
-- AI-powered failure diagnosis
+- AI-powered failure diagnosis with 3 LLM providers
 - Traditional and cy.prompt() modes (Cypress)
 - Playwright TypeScript test generation
 - Multi-framework support via `FRAMEWORK_CONFIG`
 - Pattern library management
+- **Multi-provider LLM support**: OpenAI, Anthropic, Google
 - Docker support for zero-install usage
 
 ---
@@ -228,16 +237,35 @@ Generated tests appear in the same output directories as local setup. Pattern le
 ## Environment Variables
 
 ```bash
+# Required (default provider)
 OPENAI_API_KEY=your_key
+
+# Optional (for Anthropic)
+ANTHROPIC_API_KEY=your_key
+
+# Optional (for Google)
+GOOGLE_API_KEY=your_key
 ```
 
 ---
 
 ## Commands
 
-### Basic Generation
+### Basic Generation (ChatGPT Default)
 ```bash
 python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login
+```
+
+### Multi-Provider LLM Support
+```bash
+# Use Claude (Anthropic)
+python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --llm anthropic
+
+# Use Gemini (Google)
+python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --llm google
+
+# View available providers
+python qa_automation.py --help
 ```
 
 ### cy.prompt() Mode
@@ -290,6 +318,7 @@ Returns: `CATEGORY: SELECTOR REASON: ... FIX: ...` (via OpenAI GPT-4o-mini)
 | `--out` | Output directory for generated specs | Framework default |
 | `--use-prompt` | Use cy.prompt() style (Cypress only) | `false` |
 | `--run` | Run tests after generation | `false` |
+| `--llm` | LLM provider: `openai`, `anthropic`, `google` | `openai` |
 | `--analyze`, `-a` | Analyze a test failure log | — |
 | `--file`, `-f` | Log file to analyze | — |
 | `--list-patterns` | List all stored patterns in vector store | — |
@@ -406,6 +435,7 @@ Then create `prompts/test_generation_selenium.txt`.
 
 ## Releases
 
+**v3.3** — Multi-provider LLM support (OpenAI, Anthropic, Google)  
 **v3.2** — Docker support, docker-compose setup  
 **v3.1** — Playwright support, multi-framework architecture  
 **v3.0** — LangGraph workflows, vector pattern learning  
