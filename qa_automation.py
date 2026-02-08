@@ -619,7 +619,7 @@ Examples:
     parser.add_argument('--run', action='store_true', 
                         help='Execute tests immediately after generation using framework test runner')
     parser.add_argument('--llm', choices=list(LLM_CONFIG.keys()), default=DEFAULT_LLM,
-                        help=f'LLM provider to use for test generation: {", ".join(LLM_CONFIG.keys())} (default: {DEFAULT_LLM})')
+                        help=f'LLM provider to use for test generation: {" or ".join(LLM_CONFIG.keys())} (default: {DEFAULT_LLM})')
     parser.add_argument('--analyze', '-a', nargs='?', const='', 
                         help='Analyze test failure log using AI - provide error message directly or use with --file')
     parser.add_argument('--file', '-f', 
