@@ -1,4 +1,4 @@
-langchain-openai==0.3.35
+langchain-openai==1.1.7
 langgraph==0.6.11
 langchain-chroma==1.1.0
 langchain-core==0.3.83
