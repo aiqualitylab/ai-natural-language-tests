@@ -46,14 +46,16 @@ describe('Tests', function () {{
         const valid = this.testData.test_cases.find(tc => tc.name === 'valid_test');
         const selectors = this.testData.selectors;
         
-        // DYNAMIC: Loop through all selectors from fixture
-        Object.keys(selectors).forEach(field => {{
-            if (field !== 'submit' && valid[field]) {{
+        // DYNAMIC: Fill only real input fields that exist in both test case + selectors
+        Object.keys(valid).forEach(field => {{
+            if (selectors[field] && typeof valid[field] === 'string' && valid[field]) {{
                 cy.get(selectors[field]).type(valid[field]);
             }}
         }});
         
         cy.get(selectors.submit).click();
+        const successSelector = selectors.success_container || selectors.error_container || '#flash';
+        cy.get(successSelector).should('be.visible');
     }});
 
     it('should fail with invalid data', function () {{
@@ -61,13 +63,18 @@ describe('Tests', function () {{
         const invalid = this.testData.test_cases.find(tc => tc.name === 'invalid_test');
         const selectors = this.testData.selectors;
         
-        Object.keys(selectors).forEach(field => {{
-            if (field !== 'submit' && invalid[field]) {{
+        Object.keys(invalid).forEach(field => {{
+            if (selectors[field] && typeof invalid[field] === 'string' && invalid[field]) {{
                 cy.get(selectors[field]).type(invalid[field]);
             }}
         }});
         
         cy.get(selectors.submit).click();
+        const errorSelector = selectors.error_container || selectors.success_container || '#flash';
+        cy.get(errorSelector).should('be.visible');
+        cy.get(errorSelector).invoke('text').then((text) => {{
+            expect(text.toLowerCase()).to.match(/invalid|error|incorrect|failed/);
+        }});
     }});
 }});
 ```
@@ -139,6 +146,7 @@ CRITICAL:
 - cy.get(selectors[field]) - selectors from fixture!
 - DO NOT hardcode #username, #password, or any selector!
 - DO NOT hardcode any URL!
+- Exception: for message container only, fallback to '#flash' is allowed when fixture selectors are missing
 - Choose appropriate Cypress commands based on the requirement
 - Add meaningful assertions to verify test outcomes
 - Use cy.intercept() for API testing scenarios

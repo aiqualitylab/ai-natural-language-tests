@@ -98,6 +98,9 @@ TEST DATA GENERATION:
 CRITICAL RULES:
 - Return ONLY valid JSON (no markdown, no explanations)
 - All selectors must be valid CSS selectors
+- submit, error_container, and success_container must never be empty strings
+- If success/error use the same flash or alert element, set both fields to that same selector
+- Prefer '#flash' over '#flash-messages' when id='flash' exists in HTML
 - Include at least 2 test cases (valid + invalid)
 - Map field names to element_types
 - Include expected outcomes for each test case
