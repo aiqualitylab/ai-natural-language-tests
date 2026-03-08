@@ -279,7 +279,13 @@ def step_2_fetch_test_data(state: TestState) -> TestState:
     
     # Update state
     state.test_data = test_data
-    state.context = f"FIXTURE: {filepath}\nURL: {url}\nSELECTORS: {test_data['selectors']}"
+    state.context = (
+        f"FIXTURE: {filepath}\n"
+        f"URL: {url}\n"
+        f"SELECTORS: {json.dumps(test_data.get('selectors', {}))}\n"
+        f"TEST_CASES: {json.dumps(test_data.get('test_cases', []))}\n"
+        f"TEST_DATA_JSON: {json.dumps(test_data)}"
+    )
     
     return state
 
@@ -412,9 +418,18 @@ def step_5_run_tests(state: TestState) -> TestState:
     
     # ── Framework-aware test runner ──
     if state.framework == "playwright":
-        output_base = state.output_dir if state.output_dir != "cypress/e2e" else fw["default_output"]
-        test_path = f"{output_base}/generated"
-        cmd = f"npx playwright test {test_path}"
+        generated_specs = [
+            f'"{test["filepath"]}"'
+            for test in state.generated_tests
+            if test.get("filepath", "").endswith(fw["file_ext"])
+        ]
+
+        if generated_specs:
+            cmd = f"npx playwright test {' '.join(generated_specs)}"
+        else:
+            output_base = state.output_dir if state.output_dir != "cypress/e2e" else fw["default_output"]
+            test_path = f"{output_base}/generated"
+            cmd = f"npx playwright test {test_path}"
     else:
         folder_name = "prompt-powered" if use_prompt_mode else "generated"
         test_path = f"cypress/e2e/{folder_name}/**/*.cy.js"

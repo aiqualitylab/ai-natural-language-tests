@@ -12,8 +12,8 @@ CRITICAL RULES (NEVER VIOLATE)
 
 1. Import ONLY from '@playwright/test': import {{ test, expect }} from '@playwright/test';
 2. DO NOT import from 'fs', 'path', or any Node.js modules.
-3. DO NOT read any fixture files. DO NOT use cypress/fixtures or any JSON files.
-4. Hardcode all test data (usernames, passwords, URLs) directly in the test file.
+3. Build tests from CONTEXT values (URL/selectors/test cases). Do NOT invent unrelated selectors.
+4. Never hardcode URL, selectors, usernames, or passwords when they exist in CONTEXT.
 5. All test functions must be async: async ({{ page }}) => {{ }}
 6. Always await every Playwright call.
 7. NEVER use .waitFor() before expect(). Playwright expect() auto-waits.
@@ -23,7 +23,20 @@ CRITICAL RULES (NEVER VIOLATE)
 10. DO NOT use getByRole('alert') unless you are 100% certain the HTML element has
     role="alert". Most flash messages, toasts, and notification divs do NOT have this role.
     Use page.locator() with the actual CSS selector instead.
-11. Return ONLY valid TypeScript code. No markdown fences. No explanation.
+11. Always declare a local `testData` object at top-level and execute tests by iterating
+  `testData.test_cases` and `testData.selectors` dynamically.
+12. Fill only when BOTH conditions are true: selector exists and test case value is non-empty.
+13. Use resilient message assertions with fallback locator selection:
+  - successLocator = selectors.success_container || selectors.error_container || '#flash'
+  - errorLocator = selectors.error_container || selectors.success_container || '#flash'
+14. Do NOT hardcode app-specific success/error text unless that exact text exists in CONTEXT.
+15. Use generic outcome assertions for dynamic URLs:
+  - success-like expected: assert successLocator is visible and has non-empty text, or URL changed to a non-login path.
+  - error-like expected: assert errorLocator is visible and has non-empty text.
+16. For generic message checks, use resilient patterns such as `toContainText(/\S+/)`.
+17. NEVER assert app-specific phrases like "invalid credentials", "required", "logged into"
+   unless those exact phrases are explicitly present in CONTEXT.
+18. Return ONLY valid TypeScript code. No markdown fences. No explanation.
 
 ═══════════════════════════════════════════════════════════════
 LOCATOR SELECTION STRATEGY
