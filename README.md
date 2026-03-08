@@ -297,6 +297,11 @@ python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/lo
 python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright --run
 ```
 
+### Execution Videos
+
+- Cypress terminal execution recording: `.github/images/Cypress_execution.mp4`
+- Playwright terminal execution recording: `.github/images/Playwright_execution.mp4`
+
 ### View Patterns
 ```bash
 python qa_automation.py --list-patterns
