@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # ── Node dependencies ──────────────────────────────────────────────
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --include=dev
 
 # ── Cypress browser (Electron) ────────────────────────────────────
 RUN npx cypress install

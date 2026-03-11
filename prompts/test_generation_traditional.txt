@@ -35,6 +35,35 @@ USE THIS PATTERN (FULLY DYNAMIC - works for ANY URL):
 
 ```javascript
 describe('Tests', function () {{
+    function getSelector(selectorEntry) {{
+        if (!selectorEntry) {{
+            return null;
+        }}
+
+        if (typeof selectorEntry === 'string') {{
+            return selectorEntry;
+        }}
+
+        if (typeof selectorEntry === 'object') {{
+            return selectorEntry.fallback_css || null;
+        }}
+
+        return null;
+    }}
+
+    function fillFormFields(testCase, selectors) {{
+        const values = testCase.field_name || testCase;
+
+        Object.keys(values).forEach(function (field) {{
+            const selector = getSelector(selectors[field]);
+            const value = values[field];
+
+            if (selector && typeof value === 'string' && value) {{
+                cy.get(selector).clear().type(value);
+            }}
+        }});
+    }}
+
     beforeEach(function () {{
         cy.fixture('url_test_data').then((data) => {{
             this.testData = data;
@@ -46,15 +75,12 @@ describe('Tests', function () {{
         const valid = this.testData.test_cases.find(tc => tc.name === 'valid_test');
         const selectors = this.testData.selectors;
         
-        // DYNAMIC: Fill only real input fields that exist in both test case + selectors
-        Object.keys(valid).forEach(field => {{
-            if (selectors[field] && typeof valid[field] === 'string' && valid[field]) {{
-                cy.get(selectors[field]).type(valid[field]);
-            }}
-        }});
-        
-        cy.get(selectors.submit).click();
-        const successSelector = selectors.success_container || selectors.error_container || '#flash';
+        fillFormFields(valid, selectors);
+
+        const submitSelector = getSelector(selectors.submit);
+        cy.get(submitSelector).click();
+
+        const successSelector = getSelector(selectors.success_container) || getSelector(selectors.error_container) || '#flash';
         cy.get(successSelector).should('be.visible');
     }});
 
@@ -63,14 +89,12 @@ describe('Tests', function () {{
         const invalid = this.testData.test_cases.find(tc => tc.name === 'invalid_test');
         const selectors = this.testData.selectors;
         
-        Object.keys(invalid).forEach(field => {{
-            if (selectors[field] && typeof invalid[field] === 'string' && invalid[field]) {{
-                cy.get(selectors[field]).type(invalid[field]);
-            }}
-        }});
-        
-        cy.get(selectors.submit).click();
-        const errorSelector = selectors.error_container || selectors.success_container || '#flash';
+        fillFormFields(invalid, selectors);
+
+        const submitSelector = getSelector(selectors.submit);
+        cy.get(submitSelector).click();
+
+        const errorSelector = getSelector(selectors.error_container) || getSelector(selectors.success_container) || '#flash';
         cy.get(errorSelector).should('be.visible');
         cy.get(errorSelector).invoke('text').then((text) => {{
             expect(text.toLowerCase()).to.match(/invalid|error|incorrect|failed/);
@@ -143,7 +167,8 @@ cy.get('body').then(($body) => {{
 CRITICAL:
 - Use function() NOT arrow =>
 - cy.visit(this.testData.url) - URL from fixture!
-- cy.get(selectors[field]) - selectors from fixture!
+- Selectors can be either strings or objects. Resolve selector objects with fallback_css before using cy.get().
+- Test case form values can be flat (testCase.username) or nested (testCase.field_name.username). Support both.
 - DO NOT hardcode #username, #password, or any selector!
 - DO NOT hardcode any URL!
 - Exception: for message container only, fallback to '#flash' is allowed when fixture selectors are missing

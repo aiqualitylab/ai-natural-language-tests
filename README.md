@@ -1,6 +1,6 @@
 # AI-Powered E2E Test Generation from Natural Language
 
-An AI-powered tool that generates **Cypress** and **Playwright** end-to-end tests from natural language requirements using OpenAI's GPT-4, LangChain, LangGraph workflows, and vector store pattern learning.
+An AI-powered tool that generates **[Cypress](https://www.cypress.io/)** and **[Playwright](https://playwright.dev/)** end-to-end tests from natural language requirements using [OpenAI](https://platform.openai.com/docs/) GPT-4, [LangChain](https://python.langchain.com/docs/introduction/), [LangGraph](https://langchain-ai.github.io/langgraph/) workflows, and [ChromaDB](https://docs.trychroma.com/) vector store pattern learning.
 
 [![CI](https://github.com/aiqualitylab/ai-natural-language-tests/actions/workflows/ci.yml/badge.svg)](https://github.com/aiqualitylab/ai-natural-language-tests/actions/workflows/ci.yml)
 
@@ -30,10 +30,49 @@ Supports local development and CI/CD pipelines.
 - 🆕 **Simple CLI**: Just add `--llm openai|anthropic|google`
 - 📦 **Optional Packages**: Install only providers you need
 
+## New in v3.4 — Accessible HTML Analysis + Normalized Fixture Schema
+
+- ♿ **Accessible Locators First**: HTML analysis now prioritizes role/label/placeholder/test-id selectors
+- 🧱 **Normalized Selectors**: Each selector is stored as `{ cypress, playwright, fallback_css }`
+- 🔁 **Stable Test Data Shape**: Test inputs are normalized under `test_cases[*].field_name`
+- 🛡️ **Backfill Defaults**: Missing selector entries and test values are auto-completed for resilience
+- 🐳 **Docker Fixture Persistence**: `cypress/fixtures/` is now mounted in Compose runs
+
+### Previous Approach vs v3.4
+
+Previous approach (before v3.4):
+- HTML analysis mostly returned CSS-first selectors (for example `#id`, `.class`, `input[name='...']`)
+- Selector entries were often plain strings, not a structured cross-framework object
+- Test case values could vary in shape (flat fields vs nested data), which caused generator inconsistency
+- Dynamic URL coverage worked for many sites, but schema drift could break generated tests on some pages
+
+Current approach (v3.4):
+- Accessible-locator-first extraction (role, label, placeholder, test-id, text), with CSS fallback retained
+- Unified selector schema per field: `{ cypress, playwright, fallback_css }`
+- Unified test case payload shape: `test_cases[*].field_name`
+- Automatic normalization/backfill for missing `submit`, `error_container`, `success_container`, and missing field values
+- Better generator compatibility across Cypress and Playwright through one normalized fixture contract
+
+### Dynamic URL Behavior and Failure Handling
+
+Expected behavior:
+- With `--url`, the tool should work across dynamic websites by analyzing live HTML and producing normalized fixture data.
+
+If failures still happen:
+- Common failure modes from earlier versions (incomplete selectors, mixed test-case shapes, missing containers) are already fixed by normalization and defaults in `qa_automation.py`.
+- The generator now supports both legacy and new fixture formats for backward compatibility.
+- For site-specific runtime issues (DOM changes, delayed rendering, anti-bot behavior), re-run generation and use failure analysis:
+
+```bash
+python qa_automation.py --analyze "<test failure message>"
+```
+
+- If needed, update the generated fixture at `cypress/fixtures/url_test_data.json` and regenerate.
+
 ## New in v3.2 — Docker Support
 
 - 🐳 **Docker Compose**: Single command to build and run — no local Python or Node.js needed
-- 📦 **Tagged Images**: `docker compose build` creates `ai-natural-language-tests:v3.2`
+- 📦 **Tagged Images**: `docker compose build` creates `ai-natural-language-tests:v3.4`
 - 🔒 **Secrets Safe**: API keys injected at runtime, never baked into the image
 - 💾 **Persistent Patterns**: Vector store mounted as volume, patterns survive across runs
 
@@ -169,10 +208,10 @@ pip install -r requirements.txt
 
 echo "OPENAI_API_KEY=sk-your-key" > .env
 
-npm install cypress@15.8.1 --save-dev
+# Install all Node dependencies from package-lock.json
+npm ci
 
-# Playwright (optional)
-npm install --save-dev @playwright/test
+# Install Playwright browser runtime
 npx playwright install chromium
 ```
 
@@ -193,6 +232,10 @@ echo "OPENAI_API_KEY=sk-your-key" > .env
 ```bash
 docker compose build
 ```
+
+Note: Docker does not need a separate `npm install @testing-library/cypress --save-dev` step.
+The image uses `npm ci --include=dev`, so all dependencies from `package-lock.json`
+(including `@testing-library/cypress`) are installed automatically.
 
 **Step 3** — Generate tests
 
@@ -230,8 +273,62 @@ Generated tests appear in the same output directories as local setup. Pattern le
 |-------------------------------|--------------------------------------|
 | `cypress/e2e/generated/`     | Generated Cypress standard tests      |
 | `cypress/e2e/prompt-powered/`| Generated cy.prompt() tests           |
+| `cypress/fixtures/`          | Latest normalized HTML analysis fixture(s) |
 | `tests/generated/`           | Generated Playwright tests            |
 | `vector_db/`                 | ChromaDB pattern store persists here  |
+
+### HTML Analysis Output Schema (v3.4)
+
+`--url` analysis now writes normalized fixture data to `cypress/fixtures/url_test_data.json`.
+
+```json
+{
+  "url": "https://example.com/login",
+  "page_type": "login",
+  "selectors": {
+    "username": {
+      "cypress": "cy.findByLabelText(/username/i)",
+      "playwright": "page.getByLabel('Username')",
+      "fallback_css": "input[name='username']"
+    },
+    "submit": {
+      "cypress": "cy.findByRole('button', {name: /login/i})",
+      "playwright": "page.getByRole('button', {name: 'Login'})",
+      "fallback_css": "button[type='submit']"
+    }
+  },
+  "element_types": {
+    "username": "text",
+    "password": "password"
+  },
+  "test_cases": [
+    {
+      "name": "valid_test",
+      "description": "Test with valid data",
+      "field_name": {
+        "username": "tomsmith",
+        "password": "SuperSecretPassword!"
+      },
+      "expected": "success"
+    },
+    {
+      "name": "invalid_test",
+      "description": "Test with invalid data",
+      "field_name": {
+        "username": "invalidUser",
+        "password": "wrongPassword"
+      },
+      "expected": "error"
+    }
+  ]
+}
+```
+
+Compatibility behavior built into the generator:
+- Supports old string selectors and new selector objects
+- Resolves selector objects to `fallback_css` for traditional Cypress generation
+- Supports both flat test case values and nested `field_name` values
+- Auto-adds `submit`, `error_container`, and `success_container` when missing
 
 ---
 
@@ -394,6 +491,90 @@ ai-natural-language-tests/
 
 ---
 
+## How Tests Are Generated
+
+### Generation Pipeline (per run)
+
+Every time you run `qa_automation.py`, this five-step LangGraph workflow executes:
+
+```
+Step 1 — Initialize Vector Store
+  Load or create ChromaDB at vector_db/
+  Past patterns are available immediately
+
+Step 2 — Fetch Test Data
+  If --url is given: fetch live HTML, run AI HTML analysis,
+  write normalized fixture to cypress/fixtures/url_test_data.json
+  If --data is given: load existing fixture JSON
+  normalize_test_data() runs on every fixture to apply
+  the v3.4 schema (selector objects, field_name map, backfill defaults)
+
+Step 3 — Search Similar Patterns
+  Query vector store for the closest matching past test pattern
+  If no patterns exist (first run): generation proceeds without context
+  If patterns exist: the closest match is injected into the AI prompt
+
+Step 4 — Generate Tests
+  AI receives: requirement text + fixture data + similar pattern (if found)
+  + framework-specific prompt template (traditional / prompt-powered / playwright)
+  AI returns: complete test file source code
+  Test file is written to the output directory with a timestamped filename
+
+Step 5 — Optionally Run Tests
+  If --run is given: execute the generated spec immediately
+  Cypress: npx cypress run --spec <file>
+  Playwright: npx playwright test <file>
+  Pattern is saved to vector store after generation regardless of --run
+```
+
+### What the AI Receives
+
+For each generation call the AI prompt is assembled from:
+
+| Input | Source |
+|-------|--------|
+| Requirement text | CLI positional args |
+| Fixture JSON (selectors + test cases) | `cypress/fixtures/url_test_data.json` |
+| Flat CSS selector map | `flatten_css_selectors()` extracts `fallback_css` from fixture |
+| Similar past pattern | Vector store semantic search result |
+| Prompt template | `prompts/test_generation_traditional.txt`, `_prompt_powered.txt`, or `_playwright.txt` |
+
+### What Happens on Every New Run
+
+Each run is **additive and non-destructive** by default:
+
+- A new timestamped file is always written — existing files are never overwritten.
+- The fixture at `cypress/fixtures/url_test_data.json` **is** overwritten when `--url` is used. Save or rename it before re-running if you want to keep the previous version.
+- The new test pattern is appended to the vector store, enriching future pattern matching.
+- If `--run` is used, only the newly generated file is executed (not all files in the directory).
+
+```
+First run (no patterns):           clean AI generation from requirement + fixture
+Second run (same requirement):     AI sees the first run as a matching pattern, refines output
+Third run (different requirement): AI sees the closest prior requirement, adapts the pattern
+```
+
+Running many requirements in one command generates one file per requirement in sequence. They share the same fixture fetch (one `--url` call) but each gets its own AI generation call.
+
+---
+
+## Recommended Folder Architecture — Group by Functionality
+
+The default output directories (`cypress/e2e/generated/`, `tests/generated/`) put all generated tests in a flat list. As the test suite grows, grouping by feature or functional area improves navigability, CI scoping, and team ownership.
+
+### Summary — Architecture Decision
+
+| Approach | Best For |
+|----------|----------|
+| Flat `generated/` folder | Quick prototyping, single-page testing, early development |
+| Folder per functional area | Production suites, team ownership, CI parallelization |
+| Folder per page/URL | URL-heavy apps where each page is fully independent |
+| Folder per user journey | End-to-end flow testing (login → search → checkout) |
+
+The recommended default for a growing test suite is **folder per functional area** because it maps directly to how teams are organized, how CI pipelines are scoped, and how failures are triaged.
+
+---
+
 ## File Naming
 
 Pattern:
@@ -441,6 +622,7 @@ Then create `prompts/test_generation_selenium.txt`.
 
 ## Releases
 
+**v3.4** — Accessible HTML analysis, normalized selector schema, Docker fixture persistence  
 **v3.3** — Multi-provider LLM support (OpenAI, Anthropic, Google)  
 **v3.2** — Docker support, docker-compose setup  
 **v3.1** — Playwright support, multi-framework architecture  

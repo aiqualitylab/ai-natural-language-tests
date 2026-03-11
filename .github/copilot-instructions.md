@@ -27,7 +27,7 @@ Generate Cypress and Playwright E2E tests from natural language using OpenAI GPT
 
 **Cypress cy.prompt()** (`cypress/e2e/prompt-powered/`)
 - Self-healing with natural language
-- Requires Cypress 15.8.1+ and `experimentalCypressPrompt: true`
+- Requires Cypress 15.8.1+ and `experimentalPromptCommand: true`
 - Best for development
 
 **Playwright Standard** (`tests/generated/`)
@@ -46,12 +46,41 @@ Generate Cypress and Playwright E2E tests from natural language using OpenAI GPT
 - Loads existing test data file
 - Same structure as URL-generated data
 
-## Dynamic Test Pattern (v2.2)
+## Dynamic Test Pattern (v3.4)
 
 Tests use selectors dynamically from fixture - no hardcoded values:
 
 ```javascript
 describe('Tests', function () {
+    function getSelector(selectorEntry) {
+        if (!selectorEntry) {
+            return null;
+        }
+
+        if (typeof selectorEntry === 'string') {
+            return selectorEntry;
+        }
+
+        if (typeof selectorEntry === 'object') {
+            return selectorEntry.fallback_css || null;
+        }
+
+        return null;
+    }
+
+    function fillFormFields(testCase, selectors) {
+        const values = testCase.field_name || testCase;
+
+        Object.keys(values).forEach(function (field) {
+            const selector = getSelector(selectors[field]);
+            const value = values[field];
+
+            if (selector && typeof value === 'string' && value) {
+                cy.get(selector).clear().type(value);
+            }
+        });
+    }
+
     beforeEach(function () {
         cy.fixture('url_test_data').then((data) => {
             this.testData = data;
@@ -63,28 +92,41 @@ describe('Tests', function () {
         const valid = this.testData.test_cases.find(tc => tc.name === 'valid_test');
         const selectors = this.testData.selectors;
         
-        Object.keys(selectors).forEach(field => {
-            if (field !== 'submit' && valid[field]) {
-                cy.get(selectors[field]).type(valid[field]);
-            }
-        });
-        
-        cy.get(selectors.submit).click();
+        fillFormFields(valid, selectors);
+
+        const submitSelector = getSelector(selectors.submit);
+        cy.get(submitSelector).click();
     });
 });
 ```
 
-**Rules**: Use `function()` not `=>`, store in `this.testData`, access selectors dynamically.
+**Rules**: Use `function()` not `=>`, store in `this.testData`, resolve selector objects via `fallback_css`, and support both flat and `field_name` test values.
 
 ## Fixture JSON Structure
 
 ```json
 {
   "url": "https://example.com",
-  "selectors": {"username": "#username", "password": "#password", "submit": "button[type=submit]"},
+    "selectors": {
+        "username": {
+            "cypress": "cy.findByLabelText(/username/i)",
+            "playwright": "page.getByLabel('Username')",
+            "fallback_css": "input[name='username']"
+        },
+        "password": {
+            "cypress": "cy.findByLabelText(/password/i)",
+            "playwright": "page.getByLabel('Password')",
+            "fallback_css": "input[name='password']"
+        },
+        "submit": {
+            "cypress": "cy.findByRole('button', {name: /login/i})",
+            "playwright": "page.getByRole('button', {name: 'Login'})",
+            "fallback_css": "button[type='submit']"
+        }
+    },
   "test_cases": [
-    {"name": "valid_test", "username": "tom", "password": "secret", "expected": "success"},
-    {"name": "invalid_test", "username": "wrong", "password": "wrong", "expected": "error"}
+        {"name": "valid_test", "field_name": {"username": "tom", "password": "secret"}, "expected": "success"},
+        {"name": "invalid_test", "field_name": {"username": "wrong", "password": "wrong"}, "expected": "error"}
   ]
 }
 ```
@@ -110,8 +152,8 @@ OPENAI_API_KEY=your_key
 |---------|----------|
 | `this.testData` undefined | Use `function()` not arrow functions (Cypress) |
 | Wrong selectors | Use `--url` to fetch real selectors |
-| cy.prompt() not working | Enable `experimentalCypressPrompt: true` (Cypress only) |
-| Tests only work for one URL | Use dynamic selector pattern (v2.2) |
+| cy.prompt() not working | Enable `experimentalPromptCommand: true` (Cypress only) |
+| Tests only work for one URL | Use normalized dynamic selector pattern (v3.4) |
 | Playwright locator timeouts | Use `page.waitForLoadState('networkidle')` before locating elements |
 | Browser context issues | Ensure proper `await` usage in Playwright tests |
 
@@ -132,7 +174,7 @@ tests/
 ## Code Style
 
 - Use `function()` for Cypress tests (not arrow functions)
-- Use dynamic selectors from `this.testData.selectors`
+- Use dynamic selectors from `this.testData.selectors` and resolve selector objects with `fallback_css`
 - No hardcoded URLs or selectors
 - No emojis in output
 - Simple if/else, no complex ternaries

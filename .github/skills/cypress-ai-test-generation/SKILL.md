@@ -77,10 +77,15 @@ export OPENAI_API_KEY="your-api-key-here"
 Enable cy.prompt() in cypress.config.js:
 ```javascript
 export default defineConfig({
-  experimentalCypressPrompt: true,
+  experimentalPromptCommand: true,
   // ... other config
 })
 ```
+
+Fixture shape note:
+- `selectors` entries can be objects with `cypress`, `playwright`, and `fallback_css`
+- Cypress generation should resolve selector objects using `fallback_css`
+- Test values can be nested under `test_cases[*].field_name`
 
 ## Output Structure
 

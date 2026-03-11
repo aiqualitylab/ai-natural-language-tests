@@ -36,9 +36,6 @@ vector_db/
 cypress/videos/
 cypress/screenshots/
 cypress/downloads/
-cypress/e2e/generated/
-cypress/e2e/prompt-powered/
-cypress/fixtures/url_test_data.json
 
 # Node
 node_modules/

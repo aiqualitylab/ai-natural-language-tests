@@ -2,52 +2,54 @@
   "url": "https://the-internet.herokuapp.com/login",
   "page_type": "login",
   "selectors": {
-    "username": "#username",
-    "password": "#password",
-    "submit": "button[type='submit']",
-    "error_container": "#flash-messages",
-    "success_container": "#flash-messages"
+    "username": {
+      "cypress": "cy.findByLabelText(/username/i)",
+      "playwright": "page.getByLabel('Username')",
+      "fallback_css": "input[name='username']"
+    },
+    "password": {
+      "cypress": "cy.findByLabelText(/password/i)",
+      "playwright": "page.getByLabel('Password')",
+      "fallback_css": "input[name='password']"
+    },
+    "submit": {
+      "cypress": "cy.findByRole('button', {name: /login/i})",
+      "playwright": "page.getByRole('button', {name: 'Login'})",
+      "fallback_css": "button[type='submit']"
+    },
+    "error_container": {
+      "cypress": "cy.findByRole('alert')",
+      "playwright": "page.getByRole('alert')",
+      "fallback_css": "#flash-messages"
+    },
+    "success_container": {
+      "cypress": "cy.findByText(/success/i)",
+      "playwright": "page.getByText(/success/i)",
+      "fallback_css": "#flash-messages"
+    }
   },
   "element_types": {
     "username": "text",
     "password": "password"
   },
-  "validations": {
-    "username": {
-      "required": true,
-      "type": "text"
-    },
-    "password": {
-      "required": true,
-      "type": "password"
-    }
-  },
   "test_cases": [
     {
       "name": "valid_test",
       "description": "Test with valid data",
-      "username": "tomsmith",
-      "password": "SuperSecretPassword!",
-      "expected": "success|redirect|url_change"
+      "field_name": {
+        "username": "tomsmith",
+        "password": "SuperSecretPassword!"
+      },
+      "expected": "success"
     },
     {
       "name": "invalid_test",
       "description": "Test with invalid data",
-      "username": "invalid_user",
-      "password": "wrong_password",
-      "expected": "error|validation_message"
-    },
-    {
-      "name": "empty_test",
-      "description": "Test with empty required fields",
-      "username": "",
-      "password": "",
-      "expected": "validation_error"
+      "field_name": {
+        "username": "invalidUser",
+        "password": "wrongPassword"
+      },
+      "expected": "error"
     }
-  ],
-  "additional_elements": {
-    "links": [],
-    "modals": [],
-    "dropdowns": []
-  }
+  ]
 }

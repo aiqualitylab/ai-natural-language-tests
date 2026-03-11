@@ -33,6 +33,35 @@ PATTERN STRUCTURE:
 
 ```javascript
 describe('Tests', function () {{
+    function getSelector(selectorEntry) {{
+        if (!selectorEntry) {{
+            return null;
+        }}
+
+        if (typeof selectorEntry === 'string') {{
+            return selectorEntry;
+        }}
+
+        if (typeof selectorEntry === 'object') {{
+            return selectorEntry.fallback_css || null;
+        }}
+
+        return null;
+    }}
+
+    function fillFormFields(testCase, selectors) {{
+        const values = testCase.field_name || testCase;
+
+        Object.keys(values).forEach(function (field) {{
+            const selector = getSelector(selectors[field]);
+            const value = values[field];
+
+            if (selector && typeof value === 'string' && value) {{
+                cy.get(selector).should('be.visible').clear().type(value);
+            }}
+        }});
+    }}
+
     beforeEach(function () {{
         cy.fixture('url_test_data').then((data) => {{
             this.testData = data;
@@ -57,13 +86,10 @@ describe('Tests', function () {{
         ]);
         
         // OR use traditional Cypress with dynamic selectors
-        Object.keys(selectors).forEach(field => {{
-            if (field !== 'submit' && valid[field]) {{
-                cy.get(selectors[field]).should('be.visible').type(valid[field]);
-            }}
-        }});
-        
-        cy.get(selectors.submit).click();
+        fillFormFields(valid, selectors);
+
+        const submitSelector = getSelector(selectors.submit);
+        cy.get(submitSelector).click();
         
         // Assertions
         cy.url().should('include', valid.expected || 'success');
@@ -75,13 +101,10 @@ describe('Tests', function () {{
         const selectors = this.testData.selectors;
         
         // Dynamic form filling
-        Object.keys(selectors).forEach(field => {{
-            if (field !== 'submit' && invalid[field]) {{
-                cy.get(selectors[field]).type(invalid[field]);
-            }}
-        }});
-        
-        cy.get(selectors.submit).click();
+        fillFormFields(invalid, selectors);
+
+        const submitSelector = getSelector(selectors.submit);
+        cy.get(submitSelector).click();
         
         // Verify error state
         cy.prompt(["Verify that an error message is displayed"]);
@@ -147,8 +170,11 @@ it('hybrid approach', function () {{
     cy.prompt(["Navigate to login section"]);
     
     // Use standard Cypress for precise control
-    cy.get(this.testData.selectors.username).type(valid.username);
-    cy.get(this.testData.selectors.password).type(valid.password);
+    const selectors = this.testData.selectors;
+    const values = valid.field_name || valid;
+
+    cy.get(getSelector(selectors.username)).type(values.username);
+    cy.get(getSelector(selectors.password)).type(values.password);
     
     // Use cy.prompt() for submission and verification
     cy.prompt([
@@ -193,7 +219,8 @@ cy.prompt([
 CRITICAL RULES:
 - Use function() NOT arrow =>
 - cy.visit(this.testData.url) - URL from fixture!
-- Use this.testData.selectors for dynamic selectors
+- Selectors can be strings or objects. Use fallback_css when selector entry is an object.
+- Test case values can be flat or nested under field_name. Support both.
 - cy.prompt() steps should be clear, natural language
 - Combine cy.prompt() with standard Cypress as needed
 - Add proper assertions after cy.prompt() actions

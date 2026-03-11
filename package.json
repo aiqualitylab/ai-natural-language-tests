@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.1",
+    "@testing-library/cypress": "^10.1.0",
     "cypress": "^15.8.1"
   },
   "dependencies": {
