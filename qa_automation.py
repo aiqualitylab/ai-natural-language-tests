@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2024-2026 Sreekanth Harigovindan / AI Quality Lab
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 """
 AI-Powered Cypress & Playwright Test Generator with LangGraph & Vector Store
 """

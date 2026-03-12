@@ -514,6 +514,16 @@ Contribution standards, branch conventions, commit format, and review expectatio
 ## Change Log Highlights
 
 <details>
+<summary><strong>v3.6</strong> — Licensing clarity and release alignment</summary>
+
+- Updated Docker Compose image tag to `v3.6`.
+- Added explicit project authorship notice (`NOTICE`).
+- Added AGPL SPDX/copyright header to `qa_automation.py`.
+- Added explicit documentation copyright and CC BY 4.0 note in README footer.
+
+</details>
+
+<details>
 <summary><strong>v3.5</strong> — Grafana observability updates</summary>
 
 - Grafana observability updates for both Tempo traces and optional Loki logs.
@@ -561,6 +571,7 @@ Contribution standards, branch conventions, commit format, and review expectatio
 
 | Version | Highlights |
 |---------|------------|
+| **v3.6** | Licensing clarity updates and Docker release alignment |
 | **v3.5** | Grafana observability and Docker environment propagation updates |
 | **v3.4** | Accessible HTML analysis and normalized fixture schema |
 | **v3.3** | Multi-provider LLM support |
@@ -584,5 +595,8 @@ External writing: [Let's Automate](https://aiqualityengineer.com/)
 ---
 
 *Built with AI. Tested by AI. Ready for CI.*
+
+© 2026 AI Quality Lab / Sreekanth Harigovindan.
+Documentation licensed under CC BY 4.0.
 
 </div>
