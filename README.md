@@ -76,7 +76,7 @@ graph TB
     subgraph "Framework Generation"
         G{Cypress Framework}
         H{Playwright Framework}
-        I[Cypress Tests<br/>.cy.js files<br/>Traditional & cy prompt]
+        I[Cypress Tests<br/>.cy.js files<br/>Traditional & cy.prompt()]
         J[Playwright Tests<br/>.spec.ts files<br/>TypeScript]
     end
 
@@ -101,11 +101,11 @@ graph TB
     K --> M
     L --> M
 
-    style D fill:#e3f2fd
-    style E fill:#f3e5f5
-    style F fill:#fff3e0
-    style G fill:#c8e6c9
-    style H fill:#ffcdd2
+    style D fill:#e3f2fd,color:#333333,stroke:#666666
+    style E fill:#f3e5f5,color:#333333,stroke:#666666
+    style F fill:#fff3e0,color:#333333,stroke:#666666
+    style G fill:#c8e6c9,color:#333333,stroke:#666666
+    style H fill:#ffcdd2,color:#333333,stroke:#666666
 ```
 
 ### High-Level Components
@@ -129,13 +129,13 @@ flowchart TD
     E --> F[Step 5: Run Tests<br/>Execute via Framework Runner<br/>Optional --run flag]
     F --> G[End: Tests Executed<br/>Ready for CI/CD]
 
-    style A fill:#e1f5fe
-    style B fill:#fff3e0
-    style C fill:#c8e6c9
-    style D fill:#ffcdd2
-    style E fill:#f3e5f5
-    style F fill:#e8f5e8
-    style G fill:#f3e5f5
+    style A fill:#e1f5fe,color:#333333,stroke:#666666
+    style B fill:#fff3e0,color:#333333,stroke:#666666
+    style C fill:#c8e6c9,color:#333333,stroke:#666666
+    style D fill:#ffcdd2,color:#333333,stroke:#666666
+    style E fill:#f3e5f5,color:#333333,stroke:#666666
+    style F fill:#e8f5e8,color:#333333,stroke:#666666
+    style G fill:#f3e5f5,color:#333333,stroke:#666666
 ```
 
 Generation follows a deterministic five-step flow:
@@ -308,13 +308,13 @@ flowchart TD
     I --> E
     H --> J[Notify Developers<br/>Manual intervention]
 
-    style A fill:#e1f5fe
-    style B fill:#fff3e0
-    style C fill:#c8e6c9
-    style D fill:#ffcdd2
-    style E fill:#f3e5f5
-    style G fill:#e8f5e8
-    style J fill:#ffebee
+    style A fill:#e1f5fe,color:#333333,stroke:#666666
+    style B fill:#fff3e0,color:#333333,stroke:#666666
+    style C fill:#c8e6c9,color:#333333,stroke:#666666
+    style D fill:#ffcdd2,color:#333333,stroke:#666666
+    style E fill:#f3e5f5,color:#333333,stroke:#666666
+    style G fill:#e8f5e8,color:#333333,stroke:#666666
+    style J fill:#ffebee,color:#333333,stroke:#666666
 ```
 
 Recommended pipeline stages:
