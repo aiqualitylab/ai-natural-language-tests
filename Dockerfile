@@ -1,8 +1,8 @@
 FROM python:3.14-slim
 
-# ── Install Node.js 20 + browser dependencies ──────────────────────
+# ── Install Node.js 22 + browser dependencies ──────────────────────
 RUN apt-get update && apt-get install -y curl gnupg \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && apt-get install -y \
        libnss3 libatk-bridge2.0-0 libdrm2 libxcomposite1 \
