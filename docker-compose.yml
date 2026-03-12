@@ -1,8 +1,18 @@
 services:
   test-generator:
     build: .
-    image: ai-natural-language-tests:v3.4
+    image: ai-natural-language-tests:v3.5
     env_file: .env
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      OTEL_PROVIDER: ${OTEL_PROVIDER:-grafana}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
+      GRAFANA_LOKI_URL: ${GRAFANA_LOKI_URL:-}
+      GRAFANA_INSTANCE_ID: ${GRAFANA_INSTANCE_ID:-}
+      GRAFANA_API_TOKEN: ${GRAFANA_API_TOKEN:-}
     volumes:
       - ./cypress/e2e/generated:/app/cypress/e2e/generated
       - ./cypress/e2e/prompt-powered:/app/cypress/e2e/prompt-powered
