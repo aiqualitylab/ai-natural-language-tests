@@ -59,9 +59,54 @@ It supports both local engineering workflows and automated pipeline execution. T
 
 ## Architecture
 
-<p align="center">
-  <img src=".github/images/architecture.png" alt="System Architecture" width="600"/>
-</p>
+```mermaid
+graph TB
+    subgraph "User Input"
+        A[Natural Language<br/>Requirements]
+        B[URL/HTML Data<br/>--url flag]
+        C[JSON Test Data<br/>--data flag]
+    end
+
+    subgraph "AI & Workflow Engine"
+        D[LangGraph Workflow<br/>5-Step Process]
+        E[Multi-Provider LLM<br/>OpenAI / Anthropic / Google]
+        F[Vector Store<br/>Pattern Learning<br/>Chroma DB]
+    end
+
+    subgraph "Framework Generation"
+        G{Cypress Framework}
+        H{Playwright Framework}
+        I[Cypress Tests<br/>.cy.js files<br/>Traditional & cy prompt]
+        J[Playwright Tests<br/>.spec.ts files<br/>TypeScript]
+    end
+
+    subgraph "Execution & Analysis"
+        K[Cypress Runner<br/>npx cypress run]
+        L[Playwright Runner<br/>npx playwright test]
+        M[AI Failure Analyzer<br/>--analyze flag<br/>Multi-Provider LLM]
+    end
+
+    A --> D
+    B --> D
+    C --> D
+    D --> E
+    E --> F
+    F --> D
+    D --> G
+    D --> H
+    G --> I
+    H --> J
+    I --> K
+    J --> L
+    K --> M
+    L --> M
+
+    style D fill:#e3f2fd
+    style E fill:#f3e5f5
+    style F fill:#fff3e0
+    style G fill:#c8e6c9
+    style H fill:#ffcdd2
+```
 
 ### High-Level Components
 
@@ -75,9 +120,23 @@ It supports both local engineering workflows and automated pipeline execution. T
 
 ## Workflow
 
-<p align="center">
-  <img src=".github/images/langgraph-workflow.png" alt="5-Step LangGraph Workflow" width="500"/>
-</p>
+```mermaid
+flowchart TD
+    A[Start: User Input<br/>Requirements + Framework] --> B[Step 1: Initialize Vector Store<br/>Load/Create Chroma DB<br/>Pattern Database]
+    B --> C[Step 2: Fetch Test Data<br/>Analyze URL/HTML<br/>Extract Selectors<br/>Generate Fixtures]
+    C --> D[Step 3: Search Similar Patterns<br/>Query Vector Store<br/>Find Matching Test Patterns<br/>From Past Generations]
+    D --> E[Step 4: Generate Tests<br/>Use AI + Patterns<br/>Create Framework-Specific Code<br/>Cypress .cy.js or Playwright .spec.ts]
+    E --> F[Step 5: Run Tests<br/>Execute via Framework Runner<br/>Optional --run flag]
+    F --> G[End: Tests Executed<br/>Ready for CI/CD]
+
+    style A fill:#e1f5fe
+    style B fill:#fff3e0
+    style C fill:#c8e6c9
+    style D fill:#ffcdd2
+    style E fill:#f3e5f5
+    style F fill:#e8f5e8
+    style G fill:#f3e5f5
+```
 
 Generation follows a deterministic five-step flow:
 
@@ -236,9 +295,27 @@ python qa_automation.py --list-patterns
 
 ## CI/CD Integration
 
-<p align="center">
-  <img src=".github/images/cicd-pipeline.png" alt="CI/CD Pipeline Integration" width="500"/>
-</p>
+```mermaid
+flowchart TD
+    A[Code Changes<br/>Pushed to Repo] --> B[CI/CD Pipeline<br/>Triggers]
+    B --> C[Install Dependencies<br/>pip install -r requirements.txt<br/>npm install]
+    C --> D[Generate Tests<br/>python qa_automation.py<br/>--url or --data]
+    D --> E[Run Tests<br/>npx cypress run<br/>or npx playwright test]
+    E --> F{Tests Pass?}
+    F -->|Yes| G[Deploy Application<br/>Success]
+    F -->|No| H[AI Failure Analysis<br/>--analyze in pipeline]
+    H --> I[Auto-Fix & Regenerate<br/>If possible]
+    I --> E
+    H --> J[Notify Developers<br/>Manual intervention]
+
+    style A fill:#e1f5fe
+    style B fill:#fff3e0
+    style C fill:#c8e6c9
+    style D fill:#ffcdd2
+    style E fill:#f3e5f5
+    style G fill:#e8f5e8
+    style J fill:#ffebee
+```
 
 Recommended pipeline stages:
 
