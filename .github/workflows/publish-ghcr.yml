@@ -1,0 +1,44 @@
+name: Publish Docker Image (GHCR)
+
+# Triggers:
+#   - When you push a version tag like v3.6.0 (production publish)
+#   - workflow_dispatch lets you trigger it manually from GitHub UI (useful for testing)
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+# Grant permission to read the repo and write to GitHub Packages (GHCR)
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the code so Docker can build from it
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Step 2: Log in to GHCR using your GitHub username and a built-in token
+      # GITHUB_TOKEN is automatically provided by GitHub Actions — no manual secret needed
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 3: Build the Docker image and push it to GHCR
+      # Two tags are pushed: one pinned to the version (e.g. v3.6.0) and one always-latest
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/ai-natural-language-tests:${{ github.ref_name }}
+            ghcr.io/${{ github.repository_owner }}/ai-natural-language-tests:latest

@@ -1,7 +1,10 @@
 services:
   test-generator:
-    build: .
-    image: ai-natural-language-tests:v3.6
+    build:
+      context: .
+      args:
+        RELEASE_TAG: v3.6.0
+    image: ai-natural-language-tests:v3.6.0
     env_file: .env
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}

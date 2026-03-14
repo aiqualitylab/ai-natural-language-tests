@@ -21,6 +21,7 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 ![LangGraph](https://img.shields.io/badge/LangGraph-FF9933?logoColor=white)
 ![ChromaDB](https://img.shields.io/badge/ChromaDB-003087?logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Apache%202.0-808080?logo=docker&logoColor=white)
+![GHCR](https://img.shields.io/badge/GitHub%20Packages-GHCR-181717?logo=github&logoColor=white)
 ![Grafana](https://img.shields.io/badge/Grafana-AGPL%20v3-FF9933?logo=grafana&logoColor=white)
 ![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-Apache%202.0-003087?logo=opentelemetry&logoColor=white)
 ![Loki](https://img.shields.io/badge/Loki-AGPL%20v3-FFD700?logo=grafana&logoColor=black)
@@ -45,6 +46,7 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 - [Repository Structure](#repository-structure)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
+- [GitHub Registry (GHCR)](#github-registry-ghcr)
 - [Configuration](#configuration)
 
 ### Using the Platform
@@ -286,6 +288,36 @@ docker compose run --rm test-generator \
 ```
 
 </details>
+
+## GitHub Registry (GHCR)
+
+Pre-built Docker images are published to GitHub Container Registry. No local clone or build required.
+
+| Without GHCR | With GHCR |
+|---|---|
+| Clone → install → build → run | `docker run` — done |
+| Each user builds their own image | One image built once, shared everywhere |
+| "Works on my machine" problems | Identical environment for every user |
+
+### Pull and run
+
+```bash
+docker pull ghcr.io/aiqualitylab/ai-natural-language-tests:latest
+
+docker run --rm \
+  -e OPENAI_API_KEY=your_key \
+  ghcr.io/aiqualitylab/ai-natural-language-tests:latest \
+  "Test login" --url https://the-internet.herokuapp.com/login
+```
+
+### Image tags
+
+| Tag | Use case |
+|-----|----------|
+| `latest` | Always the most recently published version — use for quick runs |
+| `v3.6.0` | Pinned to a specific release — use in CI/CD for reproducibility |
+
+For publishing and release management, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Configuration
 

@@ -1,6 +1,6 @@
 {
   "name": "ai-natural-language-tests",
-  "version": "2.0.0",
+  "version": "3.6.0",
   "description": "AI-powered Cypress and Playwright test generation from natural language",
   "scripts": {
     "cypress:open": "cypress open",

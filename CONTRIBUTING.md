@@ -18,6 +18,7 @@ This project follows enterprise-style contribution standards to maintain reliabi
 10. Observability Requirements
 11. Code Review Checklist
 12. Release Contribution Notes
+13. Publishing a Docker Image (GHCR)
 
 ## Contribution Principles
 
@@ -175,3 +176,47 @@ If your change affects user workflows, include a short release note proposal in 
 - What changed.
 - Why it matters.
 - Any migration step required.
+
+## Publishing a Docker Image (GHCR)
+
+Only the repository maintainer publishes Docker images. Contributors open a pull request — the maintainer merges, tags, and publishes.
+
+### How the workflow works
+
+Pushing a version tag triggers `.github/workflows/publish-ghcr.yml` automatically:
+
+```
+git push origin v3.7.0
+        |
+        ▼
+GitHub Actions
+        ├── Checks out the code
+        ├── Logs in to GHCR using GITHUB_TOKEN (no manual secret needed)
+        ├── Builds the Docker image from Dockerfile
+        └── Pushes to GHCR:
+              ghcr.io/aiqualitylab/ai-natural-language-tests:v3.7.0  ← pinned
+              ghcr.io/aiqualitylab/ai-natural-language-tests:latest   ← always current
+```
+
+### When to publish a new version
+
+- A bug in test generation is fixed
+- Support for a new LLM provider is added
+- A dependency is updated (Python, Node, LangGraph, etc.)
+- The `Dockerfile` or `docker-compose.yml` is changed
+- Any change that affects how the tool behaves for end users
+
+> Without publishing, users pulling `latest` would run an outdated image. Pinned tags let users stay on a specific release and upgrade deliberately.
+
+### Steps to publish
+
+```bash
+# 1. Merge the PR and ensure main is clean
+# 2. Tag the current commit
+git tag v3.7.0
+
+# 3. Push the tag — this triggers the publish workflow
+git push origin v3.7.0
+```
+
+After ~2 minutes the image appears in the **Packages** tab of the repository.

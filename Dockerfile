@@ -1,5 +1,8 @@
 FROM python:3.14-slim
 
+ARG RELEASE_TAG=v3.6.0
+LABEL org.opencontainers.image.version=$RELEASE_TAG
+
 # ── Install Node.js 22 + browser dependencies ──────────────────────
 RUN apt-get update && apt-get install -y curl gnupg \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
