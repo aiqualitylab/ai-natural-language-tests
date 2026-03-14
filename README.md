@@ -9,6 +9,7 @@ Enterprise-grade platform to generate and execute Cypress and Playwright end-to-
 This project combines LLM-driven generation, LangGraph workflow orchestration, and vector-based pattern learning to improve test authoring speed while maintaining repeatability and CI/CD readiness.
 
 [![CI](https://github.com/aiqualitylab/ai-natural-language-tests/actions/workflows/ci.yml/badge.svg)](https://github.com/aiqualitylab/ai-natural-language-tests/actions/workflows/ci.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19020686.svg)](https://doi.org/10.5281/zenodo.19020686)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-003087?logo=python&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-22-FF9933?logo=node.js&logoColor=white)
 ![License](https://img.shields.io/badge/License-AGPL%20v3-808080)
