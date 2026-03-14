@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-ARG RELEASE_TAG=v3.6.1
+ARG RELEASE_TAG=v3.6.2
 LABEL org.opencontainers.image.version=$RELEASE_TAG
 
 # ── Install Node.js 22 + browser dependencies ──────────────────────
