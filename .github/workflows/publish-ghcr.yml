@@ -1,7 +1,7 @@
 name: Publish Docker Image (GHCR)
 
 # Triggers:
-#   - When you push a version tag like v3.6.0 (production publish)
+#   - When you push a version tag like v3.6.1 (production publish)
 #   - workflow_dispatch lets you trigger it manually from GitHub UI (useful for testing)
 on:
   push:
@@ -33,7 +33,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # Step 3: Build the Docker image and push it to GHCR
-      # Two tags are pushed: one pinned to the version (e.g. v3.6.0) and one always-latest
+      # Two tags are pushed: one pinned to the version (e.g. v3.6.1) and one always-latest
       - name: Build and push
         uses: docker/build-push-action@v6
         with:

@@ -315,7 +315,7 @@ docker run --rm \
 | Tag | Use case |
 |-----|----------|
 | `latest` | Always the most recently published version — use for quick runs |
-| `v3.6.0` | Pinned to a specific release — use in CI/CD for reproducibility |
+| `v3.6.1` | Pinned to a specific release — use in CI/CD for reproducibility |
 
 For publishing and release management, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -546,6 +546,14 @@ Contribution standards, branch conventions, commit format, and review expectatio
 ## Change Log Highlights
 
 <details>
+<summary><strong>v3.6.1</strong> — Docker runtime compatibility update</summary>
+
+- Switched Docker base image from Python 3.14 to Python 3.12 for ChromaDB/Pydantic compatibility.
+- Prepared GHCR release examples and compose tags for `v3.6.1`.
+
+</details>
+
+<details>
 <summary><strong>v3.6</strong> — Licensing clarity and release alignment</summary>
 
 - Updated Docker Compose image tag to `v3.6`.
@@ -603,6 +611,7 @@ Contribution standards, branch conventions, commit format, and review expectatio
 
 | Version | Highlights |
 |---------|------------|
+| **v3.6.1** | Docker runtime compatibility update and release tag alignment |
 | **v3.6** | Licensing clarity updates and Docker release alignment |
 | **v3.5** | Grafana observability and Docker environment propagation updates |
 | **v3.4** | Accessible HTML analysis and normalized fixture schema |
