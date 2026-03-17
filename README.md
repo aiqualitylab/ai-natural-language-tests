@@ -118,7 +118,7 @@ graph TB
     subgraph "Framework Generation"
         G{Cypress Framework}
         H{Playwright Framework}
-        I[Cypress Tests<br>.cy.js files<br>Traditional and cy.prompt]
+        I["Cypress Tests<br>.cy.js files<br>Traditional & cy.prompt()"]
         J[Playwright Tests<br>.spec.ts files<br>TypeScript]
     end
 
