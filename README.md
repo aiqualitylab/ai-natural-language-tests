@@ -104,28 +104,28 @@ It supports both local engineering workflows and automated pipeline execution. T
 ```mermaid
 graph TB
     subgraph "User Input"
-        A[Natural Language<br/>Requirements]
-        B[URL/HTML Data<br/>--url flag]
-        C[JSON Test Data<br/>--data flag]
+        A[Natural Language<br>Requirements]
+        B[URL/HTML Data<br>--url flag]
+        C[JSON Test Data<br>--data flag]
     end
 
     subgraph "AI & Workflow Engine"
-        D[LangGraph Workflow<br/>5-Step Process]
-        E[Multi-Provider LLM<br/>OpenAI / Anthropic / Google]
-        F[Vector Store<br/>Pattern Learning<br/>Chroma DB]
+        D[LangGraph Workflow<br>5-Step Process]
+        E[Multi-Provider LLM<br>OpenAI / Anthropic / Google]
+        F[Vector Store<br>Pattern Learning<br/>Chroma DB]
     end
 
     subgraph "Framework Generation"
         G{Cypress Framework}
         H{Playwright Framework}
-        I[Cypress Tests<br/>.cy.js files<br/>Traditional & cy.prompt&#40;&#41;]
-        J[Playwright Tests<br/>.spec.ts files<br/>TypeScript]
+        I[Cypress Tests<br>.cy.js files<br>Traditional & cy.prompt&#40;&#41;]
+        J[Playwright Tests<br/>.spec.ts files<br>TypeScript]
     end
 
     subgraph "Execution & Analysis"
-        K[Cypress Runner<br/>npx cypress run]
-        L[Playwright Runner<br/>npx playwright test]
-        M[AI Failure Analyzer<br/>--analyze flag<br/>Multi-Provider LLM]
+        K[Cypress Runner<br>npx cypress run]
+        L[Playwright Runner<br>npx playwright test]
+        M[AI Failure Analyzer<br>--analyze flag<br>Multi-Provider LLM]
     end
 
     A --> D
