@@ -27,6 +27,8 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 ![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-Apache%202.0-003087?logo=opentelemetry&logoColor=white)
 ![Loki](https://img.shields.io/badge/Loki-AGPL%20v3-FFD700?logo=grafana&logoColor=black)
 
+[![Website](https://img.shields.io/badge/Website-tests.aiqualitylab.org-4a7cff?style=flat-square&logo=google-chrome&logoColor=white)](https://tests.aiqualitylab.org)
+
 </div>
 
 ---
