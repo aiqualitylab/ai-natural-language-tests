@@ -647,7 +647,9 @@ External writing: [Let's Automate](https://aiqualityengineer.com/)
 
 *Built with AI. Tested by AI. Ready for CI.*
 
-© 2026 AI Quality Lab / Sreekanth Harigovindan.
+*© 2026 AI Quality Lab / [Sreekanth Harigovindan.](https://www.linkedin.com/in/sreekanthharigovindan/).*
+
+---
 Documentation licensed under CC BY 4.0.
 
 </div>
