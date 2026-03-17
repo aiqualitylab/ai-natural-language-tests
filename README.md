@@ -112,14 +112,14 @@ graph TB
     subgraph "AI & Workflow Engine"
         D[LangGraph Workflow<br>5-Step Process]
         E[Multi-Provider LLM<br>OpenAI / Anthropic / Google]
-        F[Vector Store<br>Pattern Learning<br/>Chroma DB]
+        F[Vector Store<br>Pattern Learning<br>Chroma DB]
     end
 
     subgraph "Framework Generation"
         G{Cypress Framework}
         H{Playwright Framework}
         I[Cypress Tests<br>.cy.js files<br>Traditional & cy.prompt&#40;&#41;]
-        J[Playwright Tests<br/>.spec.ts files<br>TypeScript]
+        J[Playwright Tests<br>.spec.ts files<br>TypeScript]
     end
 
     subgraph "Execution & Analysis"
