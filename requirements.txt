@@ -6,7 +6,7 @@ chromadb==1.5.5
 python-dotenv==1.2.2
 requests==2.32.5
 langchain-anthropic==0.3.22
-langchain-google-genai==2.1.12
+langchain-google-genai==4.2.1
 protobuf==5.29.3
 opentelemetry-sdk
 opentelemetry-exporter-otlp-proto-http
