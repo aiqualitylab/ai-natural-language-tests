@@ -16,17 +16,17 @@
     "test:all": "npm run cypress:run && npm run playwright:test && npm run webdriverio:test"
   },
   "devDependencies": {
-    "@wdio/cli": "^8.46.0",
-    "@wdio/globals": "^8.46.0",
-    "@wdio/local-runner": "^8.46.0",
-    "@wdio/mocha-framework": "^8.46.0",
-    "@wdio/spec-reporter": "^8.43.0",
+    "@wdio/cli": "^9.0.0",
+    "@wdio/globals": "^9.0.0",
+    "@wdio/local-runner": "^9.0.0",
+    "@wdio/mocha-framework": "^9.0.0",
+    "@wdio/spec-reporter": "^9.0.0",
     "@playwright/test": "^1.58.1",
     "@testing-library/cypress": "^10.1.0",
     "chromedriver": "^145.0.6",
     "cypress": "^15.8.1",
     "expect-webdriverio": "^4.15.4",
-    "webdriverio": "^8.46.0",
+    "webdriverio": "^9.0.0",
     "wdio-chromedriver-service": "^8.1.1"
   },
   "dependencies": {
