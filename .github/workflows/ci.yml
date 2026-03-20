@@ -1,4 +1,4 @@
-name: AI-Powered Cypress & Playwright Test Generation and Execution
+name: AI-Powered Cypress, Playwright, and WebdriverIO Test Generation and Execution
 
 on:
   push:
@@ -23,6 +23,7 @@ on:
         options:
           - 'cypress'
           - 'playwright'
+          - 'webdriverio'
       use_prompt:
         description: 'Use cy.prompt() self-healing tests (Cypress only)'
         required: false
@@ -57,13 +58,12 @@ jobs:
         run: |
           pip install -r requirements.txt
           npm install
-          
-          # Install Playwright if framework is playwright
+
           FRAMEWORK="${{ github.event.inputs.framework }}"
           if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
             FRAMEWORK="cypress"
           fi
-          
+
           if [ "$FRAMEWORK" == "playwright" ]; then
             npm install --save-dev @playwright/test
             npx playwright install chromium
@@ -113,6 +113,8 @@ jobs:
           
           if [ "$FRAMEWORK" == "playwright" ]; then
             npx playwright test tests/generated/ 2>&1 | tee test-output.log
+          elif [ "$FRAMEWORK" == "webdriverio" ]; then
+            npx wdio run wdio.conf.js 2>&1 | tee test-output.log
           else
             if [ "${{ github.event.inputs.use_prompt }}" == "true" ]; then
               SPEC_PATH="cypress/e2e/prompt-powered/**/*.cy.js"
@@ -144,4 +146,5 @@ jobs:
             cypress/screenshots/
             cypress/videos/
             tests/generated/
+            webdriverio/tests/generated/
             test-output.log

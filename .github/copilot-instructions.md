@@ -2,14 +2,14 @@
 
 ## Project Overview
 
-Generate Cypress and Playwright E2E tests from natural language using OpenAI GPT-4o-mini and LangGraph.
+Generate Cypress, Playwright, and WebdriverIO E2E tests from natural language using OpenAI GPT-4o-mini and LangGraph.
 
 ## CLI Quick Reference
 
 | Flag | Purpose |
 |------|---------|
 | `requirements` | Test descriptions (positional) |
-| `--framework`, `-f` | Target framework: `cypress` or `playwright` (default: cypress) |
+| `--framework`, `-f` | Target framework: `cypress`, `playwright`, or `webdriverio` (default: cypress) |
 | `--url`, `-u` | Fetch URL, analyze HTML, generate fixture |
 | `--data`, `-d` | Load JSON test data file |
 | `--use-prompt` | Generate cy.prompt() self-healing tests (Cypress only) |
@@ -18,7 +18,7 @@ Generate Cypress and Playwright E2E tests from natural language using OpenAI GPT
 | `--analyze`, `-a` | Diagnose test failure with AI |
 | `--file` | Log file to analyze |
 
-## Three Test Modes
+## Framework Modes
 
 **Cypress Traditional** (`cypress/e2e/generated/`)
 - Uses fixture data from `--url` or `--data`
@@ -34,6 +34,11 @@ Generate Cypress and Playwright E2E tests from natural language using OpenAI GPT
 - TypeScript tests with modern async/await
 - Multi-browser support (Chromium, Firefox, WebKit)
 - Intelligent locator strategies
+
+**WebdriverIO Standard** (`webdriverio/tests/generated/`)
+- JavaScript `.spec.js` tests using WebdriverIO with Mocha and Jest-like `expect`
+- CSS-first selectors with `browser.url()`, `$(selector)`, and resilient assertions
+- Runs through `wdio.conf.js` with Chrome + chromedriver service
 
 ## Test Data Options
 
@@ -169,6 +174,10 @@ cypress/
 
 tests/
 └── generated/          # Playwright tests
+
+webdriverio/
+└── tests/
+    └── generated/      # WebdriverIO tests
 ```
 
 ## Code Style
@@ -180,3 +189,4 @@ tests/
 - Simple if/else, no complex ternaries
 - Use async/await for Playwright tests
 - Prefer semantic locators in Playwright (getByRole, getByText, etc.)
+- Use WebdriverIO `describe`/`it` with `browser.url()`, `$(selector)`, and resilient `expect(...)` assertions

@@ -1,7 +1,7 @@
 {
   "name": "ai-natural-language-tests",
-  "version": "3.6.2",
-  "description": "AI-powered Cypress and Playwright test generation from natural language",
+  "version": "3.8.0",
+  "description": "AI-powered Cypress, Playwright, and WebdriverIO test generation from natural language",
   "scripts": {
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
@@ -11,12 +11,23 @@
     "playwright:test": "npx playwright test tests/generated/",
     "playwright:test:headed": "npx playwright test --headed tests/generated/",
     "playwright:report": "npx playwright show-report",
-    "test:all": "npm run cypress:run && npm run playwright:test"
+    "webdriverio:test": "npx wdio run wdio.conf.js",
+    "webdriverio:test:latest": "npx wdio run wdio.conf.js --spec ./webdriverio/tests/generated/*.spec.js",
+    "test:all": "npm run cypress:run && npm run playwright:test && npm run webdriverio:test"
   },
   "devDependencies": {
+    "@wdio/cli": "^8.46.0",
+    "@wdio/globals": "^8.46.0",
+    "@wdio/local-runner": "^8.46.0",
+    "@wdio/mocha-framework": "^8.46.0",
+    "@wdio/spec-reporter": "^8.43.0",
     "@playwright/test": "^1.58.1",
     "@testing-library/cypress": "^10.1.0",
-    "cypress": "^15.8.1"
+    "chromedriver": "^145.0.6",
+    "cypress": "^15.8.1",
+    "expect-webdriverio": "^4.15.4",
+    "webdriverio": "^8.46.0",
+    "wdio-chromedriver-service": "^8.1.1"
   },
   "dependencies": {
     "dotenv": "^16.0.3"

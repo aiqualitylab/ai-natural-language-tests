@@ -1,13 +1,14 @@
 FROM python:3.12-slim
 
-ARG RELEASE_TAG=v3.6.2
+ARG RELEASE_TAG=v3.8.0
 LABEL org.opencontainers.image.version=$RELEASE_TAG
 
-# ── Install Node.js 22 + browser dependencies ──────────────────────
+# ── Install Node.js 22 + browser dependencies for Cypress, Playwright, and WebdriverIO ──
 RUN apt-get update && apt-get install -y curl gnupg \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && apt-get install -y \
+         chromium chromium-driver \
        libnss3 libatk-bridge2.0-0 libdrm2 libxcomposite1 \
        libxdamage1 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 \
        libasound2 libatspi2.0-0 libgtk-3-0 libx11-xcb1 \

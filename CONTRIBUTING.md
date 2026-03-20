@@ -45,7 +45,7 @@ npx playwright install chromium
 
 Create `.env` from `.env.example` and populate required keys.
 
-`npm ci` installs Cypress from `devDependencies`; `npx cypress install` and `npx cypress verify` ensure the Cypress binary is available and healthy on the local machine.
+`npm ci` installs Cypress, Playwright, and WebdriverIO dependencies from `devDependencies`. `npx cypress install` and `npx cypress verify` ensure the Cypress binary is available, and `npx playwright install chromium` installs the Playwright browser runtime.
 
 ### Option B: Docker Setup
 
@@ -118,13 +118,14 @@ Before opening a PR, run:
 
 ```bash
 python qa_automation.py --help
-python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright
+python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework cypress
 ```
 
-If change affects runtime execution, also run:
+If change affects runtime execution, also run the relevant framework:
 
 ```bash
 python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright --run
+python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework webdriverio --run
 ```
 
 If change affects Cypress pathing or prompt mode, run at least one Cypress generation command.
@@ -186,7 +187,7 @@ Only the repository maintainer publishes Docker images. Contributors open a pull
 Pushing a version tag triggers `.github/workflows/publish-ghcr.yml` automatically:
 
 ```
-git push origin v3.6.2
+git push origin v3.8.0
         |
         ▼
 GitHub Actions
@@ -194,7 +195,7 @@ GitHub Actions
         ├── Logs in to GHCR using GITHUB_TOKEN (no manual secret needed)
         ├── Builds the Docker image from Dockerfile
         └── Pushes to GHCR:
-              ghcr.io/aiqualitylab/ai-natural-language-tests:v3.6.2  ← pinned
+                                  ghcr.io/aiqualitylab/ai-natural-language-tests:v3.8.0  ← pinned
               ghcr.io/aiqualitylab/ai-natural-language-tests:latest   ← always current
 ```
 
@@ -213,10 +214,10 @@ GitHub Actions
 ```bash
 # 1. Merge the PR and ensure main is clean
 # 2. Tag the current commit
-git tag v3.6.2
+git tag v3.8.0
 
 # 3. Push the tag — this triggers the publish workflow
-git push origin v3.6.2
+git push origin v3.8.0
 ```
 
 After ~2 minutes the image appears in the **Packages** tab of the repository.

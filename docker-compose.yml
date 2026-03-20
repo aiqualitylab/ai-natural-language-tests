@@ -3,8 +3,8 @@ services:
     build:
       context: .
       args:
-        RELEASE_TAG: v3.6.2
-    image: ai-natural-language-tests:v3.6.2
+        RELEASE_TAG: v3.8.0
+    image: ai-natural-language-tests:v3.8.0
     env_file: .env
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
@@ -21,4 +21,5 @@ services:
       - ./cypress/e2e/prompt-powered:/app/cypress/e2e/prompt-powered
       - ./cypress/fixtures:/app/cypress/fixtures
       - ./tests/generated:/app/tests/generated
+      - ./webdriverio/tests/generated:/app/webdriverio/tests/generated
       - ./vector_db:/app/vector_db

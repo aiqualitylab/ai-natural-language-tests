@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 """
-AI-Powered Cypress & Playwright Test Generator with LangGraph & Vector Store
+AI-Powered Cypress, Playwright, and WebdriverIO test generator with LangGraph & Vector Store
 """
 
 import os
@@ -129,6 +129,15 @@ FRAMEWORK_CONFIG = {
         "run_cmd": "npx playwright test",
         "code_fence": "typescript",
         "prompt_file_standard": "test_generation_playwright.txt",
+        "supports_prompt_mode": False,
+    },
+    "webdriverio": {
+        "name": "WebdriverIO",
+        "file_ext": ".spec.js",
+        "default_output": "webdriverio/tests",
+        "run_cmd": "npx wdio run wdio.conf.js",
+        "code_fence": "javascript",
+        "prompt_file_standard": "test_generation_webdriverio.txt",
         "supports_prompt_mode": False,
     },
 }
@@ -286,7 +295,7 @@ def step_4_generate_tests(state: TestState) -> TestState:
         use_prompt_mode = state.use_prompt and fw["supports_prompt_mode"]
 
         if state.use_prompt and not fw["supports_prompt_mode"]:
-            logger.warning(f"--use-prompt ignored: {fw['name']} does not support cy.prompt()")
+            logger.warning(f"--use-prompt ignored: {fw['name']} does not support prompt-powered mode")
 
         llm = get_llm(state.llm_provider)
         generated_tests = []
@@ -308,6 +317,8 @@ def step_4_generate_tests(state: TestState) -> TestState:
                     content = content.split("```typescript")[1].split("```")[0].strip()
                 elif "```javascript" in content:
                     content = content.split("```javascript")[1].split("```")[0].strip()
+                elif "```js" in content:
+                    content = content.split("```js")[1].split("```")[0].strip()
                 elif "```" in content:
                     content = content.split("```")[1].split("```")[0].strip()
 
@@ -354,13 +365,22 @@ def step_5_run_tests(state: TestState) -> TestState:
             specs = [f'"{t["filepath"]}"' for t in state.generated_tests if t.get("filepath", "").endswith(fw["file_ext"])]
             cmd = f"npx playwright test {' '.join(specs)}" if specs else \
                   f"npx playwright test {state.output_dir if state.output_dir != 'cypress/e2e' else fw['default_output']}/generated"
+            logger.info(f"Running: {cmd}")
+            span.set_attribute("run_command", cmd)
+            exit_code = os.system(cmd)
+        elif state.framework == "webdriverio":
+            spec_paths = [t["filepath"] for t in state.generated_tests if t.get("filepath", "").endswith(fw["file_ext"])]
+            spec_arg = ",".join(spec_paths)
+            cmd = f'npx wdio run wdio.conf.js --spec "{spec_arg}"' if spec_arg else "npx wdio run wdio.conf.js"
+            logger.info(f"Running: {cmd}")
+            span.set_attribute("run_command", cmd)
+            exit_code = os.system(cmd)
         else:
             folder_name = "prompt-powered" if use_prompt_mode else "generated"
             cmd = f"npx cypress run --spec 'cypress/e2e/{folder_name}/**/*.cy.js'"
-
-        logger.info(f"Running: {cmd}")
-        span.set_attribute("run_command", cmd)
-        exit_code = os.system(cmd)
+            logger.info(f"Running: {cmd}")
+            span.set_attribute("run_command", cmd)
+            exit_code = os.system(cmd)
 
         state.test_results = {"exit_code": exit_code, "success": exit_code == 0, "timestamp": datetime.now().isoformat()}
         span.set_attribute("exit_code", exit_code)
@@ -448,7 +468,8 @@ def generate_tests_action(args: argparse.Namespace) -> None:
         logger.info("=" * 50)
         logger.info("GENERATION COMPLETE")
         logger.info("=" * 50)
-        logger.info(f"Framework: {args.framework.upper()}")
+        framework_name = FRAMEWORK_CONFIG.get(args.framework, {}).get("name", args.framework)
+        logger.info(f"Framework: {framework_name}")
         logger.info(f"Generated tests: {len(final_state['generated_tests'])}")
         logger.info(f"Similar patterns used: {len(final_state['similar_patterns'])}")
         for test in final_state["generated_tests"]:
@@ -461,16 +482,17 @@ def generate_tests_action(args: argparse.Namespace) -> None:
 # MAIN
 
 def main() -> None:
-    logger.info("AI-Powered Test Generator (Cypress & Playwright)")
+    logger.info("AI-Powered Test Generator (Cypress, Playwright, and WebdriverIO)")
     logger.info("With LangGraph Workflows and Vector Store Learning")
 
     parser = argparse.ArgumentParser(
-        description="AI Test Generator — Cypress & Playwright",
+        description="AI Test Generator — Cypress, Playwright, and WebdriverIO",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   python qa_automation.py "Test login" --url https://example.com/login
   python qa_automation.py "Test login" --url https://example.com/login --framework playwright
+  python qa_automation.py "Test login" --url https://example.com/login --framework webdriverio
   python qa_automation.py "Test login" --url https://example.com/login --use-prompt
   python qa_automation.py "Test login" --url https://example.com/login --run
   python qa_automation.py "Test login" --url https://example.com/login --llm anthropic
@@ -480,7 +502,12 @@ Examples:
 """
     )
     parser.add_argument("requirements", nargs="*", help="Test requirements in natural language")
-    parser.add_argument("--framework", "-fw", choices=["cypress", "playwright"], default="cypress")
+    parser.add_argument(
+        "--framework",
+        "-fw",
+        choices=["cypress", "playwright", "webdriverio"],
+        default="cypress",
+    )
     parser.add_argument("--url", "-u")
     parser.add_argument("--out", default="cypress/e2e")
     parser.add_argument("--use-prompt", action="store_true")

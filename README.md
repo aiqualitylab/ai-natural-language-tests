@@ -4,7 +4,7 @@
 
 > *Describe tests in plain English. AI writes the code.*
 
-Enterprise-grade platform to generate and execute Cypress and Playwright end-to-end tests from natural language requirements.
+Enterprise-grade platform to generate and execute Cypress, Playwright, and WebdriverIO end-to-end tests from natural language requirements.
 
 This project combines LLM-driven generation, LangGraph workflow orchestration, and vector-based pattern learning to improve test authoring speed while maintaining repeatability and CI/CD readiness.
 
@@ -18,6 +18,7 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 ![Google](https://img.shields.io/badge/Google-Gemini-003087?logo=google&logoColor=white)
 ![Cypress](https://img.shields.io/badge/Cypress-FF9933?logo=cypress&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-003087?logo=playwright&logoColor=white)
+![WebdriverIO](https://img.shields.io/badge/WebdriverIO-EA5906?logo=webdriverio&logoColor=white)
 ![LangChain](https://img.shields.io/badge/LangChain-1A1A1A?logo=langchain&logoColor=FF9933)
 ![LangGraph](https://img.shields.io/badge/LangGraph-FF9933?logoColor=white)
 ![ChromaDB](https://img.shields.io/badge/ChromaDB-003087?logoColor=white)
@@ -72,6 +73,7 @@ The platform translates natural language requirements into executable E2E tests 
 |-----------|--------|-------|
 | Cypress | `.cy.js` | Traditional & prompt-powered |
 | Playwright | `.spec.ts` | TypeScript async/await |
+| WebdriverIO | `.spec.js` | Mocha runner with Jest-like `expect` |
 
 It supports both local engineering workflows and automated pipeline execution. The generator uses contextual data from live HTML analysis and historical pattern matching to produce stable, maintainable test assets.
 
@@ -95,6 +97,7 @@ It supports both local engineering workflows and automated pipeline execution. T
 | LLM Support | Multi-provider: OpenAI, Anthropic, Google |
 | Cypress Modes | Traditional mode and Cypress prompt-powered mode |
 | Playwright | TypeScript generation |
+| WebdriverIO | JavaScript `.spec.js` generation with Mocha and Chrome runner support |
 | Execution | Optional immediate test execution after generation |
 | Tracing | OpenTelemetry trace export to Grafana Tempo |
 | Logging | Optional log shipping to Grafana Loki |
@@ -104,28 +107,31 @@ It supports both local engineering workflows and automated pipeline execution. T
 ```mermaid
 graph TB
     subgraph "User Input"
-        A[Natural Language<br>Requirements]
-        B[URL/HTML Data<br>--url flag]
-        C[JSON Test Data<br>--data flag]
+        A[Natural Language<br/>Requirements]
+        B[URL/HTML Data<br/>--url flag]
+        C[JSON Test Data<br/>--data flag]
     end
 
     subgraph "AI & Workflow Engine"
-        D[LangGraph Workflow<br>5-Step Process]
-        E[Multi-Provider LLM<br>OpenAI / Anthropic / Google]
-        F[Vector Store<br>Pattern Learning<br>Chroma DB]
+        D[LangGraph Workflow<br/>5-Step Process]
+        E[Multi-Provider LLM<br/>OpenAI / Anthropic / Google]
+        F[Vector Store<br/>Pattern Learning<br/>Chroma DB]
     end
 
     subgraph "Framework Generation"
         G{Cypress Framework}
         H{Playwright Framework}
-        I["Cypress Tests<br>.cy.js files<br>Traditional & cy.prompt()"]
-        J[Playwright Tests<br>.spec.ts files<br>TypeScript]
+        W{WebdriverIO Framework}
+        I[Cypress Tests<br/>.cy.js files<br/>Traditional & cy.prompt&#40;&#41;]
+        J[Playwright Tests<br/>.spec.ts files<br/>TypeScript]
+        X[WebdriverIO Tests<br/>.spec.js files<br/>Mocha + expect]
     end
 
     subgraph "Execution & Analysis"
-        K[Cypress Runner<br>npx cypress run]
-        L[Playwright Runner<br>npx playwright test]
-        M[AI Failure Analyzer<br>--analyze flag<br>Multi-Provider LLM]
+        K[Cypress Runner<br/>npx cypress run]
+        L[Playwright Runner<br/>npx playwright test]
+        M[AI Failure Analyzer<br/>--analyze flag<br/>Multi-Provider LLM]
+        P[WebdriverIO Runner<br/>npx wdio run]
     end
 
     A --> D
@@ -136,18 +142,23 @@ graph TB
     F --> D
     D --> G
     D --> H
+    D --> W
     G --> I
     H --> J
+    W --> X
     I --> K
     J --> L
+    X --> P
     K --> M
     L --> M
+    P --> M
 
     style D fill:#e3f2fd,color:#333333,stroke:#666666
     style E fill:#f3e5f5,color:#333333,stroke:#666666
     style F fill:#fff3e0,color:#333333,stroke:#666666
     style G fill:#c8e6c9,color:#333333,stroke:#666666
     style H fill:#ffcdd2,color:#333333,stroke:#666666
+    style W fill:#ffe0b2,color:#333333,stroke:#666666
 ```
 
 <details>
@@ -170,7 +181,7 @@ flowchart TD
     A[Start: User Input<br/>Requirements + Framework] --> B[Step 1: Initialize Vector Store<br/>Load/Create Chroma DB<br/>Pattern Database]
     B --> C[Step 2: Fetch Test Data<br/>Analyze URL/HTML<br/>Extract Selectors<br/>Generate Fixtures]
     C --> D[Step 3: Search Similar Patterns<br/>Query Vector Store<br/>Find Matching Test Patterns<br/>From Past Generations]
-    D --> E[Step 4: Generate Tests<br/>Use AI + Patterns<br/>Create Framework-Specific Code<br/>Cypress .cy.js or Playwright .spec.ts]
+    D --> E[Step 4: Generate Tests<br/>Use AI + Patterns<br/>Create Framework-Specific Code<br/>Cypress, Playwright, or WebdriverIO]
     E --> F[Step 5: Run Tests<br/>Execute via Framework Runner<br/>Optional --run flag]
     F --> G[End: Tests Executed<br/>Ready for CI/CD]
 
@@ -201,7 +212,7 @@ Generation follows a deterministic five-step flow:
 | Workflow | LangChain + LangGraph |
 | Vector Store | ChromaDB vector store |
 | LLM Backends | OpenAI / Anthropic / Google |
-| Test Runners | Cypress and Playwright runners |
+| Test Runners | Cypress, Playwright, and WebdriverIO runners |
 | Observability | OpenTelemetry SDK and OTLP exporter |
 | Logging | Loki logging handler (optional) |
 
@@ -219,11 +230,15 @@ ai-natural-language-tests/
 |   `-- fixtures/
 |-- tests/
 |   `-- generated/
+|-- webdriverio/
+|   `-- tests/
+|       `-- generated/
 |-- prompts/
 |-- vector_db/
 |-- qa_automation.py
 |-- cypress.config.js
 |-- playwright.config.ts
+|-- wdio.conf.js
 |-- package.json
 |-- requirements.txt
 |-- Dockerfile
@@ -238,7 +253,7 @@ ai-natural-language-tests/
 | Requirement | Version / Notes |
 |-------------|------------------|
 | Python | 3.10+ |
-| Node.js | 18+ |
+| Node.js | 22+ |
 | npm | latest |
 | Git | latest |
 | Playwright browsers | `npx playwright install chromium` |
@@ -316,7 +331,7 @@ docker run --rm \
 | Tag | Use case |
 |-----|----------|
 | `latest` | Always the most recently published version — use for quick runs |
-| `v3.6.2` | Pinned to a specific release — use in CI/CD for reproducibility |
+| `v3.8.0` | Pinned to a specific release — use in CI/CD for reproducibility |
 
 For publishing and release management, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -363,6 +378,7 @@ GRAFANA_API_TOKEN=<logs_write_token>
 |------|---------|
 | Cypress (default) | `python qa_automation.py "requirement" --url <url>` |
 | Playwright | `python qa_automation.py "requirement" --url <url> --framework playwright` |
+| WebdriverIO | `python qa_automation.py "requirement" --url <url> --framework webdriverio` |
 | Prompt-powered Cypress | `python qa_automation.py "requirement" --url <url> --use-prompt` |
 | Generate + Execute | `python qa_automation.py "requirement" --url <url> --run` |
 | Failure Analysis | `python qa_automation.py --analyze "error message"` |
@@ -405,6 +421,17 @@ python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/lo
 
 ```bash
 python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright
+```
+
+</details>
+
+### Generate WebdriverIO Test
+
+<details>
+<summary>Show command</summary>
+
+```bash
+python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework webdriverio
 ```
 
 </details>
@@ -470,7 +497,7 @@ flowchart TD
     A[Code Changes<br/>Pushed to Repo] --> B[CI/CD Pipeline<br/>Triggers]
     B --> C[Install Dependencies<br/>pip install -r requirements.txt<br/>npm install]
     C --> D[Generate Tests<br/>python qa_automation.py<br/>--url or --data]
-    D --> E[Run Tests<br/>npx cypress run<br/>or npx playwright test]
+    D --> E[Run Tests<br/>npx cypress run<br/>npx playwright test<br/>npx wdio run]
     E --> F{Tests Pass?}
     F -->|Yes| G[Deploy Application<br/>Success]
     F -->|No| H[AI Failure Analysis<br/>--analyze in pipeline]
@@ -534,17 +561,40 @@ Recommended pipeline stages:
 > - In Grafana Explore, query Tempo with `service.name="ai-natural-language-tests"`.
 > - In Grafana Loki, query labels: `{service_name="ai-natural-language-tests"}`.
 
-## Contributing
-
-Contribution standards, branch conventions, commit format, and review expectations are documented in `CONTRIBUTING.md`.
-
 > [!TIP]
-> **Playwright Runtime Issues**
+> **Switching to Headed Mode for Debugging**
 >
-> - Install required browser runtime.
+> Tests run headless by default. To debug interactively, switch your framework config:
+>
+> **Cypress:**
+> - Edit `cypress.config.js` and add `headed: true` after `browser: 'chrome'`
+> - Or run: `npx cypress run --headed --spec 'cypress/e2e/generated/*.cy.js'`
+>
+> **Playwright:**
+> - Edit `playwright.config.ts` and change `headless: true` → `headless: false`
+> - Or run: `npx playwright test --headed tests/generated/`
+>
+> **WebdriverIO:**
+> - Edit `wdio.conf.js` and comment out `'--headless=new'` from the args array
+>
+> **Docker Headed Mode (with X11 forwarding):**
+> ```bash
+> docker build --target debug -t ai-tests:debug .
+> docker run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix ai-tests:debug
+> ```
+
 > - Retry with generated single-spec command from logs.
 
 ## Change Log Highlights
+
+<details>
+<summary><strong>v3.8.0</strong> — WebdriverIO framework support</summary>
+
+- Added WebdriverIO `.spec.js` generation with Mocha runner support and Jest-like expectations.
+- Added `wdio.conf.js`, Docker/CI/runtime wiring, and generated output path support for WebdriverIO.
+- Bumped version references to `v3.8.0` across release-tagged files.
+
+</details>
 
 <details>
 <summary><strong>v3.6.2</strong> — Version alignment and release bump</summary>
@@ -620,6 +670,7 @@ Contribution standards, branch conventions, commit format, and review expectatio
 
 | Version | Highlights |
 |---------|------------|
+| **v3.8.0** | WebdriverIO framework support across generation, Docker, CI, and docs |
 | **v3.6.2** | Version alignment and release bump |
 | **v3.6.1** | Docker runtime compatibility update and release tag alignment |
 | **v3.6** | Licensing clarity updates and Docker release alignment |
@@ -632,16 +683,6 @@ Contribution standards, branch conventions, commit format, and review expectatio
 | **v2.2** | Dynamic test generation |
 | **v2.1** | AI failure analyzer |
 | **v2.0** | Cypress prompt-powered mode |
-
----
-
-<div align="center">
-
-## Support
-
-Documentation updates and issues: repository Issues tab
-
-External writing: [Let's Automate](https://aiqualityengineer.com/)
 
 ---
 
