@@ -235,7 +235,7 @@ ai-natural-language-tests/
 |-- webdriverio/
 |   `-- tests/
 |       `-- generated/
-|-- prompts/
+|-- prompt_specs/
 |-- vector_db/
 |-- qa_automation.py
 |-- cypress.config.js
@@ -333,7 +333,7 @@ docker run --rm \
 | Tag | Use case |
 |-----|----------|
 | `latest` | Always the most recently published version — use for quick runs |
-| `v3.8.0` | Pinned to a specific release — use in CI/CD for reproducibility |
+| `v3.9.0` | Pinned to a specific release — use in CI/CD for reproducibility |
 
 For publishing and release management, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -590,6 +590,15 @@ Recommended pipeline stages:
 ## Change Log Highlights
 
 <details>
+<summary><strong>v3.9.0</strong> — YAML prompt spec migration</summary>
+
+- Migrated prompt templates from `prompts/*.txt` to `prompt_specs/*.yaml`.
+- Updated generation and failure-analysis flows to load prompt specs from YAML.
+- Aligned runtime and release tag references to `v3.9.0`.
+
+</details>
+
+<details>
 <summary><strong>v3.8.0</strong> — WebdriverIO framework support</summary>
 
 - Added WebdriverIO `.spec.js` generation with Mocha runner support and Jest-like expectations.
@@ -672,6 +681,7 @@ Recommended pipeline stages:
 
 | Version | Highlights |
 |---------|------------|
+| **v3.9.0** | YAML prompt spec migration and release tag alignment |
 | **v3.8.0** | WebdriverIO framework support across generation, Docker, CI, and docs |
 | **v3.6.2** | Version alignment and release bump |
 | **v3.6.1** | Docker runtime compatibility update and release tag alignment |

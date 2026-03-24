@@ -1,0 +1,58 @@
+name: failure_analysis
+
+version: 1
+
+metadata:
+
+  category: analysis
+
+  output: three-line-text
+
+system: |
+
+  You are an expert test automation engineer for Cypress, Playwright, and WebdriverIO.
+
+template: |
+
+  Analyze this test failure log.
+
+
+
+  Detect framework from these hints:
+
+  - Cypress: cy.* commands or CypressError
+
+  - Playwright: page.* calls or Playwright
+
+  - WebdriverIO: webdriverio, wdio, browser.$, or $(selector)
+
+
+
+  Use one category from: SELECTOR, TIMING, ASSERTION, NETWORK, STATE, NAVIGATION, INTERACTION, CONFIGURATION.
+
+
+
+  Return exactly these lines:
+
+  CATEGORY: <CATEGORY>
+
+  REASON: <one concise line>
+
+  FIX: <one specific actionable fix with framework-appropriate command examples>
+
+
+
+  Rules:
+
+  - Return exactly 3 lines in the required order
+
+  - Keep REASON concise
+
+  - Make FIX specific and actionable
+
+
+
+  LOG:
+
+  {log}
+

@@ -13,6 +13,7 @@ import json
 import argparse
 import requests
 import logging
+import yaml
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Optional, Any
@@ -79,7 +80,7 @@ except ImportError:
     ChatGoogleGenerativeAI = None
 
 
-PROMPT_DIR = Path(__file__).parent / "prompts"
+PROMPT_SPEC_DIR = Path(__file__).parent / "prompt_specs"
 VECTOR_DB_DIR = Path(__file__).parent / "vector_db"
 
 LLM_CONFIG = {
@@ -89,6 +90,17 @@ LLM_CONFIG = {
 }
 
 DEFAULT_LLM = "openai"
+
+ALLOWED_FAILURE_CATEGORIES = {
+    "SELECTOR",
+    "TIMING",
+    "ASSERTION",
+    "NETWORK",
+    "STATE",
+    "NAVIGATION",
+    "INTERACTION",
+    "CONFIGURATION",
+}
 
 
 def get_llm(provider: str = DEFAULT_LLM) -> Any:
@@ -118,8 +130,8 @@ FRAMEWORK_CONFIG = {
         "default_output": "cypress/e2e",
         "run_cmd": "npx cypress run --spec",
         "code_fence": "javascript",
-        "prompt_file_standard": "test_generation_traditional.txt",
-        "prompt_file_prompt": "test_generation_prompt_powered.txt",
+        "prompt_file_standard": "test_generation_traditional.yaml",
+        "prompt_file_prompt": "test_generation_prompt_powered.yaml",
         "supports_prompt_mode": True,
     },
     "playwright": {
@@ -128,7 +140,7 @@ FRAMEWORK_CONFIG = {
         "default_output": "tests",
         "run_cmd": "npx playwright test",
         "code_fence": "typescript",
-        "prompt_file_standard": "test_generation_playwright.txt",
+        "prompt_file_standard": "test_generation_playwright.yaml",
         "supports_prompt_mode": False,
     },
     "webdriverio": {
@@ -137,7 +149,7 @@ FRAMEWORK_CONFIG = {
         "default_output": "webdriverio/tests",
         "run_cmd": "npx wdio run wdio.conf.js",
         "code_fence": "javascript",
-        "prompt_file_standard": "test_generation_webdriverio.txt",
+        "prompt_file_standard": "test_generation_webdriverio.yaml",
         "supports_prompt_mode": False,
     },
 }
@@ -199,9 +211,33 @@ class TestState:
 
 # UTILITIES
 
-def load_prompt_file(filename: str, **variables: Any) -> str:
-    logger.info(f"Loading prompt: {filename}")
-    return (PROMPT_DIR / filename).read_text(encoding="utf-8").format(**variables)
+def load_prompt_template(filename: str, **variables: Any) -> str:
+    spec = load_prompt_spec(filename, required_keys=["template"])
+    template = str(spec.get("template", ""))
+    return template.format(**variables)
+
+
+def load_prompt_spec(filename: str, required_keys: Optional[List[str]] = None) -> Dict[str, Any]:
+    logger.info(f"Loading prompt spec: {filename}")
+    spec_path = PROMPT_SPEC_DIR / filename
+    with open(spec_path, "r", encoding="utf-8") as file:
+        spec = yaml.safe_load(file) or {}
+
+    # Validate required keys strictly, but keep recommended keys as warnings.
+    missing_required = [key for key in (required_keys or []) if key not in spec]
+    if missing_required:
+        raise ValueError(f"Prompt spec '{filename}' is missing required key '{missing_required[0]}'")
+
+    for key in ("name", "version", "metadata"):
+        if key not in spec:
+            logger.warning(f"Prompt spec '{filename}' is missing recommended key '{key}'")
+
+    return spec
+
+
+def load_prompt_system(filename: str) -> str:
+    spec = load_prompt_spec(filename)
+    return str(spec.get("system", ""))
 
 
 # WORKFLOW NODES — every step has its own span ✅
@@ -234,7 +270,7 @@ def step_2_fetch_test_data(state: TestState) -> TestState:
         span.set_attribute("html_length", len(html))
 
         llm = get_llm(state.llm_provider)
-        prompt = load_prompt_file("html_analysis.txt", url=state.url, html=html)
+        prompt = load_prompt_template("html_analysis.yaml", url=state.url, html=html)
         ai_response = llm.invoke(prompt)
         content = ai_response.content.strip()
 
@@ -309,7 +345,7 @@ def step_4_generate_tests(state: TestState) -> TestState:
                 test_span.set_attribute("framework", state.framework)
 
                 prompt_file = fw["prompt_file_prompt"] if use_prompt_mode else fw["prompt_file_standard"]
-                prompt = load_prompt_file(prompt_file, requirement=requirement, context=state.context)
+                prompt = load_prompt_template(prompt_file, requirement=requirement, context=state.context)
                 ai_response = llm.invoke(prompt)
                 content = ai_response.content
 
@@ -415,21 +451,57 @@ def create_workflow() -> Any:
 
 # ACTIONS
 
+def build_failure_analysis_messages(log_text: str) -> List[Dict[str, str]]:
+    system_content = load_prompt_system("failure_analysis.yaml")
+    user_content = load_prompt_template("failure_analysis.yaml", log=log_text)
+    return [
+        {"role": "system", "content": system_content},
+        {"role": "user", "content": user_content},
+    ]
+
+
+def _read_value(content: str, key: str) -> str:
+    prefix = f"{key}:"
+    for line in content.splitlines():
+        clean_line = line.strip()
+        if clean_line.upper().startswith(prefix):
+            return clean_line[len(prefix):].strip()
+    return ""
+
+
+def format_failure_analysis(content: str) -> str:
+    category = _read_value(content, "CATEGORY").upper()
+    reason = _read_value(content, "REASON")
+    fix = _read_value(content, "FIX")
+
+    if category not in ALLOWED_FAILURE_CATEGORIES:
+        category = "CONFIGURATION"
+
+    if not reason:
+        reason = "Unable to determine root cause from log; output did not include structured reason."
+
+    if not fix:
+        fix = "Add explicit waits/assertions around the failing step and verify selectors for the detected framework."
+
+    return f"CATEGORY: {category}\nREASON: {reason}\nFIX: {fix}"
+
 def analyze_test_failure(log_text: str) -> str:
     with tracer.start_as_current_span("analyze_test_failure") as span:
         logger.info("Analyzing test failure")
         span.set_attribute("log_length", len(log_text))
-        prompt_path = PROMPT_DIR / "failure_analysis.txt"
-        with open(prompt_path, "r") as f:
-            prompt = f.read().replace("{log}", log_text)
+        messages = build_failure_analysis_messages(log_text)
         response = requests.post(
             url="https://api.openai.com/v1/chat/completions",
             headers={"Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}", "Content-Type": "application/json"},
-            json={"model": "gpt-4o-mini", "messages": [{"role": "user", "content": prompt}], "max_tokens": 300}
+            json={"model": "gpt-4o-mini", "messages": messages, "max_tokens": 300}
         )
         logger.info("Analysis complete")
         span.set_attribute("success", response.ok)
-        return response.json()["choices"][0]["message"]["content"] if response.ok else f"Error: {response.text}"
+        if not response.ok:
+            return f"Error: {response.text}"
+
+        content = response.json()["choices"][0]["message"]["content"]
+        return format_failure_analysis(content)
 
 
 def list_all_patterns() -> None:

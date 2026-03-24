@@ -1,0 +1,202 @@
+name: html_analysis
+version: 1
+metadata:
+  category: generation
+template: |
+  You are an expert web automation engineer.
+
+  
+
+  Analyze this HTML and generate test data using accessible locators that work on any website.
+
+  
+
+  URL: {url}
+
+  HTML:
+
+  {html}
+
+  
+
+  LOCATOR RULES:
+
+  - For Cypress: use @testing-library/cypress commands
+
+  - For Playwright: use native locator methods
+
+  - Do NOT return raw CSS selectors like #id or .class
+
+  - Find elements the way a real user would: by role, label, placeholder, text
+
+  
+
+  LOCATOR PRIORITY (use the first one that applies):
+
+  1. Role + name: button "Login", link "Sign up", textbox "Email"
+
+  2. Label text: the label associated with an input
+
+  3. Placeholder text: placeholder attribute
+
+  4. Test ID: data-testid, data-test, data-cy attributes
+
+  5. Visible text: button text, link text
+
+  6. Only as last resort: CSS selector
+
+  
+
+  Return ONLY valid JSON:
+
+  
+
+  {{
+
+    "url": "{url}",
+
+    "page_type": "login|signup|checkout|search|form|dashboard|other",
+
+    "selectors": {{
+
+      "field_name": {{
+
+        "cypress": "cy.findByRole('textbox', {{name: /email/i}})",
+
+        "playwright": "page.getByRole('textbox', {{name: 'Email'}})",
+
+        "fallback_css": "input[name='email']"
+
+      }},
+
+      "submit": {{
+
+        "cypress": "cy.findByRole('button', {{name: /login/i}})",
+
+        "playwright": "page.getByRole('button', {{name: 'Login'}})",
+
+        "fallback_css": "button[type='submit']"
+
+      }},
+
+      "error_container": {{
+
+        "cypress": "cy.findByRole('alert')",
+
+        "playwright": "page.getByRole('alert')",
+
+        "fallback_css": "#flash"
+
+      }},
+
+      "success_container": {{
+
+        "cypress": "cy.findByText(/success/i)",
+
+        "playwright": "page.getByText(/success/i)",
+
+        "fallback_css": "#flash"
+
+      }}
+
+    }},
+
+    "element_types": {{
+
+      "field_name": "text|email|password|number|checkbox|radio|select|textarea"
+
+    }},
+
+    "test_cases": [
+
+      {{
+
+        "name": "valid_test",
+
+        "description": "Test with valid data",
+
+        "field_name": "valid_value",
+
+        "expected": "success"
+
+      }},
+
+      {{
+
+        "name": "invalid_test",
+
+        "description": "Test with invalid data",
+
+        "field_name": "invalid_value",
+
+        "expected": "error"
+
+      }}
+
+    ]
+
+  }}
+
+  
+
+  LOCATOR EXAMPLES:
+
+  
+
+  For a login form with username and password:
+
+    "username": {{
+
+      "cypress": "cy.findByLabelText(/username/i)",
+
+      "playwright": "page.getByLabel('Username')",
+
+      "fallback_css": "input[name='username']"
+
+    }}
+
+  
+
+  For a search box:
+
+    "search": {{
+
+      "cypress": "cy.findByPlaceholderText(/search/i)",
+
+      "playwright": "page.getByPlaceholder('Search')",
+
+      "fallback_css": "input[type='search']"
+
+    }}
+
+  
+
+  For a link:
+
+    "signup_link": {{
+
+      "cypress": "cy.findByRole('link', {{name: /sign up/i}})",
+
+      "playwright": "page.getByRole('link', {{name: 'Sign up'}})",
+
+      "fallback_css": "a[href='/signup']"
+
+    }}
+
+  
+
+  RULES:
+
+  - Return ONLY valid JSON, no markdown, no explanations
+
+  - Include at least 2 test cases (valid + invalid)
+
+  - Every selector must have cypress, playwright, and fallback_css
+
+  - Use realistic test data values
+
+  - Map field names to element_types
+
+
+
+

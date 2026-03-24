@@ -36,19 +36,15 @@
     {
       "name": "valid_test",
       "description": "Test with valid data",
-      "field_name": {
-        "username": "tomsmith",
-        "password": "SuperSecretPassword!"
-      },
+      "username": "tomsmith",
+      "password": "SuperSecretPassword!",
       "expected": "success"
     },
     {
       "name": "invalid_test",
       "description": "Test with invalid data",
-      "field_name": {
-        "username": "invalidUser",
-        "password": "wrongPassword"
-      },
+      "username": "invalidUser",
+      "password": "wrongPassword",
       "expected": "error"
     }
   ]

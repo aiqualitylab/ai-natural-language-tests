@@ -1,0 +1,188 @@
+name: test_generation_webdriverio
+version: 1
+metadata:
+  category: generation
+template: |
+  You are an expert QA automation engineer. Generate a complete, runnable WebdriverIO JavaScript test file using Mocha and Jest-like expect assertions.
+
+  
+
+  REQUIREMENT:
+
+  {requirement}
+
+  
+
+  CONTEXT:
+
+  {context}
+
+  
+
+  CRITICAL RULES:
+
+  1. Return ONLY valid JavaScript code. No markdown fences and no explanation.
+
+  2. Use CommonJS imports from @wdio/globals for browser, dollar-selector access, and expect.
+
+  3. Use Mocha globals such as describe, it, and beforeEach.
+
+  4. Never use Cypress or Playwright APIs.
+
+  5. Never hardcode URL, selectors, or credentials when CONTEXT provides them.
+
+  6. Declare a single top-level testData object before helper functions.
+
+  7. Never read fixtures from disk. Do not import fs, path, or other Node modules.
+
+  8. Resolve selector objects via fallback_css.
+
+  9. Fill fields only when selector exists and the value is a non-empty string.
+
+  10. Generate .spec.js content that runs under npx wdio run wdio.conf.js.
+
+  11. Keep assertions resilient and URL-agnostic.
+
+  12. WebdriverIO is async in this project. Every function that touches browser or elements MUST be async.
+
+  13. ALWAYS await these calls: browser.url, browser.getUrl, selector waitForDisplayed, isDisplayed, setValue, click, getText.
+
+  14. NEVER call trim on getText directly. First await getText into a string variable, then trim the string.
+
+  15. Import expect as well as browser and the selector helper from @wdio/globals.
+
+  
+
+  MANDATORY STRUCTURE:
+
+  - Start with imports from @wdio/globals and a top-level testData object.
+
+  - Include helper functions named getSelector, fillFormFields, getMessageText, and isAuthLikeUrl.
+
+  - Wrap tests in one Mocha describe block.
+
+  - Create test cases dynamically from testData.test_cases when present.
+
+  - Use async beforeEach and async it blocks.
+
+  
+
+  REQUIRED CODE SHAPE:
+
+  - getSelector must return a CSS string or null, not an element.
+
+  - fillFormFields must accept the test case and selectors, derive values from field_name when present, and await element commands.
+
+  - getMessageText must return an empty string when no message selector is available or visible.
+
+  - isAuthLikeUrl must await browser.getUrl and return a boolean.
+
+  - include helper hasErrorSignal(errorText, currentUrl, urlBefore) that returns true when either non-empty error text exists OR url remains auth-like.
+
+  - Use for-of or forEach to create tests, but every generated test body must be async.
+
+  
+
+  EXECUTION RULES:
+
+  - In beforeEach, navigate with browser.url using testData.url.
+
+  - Use the test case shape field_name when present, otherwise use the flat test case values.
+
+  - Wait for input elements to be displayed before setValue when selectors exist.
+
+  - Submit using the context submit selector when present.
+
+  - After submit, assert either message visibility with non-empty text or meaningful URL behavior.
+
+  - Capture urlBefore immediately before submit and currentUrl immediately after submit.
+
+  - In getMessageText, if configured selector is empty or hidden, try #flash fallback before returning empty text.
+
+  
+
+  DO NOT OUTPUT SYNC WDIO CODE:
+
+  - Do not write browser.url without await.
+
+  - Do not write browser.getUrl without await.
+
+  - Do not write element.isDisplayed without await.
+
+  - Do not write element.setValue without await.
+
+  - Do not write element.click without await.
+
+  - Do not write element.getText without await.
+
+  
+
+  ASSERTION STRATEGY:
+
+  - For success-like outcomes, prefer non-empty message text, otherwise assert URL changed away from an auth-like path, otherwise use a likely post-login signal from CONTEXT.
+
+  - For error-like outcomes, prefer non-empty message text, otherwise assert URL stayed on the login or auth-like page.
+
+  - Do not require a hardcoded phrase unless that exact phrase is present in CONTEXT.
+
+  - For error-like outcomes, URL staying on the login or auth-like page is sufficient even when the message text is empty.
+
+  - Never require both a non-empty error message and an auth-like URL for invalid-login scenarios. Either one is enough.
+
+  
+
+  FORBIDDEN ASSERTION PATTERN (MUST NOT OUTPUT):
+
+  - In expected error branch, do NOT output `expect(errorText.trim().length).toBeGreaterThan(0)` as a standalone required assertion.
+
+  - In expected error branch, do NOT force both `errorText length > 0` AND `isAuthLikeUrl === true`.
+
+  
+
+  REQUIRED ERROR BRANCH PATTERN:
+
+  - Use logic equivalent to:
+
+  	- const errorSignal = await hasErrorSignal(errorText, currentUrl, urlBefore)
+
+  	- expect(errorSignal).toBe(true)
+
+  
+
+  MANDATORY WDIO STYLE:
+
+  - Use browser.url, browser.getUrl, selector waitForDisplayed, setValue, click, and expect element assertions.
+
+  - If reading message text, trim it and assert that its length is greater than zero.
+
+  - Keep helper functions explicit and dependency-driven.
+
+  
+
+  EXACT IMPORT PATTERN:
+
+  - Use a require statement that imports browser, the selector helper, and expect from @wdio/globals.
+
+  
+
+  EXACT ASSERTION PATTERN:
+
+  - When checking message text, first store awaited text in a variable, then assert on variable.trim().length.
+
+  - When checking URL state, first store awaited browser.getUrl in a variable, then assert on that string.
+
+  - For invalid-login flows, generate logic like: if error text length is greater than zero, pass; otherwise assert auth-like URL remains true.
+
+  
+
+  OUTPUT REQUIREMENTS:
+
+  - Produce one runnable .spec.js file.
+
+  - Use dynamic selectors and test cases from CONTEXT.
+
+  - Make the code CI-safe and resilient for generated login or form scenarios.
+
+
+
+

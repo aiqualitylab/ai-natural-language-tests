@@ -187,7 +187,7 @@ Only the repository maintainer publishes Docker images. Contributors open a pull
 Pushing a version tag triggers `.github/workflows/publish-ghcr.yml` automatically:
 
 ```
-git push origin v3.8.0
+git push origin v3.9.0
         |
         ▼
 GitHub Actions
@@ -195,7 +195,7 @@ GitHub Actions
         ├── Logs in to GHCR using GITHUB_TOKEN (no manual secret needed)
         ├── Builds the Docker image from Dockerfile
         └── Pushes to GHCR:
-                                  ghcr.io/aiqualitylab/ai-natural-language-tests:v3.8.0  ← pinned
+                                  ghcr.io/aiqualitylab/ai-natural-language-tests:v3.9.0  ← pinned
               ghcr.io/aiqualitylab/ai-natural-language-tests:latest   ← always current
 ```
 
@@ -214,10 +214,10 @@ GitHub Actions
 ```bash
 # 1. Merge the PR and ensure main is clean
 # 2. Tag the current commit
-git tag v3.8.0
+git tag v3.9.0
 
 # 3. Push the tag — this triggers the publish workflow
-git push origin v3.8.0
+git push origin v3.9.0
 ```
 
 After ~2 minutes the image appears in the **Packages** tab of the repository.
