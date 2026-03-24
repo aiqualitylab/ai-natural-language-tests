@@ -26,7 +26,7 @@
     "@wdio/spec-reporter": "^8.43.0",
     "@playwright/test": "^1.58.1",
     "@testing-library/cypress": "^10.1.0",
-    "chromedriver": "^145.0.6",
+    "chromedriver": "^146.0.0",
     "cypress": "^15.8.1",
     "expect-webdriverio": "^4.15.4",
     "webdriverio": "^8.46.0",
