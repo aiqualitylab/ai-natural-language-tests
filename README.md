@@ -281,6 +281,24 @@ OPENAI_API_KEY=your_key
 
 </details>
 
+### Optional: GitAgent (Repo-Specific)
+
+This repository includes a targeted gitagent setup for its QA automation workflow:
+
+- `agent.yaml` (manifest)
+- `SOUL.md` and `RULES.md` (behavior and constraints)
+- `knowledge/` (framework and repo references)
+
+In short: `agent.yaml` defines the repo agent, `SOUL.md` and `RULES.md` define how it should behave, and `knowledge/` gives it project-specific framework guidance.
+
+Quick commands:
+
+```bash
+npm run gitagent:validate
+npm run gitagent:info
+npm run gitagent:export
+```
+
 <details>
 <summary><strong>Docker Setup</strong></summary>
 

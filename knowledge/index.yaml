@@ -1,0 +1,17 @@
+sources:
+  - id: readme
+    title: Project README
+    path: README.md
+    type: markdown
+  - id: contributing
+    title: Contribution Guide
+    path: CONTRIBUTING.md
+    type: markdown
+  - id: copilot-instructions
+    title: Repo Copilot Instructions
+    path: .github/copilot-instructions.md
+    type: markdown
+  - id: framework-rules
+    title: Framework Generation Rules
+    path: knowledge/framework-rules.md
+    type: markdown

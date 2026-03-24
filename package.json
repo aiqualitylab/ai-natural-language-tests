@@ -13,7 +13,10 @@
     "playwright:report": "npx playwright show-report",
     "webdriverio:test": "npx wdio run wdio.conf.js",
     "webdriverio:test:latest": "npx wdio run wdio.conf.js --spec ./webdriverio/tests/generated/*.spec.js",
-    "test:all": "npm run cypress:run && npm run playwright:test && npm run webdriverio:test"
+    "test:all": "npm run cypress:run && npm run playwright:test && npm run webdriverio:test",
+    "gitagent:validate": "npx @open-gitagent/gitagent validate -d .",
+    "gitagent:info": "npx @open-gitagent/gitagent info -d .",
+    "gitagent:export": "npx @open-gitagent/gitagent export --format system-prompt -d ."
   },
   "devDependencies": {
     "@wdio/cli": "^8.46.0",

@@ -58,6 +58,9 @@ Thumbs.db
 *.log
 logs/
 
+# GitAgent runtime state
+.gitagent/
+
 # Test results
 test-results/
 playwright-report/
