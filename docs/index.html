@@ -45,8 +45,9 @@
       name: 'AI Natural Language Tests',
       repo: 'https://github.com/aiqualitylab/ai-natural-language-tests',
 
-      // Fetch README.md from repo main branch
-      homepage: 'https://raw.githubusercontent.com/aiqualitylab/ai-natural-language-tests/main/README.md',
+      // Load docs content from the repository root so relative markdown links work
+      basePath: 'https://raw.githubusercontent.com/aiqualitylab/ai-natural-language-tests/main/',
+      homepage: 'README.md',
 
       loadSidebar: false,
       loadNavbar: false,

@@ -63,8 +63,7 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 
 ### Project Info
 - [Contributing](#contributing)
-- [Change Log Highlights](#change-log-highlights)
-- [Release History](#release-history)
+- [Changelog](#changelog)
 - [Support](#support)
 
 ## Overview
@@ -605,114 +604,9 @@ Recommended pipeline stages:
 
 > - Retry with generated single-spec command from logs.
 
-## Change Log Highlights
+## Changelog
 
-<details>
-<summary><strong>v3.9.0</strong> — YAML prompt spec migration</summary>
-
-- Migrated prompt templates from `prompts/*.txt` to `prompt_specs/*.yaml`.
-- Updated generation and failure-analysis flows to load prompt specs from YAML.
-- Aligned runtime and release tag references to `v3.9.0`.
-
-</details>
-
-<details>
-<summary><strong>v3.8.0</strong> — WebdriverIO framework support</summary>
-
-- Added WebdriverIO `.spec.js` generation with Mocha runner support and Jest-like expectations.
-- Added `wdio.conf.js`, Docker/CI/runtime wiring, and generated output path support for WebdriverIO.
-- Bumped version references to `v3.8.0` across release-tagged files.
-
-</details>
-
-<details>
-<summary><strong>v3.6.2</strong> — Version alignment and release bump</summary>
-
-- Bumped all version references to `v3.6.2` across `Dockerfile`, `docker-compose.yml`, `package.json`, `package-lock.json`, `CONTRIBUTING.md`, and workflow files.
-- Prepared GHCR release examples and compose tags for `v3.6.2`.
-
-</details>
-
-<details>
-<summary><strong>v3.6.1</strong> — Docker runtime compatibility update</summary>
-
-- Switched Docker base image from Python 3.14 to Python 3.12 for ChromaDB/Pydantic compatibility.
-- Prepared GHCR release examples and compose tags for `v3.6.1`.
-
-</details>
-
-<details>
-<summary><strong>v3.6</strong> — Licensing clarity and release alignment</summary>
-
-- Updated Docker Compose image tag to `v3.6`.
-- Added explicit project authorship notice (`NOTICE`).
-- Added AGPL SPDX/copyright header to `qa_automation.py`.
-- Added explicit documentation copyright and CC BY 4.0 note in README footer.
-
-</details>
-
-<details>
-<summary><strong>v3.5</strong> — Grafana observability updates</summary>
-
-- Grafana observability updates for both Tempo traces and optional Loki logs.
-- Docker Compose now forwards observability environment variables explicitly.
-- Enterprise documentation updates, including `CONTRIBUTING.md`.
-
-</details>
-
-<details>
-<summary><strong>v3.4</strong> — Accessible HTML analysis and normalized fixture schema</summary>
-
-- Accessible-locator-first HTML analysis.
-- Normalized selector schema: `{ cypress, playwright, fallback_css }`.
-- Stable test case shape: `test_cases[*].field_name`.
-- Resilience backfills for missing selector/test fields.
-- Docker fixture persistence improvements.
-
-</details>
-
-<details>
-<summary><strong>v3.3</strong> — Multi-provider LLM support</summary>
-
-- Multi-provider LLM support.
-- Default OpenAI flow with graceful fallback behavior.
-
-</details>
-
-<details>
-<summary><strong>v3.2</strong> — Docker and Docker Compose support</summary>
-
-- Docker and Docker Compose support.
-- Portable, zero-local-install workflow option.
-
-</details>
-
-<details>
-<summary><strong>v3.1</strong> — Playwright framework support</summary>
-
-- Playwright framework support.
-- Framework-aware generation architecture.
-
-</details>
-
-## Release History
-
-| Version | Highlights |
-|---------|------------|
-| **v3.9.0** | YAML prompt spec migration and release tag alignment |
-| **v3.8.0** | WebdriverIO framework support across generation, Docker, CI, and docs |
-| **v3.6.2** | Version alignment and release bump |
-| **v3.6.1** | Docker runtime compatibility update and release tag alignment |
-| **v3.6** | Licensing clarity updates and Docker release alignment |
-| **v3.5** | Grafana observability and Docker environment propagation updates |
-| **v3.4** | Accessible HTML analysis and normalized fixture schema |
-| **v3.3** | Multi-provider LLM support |
-| **v3.2** | Docker support |
-| **v3.1** | Playwright support |
-| **v3.0** | LangGraph workflows and vector pattern learning |
-| **v2.2** | Dynamic test generation |
-| **v2.1** | AI failure analyzer |
-| **v2.0** | Cypress prompt-powered mode |
+Release notes are maintained in [`CHANGELOG.md`](CHANGELOG.md) using a standard Keep a Changelog format.
 
 ---
 
