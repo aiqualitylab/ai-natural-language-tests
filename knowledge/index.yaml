@@ -7,6 +7,10 @@ sources:
     title: Contribution Guide
     path: CONTRIBUTING.md
     type: markdown
+  - id: changelog
+    title: Changelog
+    path: CHANGELOG.md
+    type: markdown
   - id: copilot-instructions
     title: Repo Copilot Instructions
     path: .github/copilot-instructions.md
