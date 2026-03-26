@@ -62,9 +62,7 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 - [Troubleshooting](#troubleshooting)
 
 ### Project Info
-- [Contributing](#contributing)
 - [Changelog](#changelog)
-- [Support](#support)
 
 ## Overview
 
@@ -601,6 +599,7 @@ Recommended pipeline stages:
 > docker build --target debug -t ai-tests:debug .
 > docker run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix ai-tests:debug
 > ```
+> - Optional: mainly for Linux visual debugging.
 
 > - Retry with generated single-spec command from logs.
 
@@ -616,5 +615,3 @@ Release notes are maintained in [`CHANGELOG.md`](CHANGELOG.md) using a standard 
 
 ---
 Documentation licensed under CC BY 4.0.
-
-</div>
