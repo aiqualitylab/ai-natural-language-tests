@@ -1,8 +1,9 @@
 langchain-openai==0.3.35
 langgraph==0.6.11
-langchain-chroma==0.2.6
+langchain-community==0.3.31
 langchain-core==0.3.83
-chromadb==1.5.5
+faiss-cpu==1.9.0
+sentence-transformers==3.4.1
 python-dotenv==1.2.2
 requests==2.32.5
 langchain-anthropic==0.3.22

@@ -20,8 +20,9 @@ from typing import List, Dict, Optional, Any
 from dataclasses import dataclass, field
 
 from langgraph.graph import StateGraph, END
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_chroma import Chroma
+from langchain_openai import ChatOpenAI
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 from dotenv import load_dotenv
 
@@ -182,11 +183,19 @@ class TestPatternStore:
     def __init__(self) -> None:
         logger.info("Setting up vector store")
         VECTOR_DB_DIR.mkdir(parents=True, exist_ok=True)
-        self.embeddings = OpenAIEmbeddings()
-        self.vectorstore = Chroma(
-            persist_directory=str(VECTOR_DB_DIR),
-            embedding_function=self.embeddings
-        )
+        self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        self._index_path = str(VECTOR_DB_DIR)
+        if (VECTOR_DB_DIR / "index.faiss").exists():
+            # allow_dangerous_deserialization is required because FAISS uses pickle
+            # internally. The index is written and read by this application only within
+            # the local VECTOR_DB_DIR, so the risk of tampered files is minimal.
+            self.vectorstore = FAISS.load_local(
+                self._index_path,
+                self.embeddings,
+                allow_dangerous_deserialization=True,
+            )
+        else:
+            self.vectorstore = None
         logger.info("Vector store ready")
 
     def store_pattern(self, test_code: str, requirement: str, url: str, test_type: str, filepath: str) -> None:
@@ -196,19 +205,27 @@ class TestPatternStore:
             metadata={"requirement": requirement, "url": url, "test_type": test_type,
                       "filepath": filepath, "timestamp": datetime.now().isoformat()}
         )
-        self.vectorstore.add_documents([doc])
+        if self.vectorstore is None:
+            self.vectorstore = FAISS.from_documents([doc], self.embeddings)
+        else:
+            self.vectorstore.add_documents([doc])
+        self.vectorstore.save_local(self._index_path)
         logger.info("Pattern stored")
 
     def search_similar_patterns(self, requirement: str) -> List[Document]:
         logger.info(f"Searching for patterns like: {requirement}")
-        count = self.vectorstore._collection.count()
+        if self.vectorstore is None:
+            return []
+        count = self.vectorstore.index.ntotal
         results = self.vectorstore.similarity_search(requirement, k=min(2, count)) if count > 0 else []
         logger.info(f"Found {len(results)} similar patterns")
         return results
 
     def get_all_patterns(self) -> List[Document]:
-        count = self.vectorstore._collection.count()
-        return self.vectorstore.similarity_search("", k=count) if count > 0 else []
+        if self.vectorstore is None:
+            return []
+        count = self.vectorstore.index.ntotal
+        return self.vectorstore.similarity_search("test", k=count) if count > 0 else []
 
 
 # STATE
