@@ -102,6 +102,27 @@ ALLOWED_FAILURE_CATEGORIES = {
     "CONFIGURATION",
 }
 
+SYMBOLIC_RULES = """
+SELECTOR CONVENTIONS (MANDATORY):
+- ALWAYS prefer data-testid attributes: [data-testid="submit-button"]
+- Use data-cy as second choice for Cypress-specific attributes: [data-cy="login-form"]
+- Use aria-label or role-based selectors as third choice: [aria-label="Password"]
+- Use CSS class or ID only when no semantic alternative exists
+- NEVER use XPath selectors (//, .//tag[@attr])
+- NEVER use :nth-child(), :nth-of-type(), or positional pseudo-selectors
+- NEVER chain more than 2 CSS descendant combinators (e.g. .a .b .c is the limit)
+- NEVER use inline style attribute selectors (e.g. [style="color: red"])
+
+ASSERTION REQUIREMENTS (MANDATORY):
+- Every test MUST have at least one explicit assertion (not just an action)
+- Assertions must check observable outcomes: visibility, text content, URL change, or element state
+- NEVER assert on implementation details such as CSS class names that carry no semantic meaning
+- Use existence + visibility assertions together: .should('exist') and .should('be.visible') for Cypress
+- For success flows: assert that a success indicator is visible OR the URL changed away from the action page
+- For error flows: assert that an error indicator is visible with non-empty text
+- NEVER leave an assertion as a TODO or placeholder comment
+"""
+
 
 def get_llm(provider: str = DEFAULT_LLM) -> Any:
     if provider not in LLM_CONFIG:
@@ -345,7 +366,12 @@ def step_4_generate_tests(state: TestState) -> TestState:
                 test_span.set_attribute("framework", state.framework)
 
                 prompt_file = fw["prompt_file_prompt"] if use_prompt_mode else fw["prompt_file_standard"]
-                prompt = load_prompt_template(prompt_file, requirement=requirement, context=state.context)
+                prompt = load_prompt_template(
+                    prompt_file,
+                    requirement=requirement,
+                    context=state.context,
+                    symbolic_rules=SYMBOLIC_RULES,
+                )
                 ai_response = llm.invoke(prompt)
                 content = ai_response.content
 

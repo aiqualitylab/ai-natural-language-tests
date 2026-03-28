@@ -27,6 +27,12 @@ wheels/
 .env
 .env.local
 
+# Local prompt files
+prompt_specs/test_generation_playwright.yaml
+prompt_specs/test_generation_traditional.yaml
+prompt_specs/test_generation_prompt_powered.yaml
+prompt_specs/test_generation_webdriverio.yaml
+
 # Vector Store Database - DO NOT COMMIT
 vector_db/
 *.sqlite3
