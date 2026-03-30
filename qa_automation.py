@@ -20,10 +20,14 @@ from typing import List, Dict, Optional, Any
 from dataclasses import dataclass, field
 
 from langgraph.graph import StateGraph, END
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_chroma import Chroma
+from langchain_openai import ChatOpenAI
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from dotenv import load_dotenv
+
+# FAISS + SQLite imports
+import sqlite3
 
 load_dotenv()
 
@@ -124,24 +128,25 @@ ASSERTION REQUIREMENTS (MANDATORY):
 """
 
 
+def _get_provider_constructor(provider: str) -> Any:
+    providers = {
+        "openai": lambda cfg: ChatOpenAI(model=cfg["model"], temperature=0),
+        "anthropic": lambda cfg: ChatAnthropic(model=cfg["model"], temperature=0) if ChatAnthropic else None,
+        "google": lambda cfg: ChatGoogleGenerativeAI(model=cfg["model"], temperature=0) if ChatGoogleGenerativeAI else None,
+    }
+    return providers.get(provider, lambda cfg: ChatOpenAI(model=cfg["model"], temperature=0))
+
 def get_llm(provider: str = DEFAULT_LLM) -> Any:
     if provider not in LLM_CONFIG:
         logger.warning(f"Unknown provider '{provider}', using default {DEFAULT_LLM}")
         provider = DEFAULT_LLM
     config = LLM_CONFIG[provider]
-    if provider == "openai":
-        return ChatOpenAI(model=config["model"], temperature=0)
-    elif provider == "anthropic":
-        if ChatAnthropic is None:
-            logger.warning("Anthropic not installed, falling back to OpenAI")
-            return ChatOpenAI(model=LLM_CONFIG[DEFAULT_LLM]["model"], temperature=0)
-        return ChatAnthropic(model=config["model"], temperature=0)
-    elif provider == "google":
-        if ChatGoogleGenerativeAI is None:
-            logger.warning("Google not installed, falling back to OpenAI")
-            return ChatOpenAI(model=LLM_CONFIG[DEFAULT_LLM]["model"], temperature=0)
-        return ChatGoogleGenerativeAI(model=config["model"], temperature=0)
-    return ChatOpenAI(model=LLM_CONFIG[DEFAULT_LLM]["model"], temperature=0)
+    ctor = _get_provider_constructor(provider)
+    result = ctor(config)
+    if result is None:
+        logger.warning(f"{provider} not installed, falling back to OpenAI")
+        return ChatOpenAI(model=LLM_CONFIG[DEFAULT_LLM]["model"], temperature=0)
+    return result
 
 
 FRAMEWORK_CONFIG = {
@@ -176,39 +181,146 @@ FRAMEWORK_CONFIG = {
 }
 
 
-# VECTOR STORE
+# VECTOR STORE + METADATA
 
 class TestPatternStore:
-    def __init__(self) -> None:
-        logger.info("Setting up vector store")
+    """Simple FAISS + SQLite pattern store."""
+
+    def __init__(self, db_name: str = "test_patterns.db") -> None:
+        logger.info("Setting up FAISS + SQLite vector store")
         VECTOR_DB_DIR.mkdir(parents=True, exist_ok=True)
-        self.embeddings = OpenAIEmbeddings()
-        self.vectorstore = Chroma(
-            persist_directory=str(VECTOR_DB_DIR),
-            embedding_function=self.embeddings
+
+        self.db_path = VECTOR_DB_DIR / db_name
+        self.faiss_index_path = VECTOR_DB_DIR / "faiss_index"
+
+        self.embeddings = HuggingFaceEmbeddings(
+            model_name="all-MiniLM-L6-v2",
+            model_kwargs={"device": "cpu"}
         )
-        logger.info("Vector store ready")
+
+        self._init_sqlite()
+        self.vectorstore = self._load_faiss_index()
+        logger.info("FAISS + SQLite vector store ready")
+
+    def _connect(self) -> sqlite3.Connection:
+        return sqlite3.connect(str(self.db_path))
+
+    def _get_table_columns(self) -> set:
+        with self._connect() as conn:
+            rows = conn.execute("PRAGMA table_info(test_patterns)").fetchall()
+            return {row[1] for row in rows}
+
+    def _init_sqlite(self) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS test_patterns (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    requirement TEXT NOT NULL,
+                    url TEXT NOT NULL,
+                    test_type TEXT NOT NULL,
+                    filepath TEXT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    test_code TEXT NOT NULL
+                )
+                """
+            )
+            conn.commit()
+
+        columns = self._get_table_columns()
+        if "test_code" not in columns:
+            with self._connect() as conn:
+                conn.execute("ALTER TABLE test_patterns ADD COLUMN test_code TEXT NOT NULL DEFAULT ''")
+                conn.commit()
+
+    def _load_faiss_index(self) -> Optional[FAISS]:
+        if not self.faiss_index_path.exists():
+            return None
+
+        try:
+            logger.info("Loading existing FAISS index")
+            return FAISS.load_local(
+                str(self.faiss_index_path),
+                embeddings=self.embeddings,
+                allow_dangerous_deserialization=True,
+            )
+        except Exception as e:
+            logger.warning(f"Could not load FAISS index: {e}")
+            return None
 
     def store_pattern(self, test_code: str, requirement: str, url: str, test_type: str, filepath: str) -> None:
         logger.info(f"Storing pattern: {requirement}")
-        doc = Document(
-            page_content=test_code,
-            metadata={"requirement": requirement, "url": url, "test_type": test_type,
-                      "filepath": filepath, "timestamp": datetime.now().isoformat()}
-        )
-        self.vectorstore.add_documents([doc])
+
+        timestamp = datetime.now().isoformat()
+        metadata = {
+            "requirement": requirement,
+            "url": url,
+            "test_type": test_type,
+            "filepath": filepath,
+            "timestamp": timestamp,
+        }
+
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO test_patterns (requirement, url, test_type, filepath, timestamp, test_code)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (requirement, url, test_type, filepath, timestamp, test_code),
+            )
+            conn.commit()
+
+        doc = Document(page_content=test_code, metadata=metadata)
+        if self.vectorstore is None:
+            self.vectorstore = FAISS.from_documents([doc], self.embeddings)
+        else:
+            self.vectorstore.add_documents([doc])
+
+        self.vectorstore.save_local(str(self.faiss_index_path))
         logger.info("Pattern stored")
 
-    def search_similar_patterns(self, requirement: str) -> List[Document]:
+    def search_similar_patterns(self, requirement: str, k: int = 2) -> List[Document]:
         logger.info(f"Searching for patterns like: {requirement}")
-        count = self.vectorstore._collection.count()
-        results = self.vectorstore.similarity_search(requirement, k=min(2, count)) if count > 0 else []
-        logger.info(f"Found {len(results)} similar patterns")
-        return results
+        if self.vectorstore is None:
+            return []
+
+        try:
+            results = self.vectorstore.similarity_search(requirement, k=max(1, k))
+            logger.info(f"Found {len(results)} similar patterns")
+            return results
+        except Exception as e:
+            logger.error(f"Error searching patterns: {e}")
+            return []
 
     def get_all_patterns(self) -> List[Document]:
-        count = self.vectorstore._collection.count()
-        return self.vectorstore.similarity_search("", k=count) if count > 0 else []
+        logger.info("Retrieving all patterns")
+        columns = self._get_table_columns()
+        query = """
+            SELECT requirement, url, test_type, filepath, timestamp, test_code
+            FROM test_patterns
+            ORDER BY id DESC
+        """ if "test_code" in columns else """
+            SELECT requirement, url, test_type, filepath, timestamp, '' AS test_code
+            FROM test_patterns
+            ORDER BY id DESC
+        """
+        with self._connect() as conn:
+            rows = conn.execute(query).fetchall()
+
+        return [
+            Document(
+                page_content=row[5],
+                metadata={
+                    "requirement": row[0],
+                    "url": row[1],
+                    "test_type": row[2],
+                    "filepath": row[3],
+                    "timestamp": row[4],
+                },
+            )
+            for row in rows
+        ]
+
 
 
 # STATE
@@ -259,6 +371,28 @@ def load_prompt_spec(filename: str, required_keys: Optional[List[str]] = None) -
 def load_prompt_system(filename: str) -> str:
     spec = load_prompt_spec(filename)
     return str(spec.get("system", ""))
+
+
+def extract_code_fence(content: str) -> str:
+    fence_markers = ["```typescript", "```javascript", "```js", "```"]
+    for marker in fence_markers:
+        if marker in content:
+            between = content.split(marker)[1].split("```")[0].strip()
+            return between
+    return content
+
+
+def get_test_filepath(framework: str, output_dir: str, use_prompt_mode: bool, index: int, requirement: str) -> tuple:
+    fw = FRAMEWORK_CONFIG[framework]
+    folder_name = "prompt-powered" if (framework == "cypress" and use_prompt_mode) else "generated"
+    output_base = output_dir if output_dir != "cypress/e2e" else fw["default_output"]
+    folder = f"{output_base}/{folder_name}"
+    os.makedirs(folder, exist_ok=True)
+    slug = re.sub(r"[^\w\s-]", "", requirement.lower()).replace(" ", "-")[:50]
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"{index:02d}_{slug}_{timestamp}{fw['file_ext']}"
+    filepath = f"{folder}/{filename}"
+    return filepath, filename, folder_name
 
 
 # WORKFLOW NODES — every step has its own span ✅
@@ -373,26 +507,11 @@ def step_4_generate_tests(state: TestState) -> TestState:
                     symbolic_rules=SYMBOLIC_RULES,
                 )
                 ai_response = llm.invoke(prompt)
-                content = ai_response.content
+                content = extract_code_fence(ai_response.content)
 
-                if "```typescript" in content:
-                    content = content.split("```typescript")[1].split("```")[0].strip()
-                elif "```javascript" in content:
-                    content = content.split("```javascript")[1].split("```")[0].strip()
-                elif "```js" in content:
-                    content = content.split("```js")[1].split("```")[0].strip()
-                elif "```" in content:
-                    content = content.split("```")[1].split("```")[0].strip()
-
-                folder_name = "prompt-powered" if (state.framework == "cypress" and use_prompt_mode) else "generated"
-                output_base = state.output_dir if state.output_dir != "cypress/e2e" else fw["default_output"]
-                folder = f"{output_base}/{folder_name}"
-                os.makedirs(folder, exist_ok=True)
-
-                slug = re.sub(r"[^\w\s-]", "", requirement.lower()).replace(" ", "-")[:50]
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"{index:02d}_{slug}_{timestamp}{fw['file_ext']}"
-                filepath = f"{folder}/{filename}"
+                filepath, filename, folder_name = get_test_filepath(
+                    state.framework, state.output_dir, use_prompt_mode, index, requirement
+                )
 
                 with open(filepath, "w") as f:
                     f.write(f"// Requirement: {requirement}\n\n{content}")
@@ -414,6 +533,20 @@ def step_4_generate_tests(state: TestState) -> TestState:
         return state
 
 
+def build_run_command(framework: str, generated_tests: List, output_dir: str, use_prompt_mode: bool) -> str:
+    fw = FRAMEWORK_CONFIG[framework]
+    if framework == "playwright":
+        specs = [f'"{t["filepath"]}"' for t in generated_tests if t.get("filepath", "").endswith(fw["file_ext"])]
+        return f"npx playwright test {' '.join(specs)}" if specs else \
+               f"npx playwright test {output_dir if output_dir != 'cypress/e2e' else fw['default_output']}/generated"
+    elif framework == "webdriverio":
+        spec_paths = [t["filepath"] for t in generated_tests if t.get("filepath", "").endswith(fw["file_ext"])]
+        spec_arg = ",".join(spec_paths)
+        return f'npx wdio run wdio.conf.js --spec "{spec_arg}"' if spec_arg else "npx wdio run wdio.conf.js"
+    else:
+        folder_name = "prompt-powered" if use_prompt_mode else "generated"
+        return f"npx cypress run --spec 'cypress/e2e/{folder_name}/**/*.cy.js'"
+
 def step_5_run_tests(state: TestState) -> TestState:
     with tracer.start_as_current_span("step_5_run_tests") as span:
         logger.info("STEP 5: Run Tests")
@@ -422,27 +555,11 @@ def step_5_run_tests(state: TestState) -> TestState:
 
         fw = FRAMEWORK_CONFIG[state.framework]
         use_prompt_mode = state.use_prompt and fw["supports_prompt_mode"]
+        cmd = build_run_command(state.framework, state.generated_tests, state.output_dir, use_prompt_mode)
 
-        if state.framework == "playwright":
-            specs = [f'"{t["filepath"]}"' for t in state.generated_tests if t.get("filepath", "").endswith(fw["file_ext"])]
-            cmd = f"npx playwright test {' '.join(specs)}" if specs else \
-                  f"npx playwright test {state.output_dir if state.output_dir != 'cypress/e2e' else fw['default_output']}/generated"
-            logger.info(f"Running: {cmd}")
-            span.set_attribute("run_command", cmd)
-            exit_code = os.system(cmd)
-        elif state.framework == "webdriverio":
-            spec_paths = [t["filepath"] for t in state.generated_tests if t.get("filepath", "").endswith(fw["file_ext"])]
-            spec_arg = ",".join(spec_paths)
-            cmd = f'npx wdio run wdio.conf.js --spec "{spec_arg}"' if spec_arg else "npx wdio run wdio.conf.js"
-            logger.info(f"Running: {cmd}")
-            span.set_attribute("run_command", cmd)
-            exit_code = os.system(cmd)
-        else:
-            folder_name = "prompt-powered" if use_prompt_mode else "generated"
-            cmd = f"npx cypress run --spec 'cypress/e2e/{folder_name}/**/*.cy.js'"
-            logger.info(f"Running: {cmd}")
-            span.set_attribute("run_command", cmd)
-            exit_code = os.system(cmd)
+        logger.info(f"Running: {cmd}")
+        span.set_attribute("run_command", cmd)
+        exit_code = os.system(cmd)
 
         state.test_results = {"exit_code": exit_code, "success": exit_code == 0, "timestamp": datetime.now().isoformat()}
         span.set_attribute("exit_code", exit_code)
@@ -495,20 +612,16 @@ def _read_value(content: str, key: str) -> str:
     return ""
 
 
+FAILURE_DEFAULTS = {
+    "REASON": "Unable to determine root cause from log; output did not include structured reason.",
+    "FIX": "Add explicit waits/assertions around the failing step and verify selectors for the detected framework.",
+}
+
 def format_failure_analysis(content: str) -> str:
     category = _read_value(content, "CATEGORY").upper()
-    reason = _read_value(content, "REASON")
-    fix = _read_value(content, "FIX")
-
-    if category not in ALLOWED_FAILURE_CATEGORIES:
-        category = "CONFIGURATION"
-
-    if not reason:
-        reason = "Unable to determine root cause from log; output did not include structured reason."
-
-    if not fix:
-        fix = "Add explicit waits/assertions around the failing step and verify selectors for the detected framework."
-
+    reason = _read_value(content, "REASON") or FAILURE_DEFAULTS["REASON"]
+    fix = _read_value(content, "FIX") or FAILURE_DEFAULTS["FIX"]
+    category = category if category in ALLOWED_FAILURE_CATEGORIES else "CONFIGURATION"
     return f"CATEGORY: {category}\nREASON: {reason}\nFIX: {fix}"
 
 def analyze_test_failure(log_text: str) -> str:
@@ -579,6 +692,20 @@ def generate_tests_action(args: argparse.Namespace) -> None:
 
 # MAIN
 
+def dispatch_cli_mode(args: argparse.Namespace) -> None:
+    if args.analyze is not None or args.file:
+        log_text = open(args.file).read() if args.file else args.analyze or sys.stdin.read()
+        logger.info(analyze_test_failure(log_text))
+        return
+    if args.list_patterns:
+        list_all_patterns()
+        return
+    if args.requirements:
+        generate_tests_action(args)
+        return
+    parser = argparse.ArgumentParser()
+    parser.print_help()
+
 def main() -> None:
     logger.info("AI-Powered Test Generator (Cypress, Playwright, and WebdriverIO)")
     logger.info("With LangGraph Workflows and Vector Store Learning")
@@ -616,21 +743,7 @@ Examples:
     parser.add_argument("--list-patterns", action="store_true")
 
     args = parser.parse_args()
-
-    if args.analyze is not None or args.file:
-        log_text = open(args.file).read() if args.file else args.analyze or sys.stdin.read()
-        logger.info(analyze_test_failure(log_text))
-        return
-
-    if args.list_patterns:
-        list_all_patterns()
-        return
-
-    if args.requirements:
-        generate_tests_action(args)
-        return
-
-    parser.print_help()
+    dispatch_cli_mode(args)
 
 
 if __name__ == "__main__":

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [4.0.0] - 2026-03-28
+### Changed
+- **BREAKING**: Migrated from ChromaDB to FAISS + SQLite for vector storage.
+- **BREAKING**: Switched embeddings from OpenAI to local sentence-transformers (all-MiniLM-L6-v2).
+- Updated dependencies: replaced `chromadb` and `langchain-chroma` with `faiss-cpu` and `langchain-community`.
+- Updated architecture diagrams to reflect FAISS + SQLite vector store.
+- Improved memory efficiency with local embeddings (no API calls required for pattern search).
+
 ## [3.9.0] - 2026-03-26
 ### Changed
 - Migrated prompt templates from `prompts/*.txt` to `prompt_specs/*.yaml`.

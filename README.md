@@ -21,7 +21,9 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 ![WebdriverIO](https://img.shields.io/badge/WebdriverIO-EA5906?logo=webdriverio&logoColor=white)
 ![LangChain](https://img.shields.io/badge/LangChain-1A1A1A?logo=langchain&logoColor=FF9933)
 ![LangGraph](https://img.shields.io/badge/LangGraph-FF9933?logoColor=white)
-![ChromaDB](https://img.shields.io/badge/ChromaDB-003087?logoColor=white)
+![FAISS](https://img.shields.io/badge/FAISS-003087?logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-07405E?logo=sqlite&logoColor=white)
+![Sentence-Transformers](https://img.shields.io/badge/Sentence--Transformers-FF9933?logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Apache%202.0-808080?logo=docker&logoColor=white)
 ![GHCR](https://img.shields.io/badge/GitHub%20Packages-GHCR-181717?logo=github&logoColor=white)
 ![Grafana](https://img.shields.io/badge/Grafana-AGPL%20v3-FF9933?logo=grafana&logoColor=white)
@@ -348,7 +350,7 @@ docker run --rm \
 | Tag | Use case |
 |-----|----------|
 | `latest` | Always the most recently published version — use for quick runs |
-| `v3.9.0` | Pinned to a specific release — use in CI/CD for reproducibility |
+| `v4.0.0` | Pinned to a specific release — use in CI/CD for reproducibility |
 
 For publishing and release management, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
