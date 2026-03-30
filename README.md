@@ -32,6 +32,10 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 
 [![Website](https://img.shields.io/badge/Website-tests.aiqualitylab.org-4a7cff?style=flat-square&logo=google-chrome&logoColor=white)](https://tests.aiqualitylab.org)
 
+<a href="https://tests.aiqualitylab.org">
+    <img src=".github/images/aiqualitylab_qr.png" alt="Website QR Code" width="180" />
+</a>
+
 </div>
 
 ---
