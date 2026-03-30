@@ -32,10 +32,6 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 
 [![Website](https://img.shields.io/badge/Website-tests.aiqualitylab.org-4a7cff?style=flat-square&logo=google-chrome&logoColor=white)](https://tests.aiqualitylab.org)
 
-<a href="https://tests.aiqualitylab.org">
-    <img src=".github/images/aiqualitylab_qr.png" alt="Website QR Code" width="180" />
-</a>
-
 </div>
 
 ---
@@ -617,7 +613,10 @@ Release notes are maintained in [`CHANGELOG.md`](CHANGELOG.md) using a standard 
 
 *Built with AI. Tested by AI. Ready for CI.*
 
-*© 2026 AI Quality Lab / [Sreekanth Harigovindan.](https://www.linkedin.com/in/sreekanthharigovindan/).*
+<table width="100%"><tr>
+<td><em>© 2026 AI Quality Lab / <a href="https://www.linkedin.com/in/sreekanthharigovindan/">Sreekanth Harigovindan.</a></em></td>
+<td width="1" align="right" nowrap><a href="https://tests.aiqualitylab.org"><img src=".github/images/aiqualitylab_qr.png" alt="tests.aiqualitylab.org" width="100" /></a><br/><sub><a href="https://tests.aiqualitylab.org">tests.aiqualitylab.org</a></sub></td>
+</tr></table>
 
 ---
 Documentation licensed under CC BY 4.0.
