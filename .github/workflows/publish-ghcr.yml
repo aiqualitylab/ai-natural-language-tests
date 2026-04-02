@@ -1,7 +1,7 @@
 name: Publish Docker Image (GHCR)
 
 # Triggers:
-#   - When you push a version tag like v4.0.0 (production publish)
+#   - When you push a version tag like v4.1.0 (production publish)
 #   - workflow_dispatch lets you trigger it manually from GitHub UI (useful for testing)
 on:
   push:

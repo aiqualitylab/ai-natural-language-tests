@@ -14,13 +14,16 @@ graph TB
     subgraph "Framework Generation"
         G{Cypress Framework}
         H{Playwright Framework}
+        W{WebdriverIO Framework}
         I[Cypress Tests<br/>.cy.js files<br/>Traditional & cy prompt]
         J[Playwright Tests<br/>.spec.ts files<br/>TypeScript]
+        X[WebdriverIO Tests<br/>.spec.js files<br/>Mocha + expect]
     end
 
     subgraph "Execution & Analysis"
         K[Cypress Runner<br/>npx cypress run]
         L[Playwright Runner<br/>npx playwright test]
+        P[WebdriverIO Runner<br/>npx wdio run]
         M[AI Failure Analyzer<br/>--analyze flag<br/>Multi-Provider LLM]
     end
 
@@ -32,15 +35,20 @@ graph TB
     F --> D
     D --> G
     D --> H
+    D --> W
     G --> I
     H --> J
+    W --> X
     I --> K
     J --> L
+    X --> P
     K --> M
     L --> M
+    P --> M
 
     style D fill:#e3f2fd
     style E fill:#f3e5f5
     style F fill:#fff3e0
     style G fill:#c8e6c9
     style H fill:#ffcdd2
+    style W fill:#ffe0b2

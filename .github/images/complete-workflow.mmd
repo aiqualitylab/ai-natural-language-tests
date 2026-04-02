@@ -2,13 +2,16 @@ graph TD
     A[Natural Language Requirements] --> B{Framework Selection}
     B -->|Cypress| C[Generate Cypress Tests]
     B -->|Playwright| D[Generate Playwright Tests]
+    B -->|WebdriverIO| W[Generate WebdriverIO Tests]
     C --> E["cy.prompt() Mode?"]
     E -->|Yes| F[Cypress cy prompt Tests<br/>cypress/e2e/prompt-powered/]
     E -->|No| G[Cypress Traditional Tests<br/>cypress/e2e/generated/]
     D --> H[Playwright Tests<br/>tests/generated/]
+    W --> X[WebdriverIO Tests<br/>webdriverio/tests/generated/]
     F --> I[Execute Tests]
     G --> I
     H --> I
+    X --> I
     I --> J[AI Failure Analysis<br/>--analyze]
     J --> K[Fix & Regenerate]
 
@@ -16,4 +19,5 @@ graph TD
     style B fill:#fff3e0
     style C fill:#c8e6c9
     style D fill:#ffcdd2
+    style W fill:#ffe0b2
     style I fill:#f3e5f5

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.0] - 2026-04-02
+### Added
+- Added HITL (human-in-the-loop) approval checkpoint during generated test save flow using `--approve`.
+- Added HTML replay utilities:
+	- `--list-html-replays`
+	- `--replay-html-analysis <run_id>`
+- Added replay snapshot persistence under `vector_db/html_analysis_debug/`.
+
+### Changed
+- Refactored from single-file runtime into a modular architecture:
+	- `qa_automation.py` (CLI entrypoint)
+	- `qa_config.py` (configuration and prompt/model loading)
+	- `qa_runtime.py` (runtime services: logging, tracing, storage, replay)
+	- `qa_workflow.py` (LangGraph workflow/state/nodes)
+- Updated workflow implementation to keep orchestration in LangGraph and business logic in service modules.
+- Simplified implementation paths for readability while preserving behavior.
+
 ## [4.0.0] - 2026-03-28
 ### Changed
 - **BREAKING**: Migrated from ChromaDB to FAISS + SQLite for vector storage.

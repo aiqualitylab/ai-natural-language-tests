@@ -94,11 +94,13 @@ It supports both local engineering workflows and automated pipeline execution. T
 | Test Generation | Natural language to executable E2E test generation |
 | Orchestration | LangGraph-based multi-step orchestration |
 | URL Analysis | Dynamic URL analysis and fixture generation |
-| Pattern Memory | Pattern storage and semantic retrieval using ChromaDB |
+| Pattern Memory | Pattern storage and semantic retrieval using FAISS + SQLite |
 | LLM Support | Multi-provider: OpenAI, Anthropic, Google |
 | Cypress Modes | Traditional mode and Cypress prompt-powered mode |
 | Playwright | TypeScript generation |
 | WebdriverIO | JavaScript `.spec.js` generation with Mocha and Chrome runner support |
+| HITL | Optional human approval gate with `--approve` |
+| Replay | HTML snapshot replay with `--list-html-replays` and `--replay-html-analysis` |
 | Execution | Optional immediate test execution after generation |
 | Tracing | OpenTelemetry trace export to Grafana Tempo |
 | Logging | Optional log shipping to Grafana Loki |
@@ -116,7 +118,7 @@ graph TB
     subgraph "AI & Workflow Engine"
         D[LangGraph Workflow<br/>5-Step Process]
         E[Multi-Provider LLM<br/>OpenAI / Anthropic / Google]
-        F[Vector Store<br/>Pattern Learning<br/>Chroma DB]
+        F[Vector Store<br/>Pattern Learning<br/>FAISS + SQLite]
     end
 
     subgraph "Framework Generation"
@@ -165,12 +167,19 @@ graph TB
 <details>
 <summary><strong>High-Level Components</strong></summary>
 
-- CLI interface (`qa_automation.py`)
-- LangGraph workflow engine
-- LLM provider adapters
-- HTML analysis and fixture writer
-- Vector store pattern manager
-- Test file generation and optional execution
+- CLI entrypoint (`qa_automation.py`)
+  - Parses arguments, selects mode, and orchestrates actions.
+  - Calls workflow `create_workflow()` and handles result output.
+- Configuration and prompts (`qa_config.py`)
+  - Defines framework metadata, LLM settings, and prompt loading utilities.
+  - Handles model provider fallback and YAML template parsing.
+- Runtime services (`qa_runtime.py`)
+  - Logging/tracing setup (OpenTelemetry, Grafana Loki) and persistent objects.
+  - FAISS + SQLite pattern store lifecycle and query helpers.
+  - HTML analysis replay and failure analysis formatting.
+- LangGraph workflow (`qa_workflow.py`)
+  - Defines `TestState` and step nodes (fetch, pattern search, generate, run).
+  - Builds workflow graph with conditional transitions and checkpointer.
 - Observability layer (OpenTelemetry + Loki)
 
 </details>
@@ -179,15 +188,15 @@ graph TB
 
 ```mermaid
 flowchart TD
-    A[Start: User Input<br/>Requirements + Framework] --> B[Step 1: Initialize Vector Store<br/>Load/Create Chroma DB<br/>Pattern Database]
-    B --> C[Step 2: Fetch Test Data<br/>Analyze URL/HTML<br/>Extract Selectors<br/>Generate Fixtures]
+    A[Start: User Input<br/>Requirements + Framework] --> C[Step 2: Fetch Test Data<br/>Analyze URL/HTML<br/>Extract Selectors<br/>Generate Fixtures]
     C --> D[Step 3: Search Similar Patterns<br/>Query Vector Store<br/>Find Matching Test Patterns<br/>From Past Generations]
     D --> E[Step 4: Generate Tests<br/>Use AI + Patterns<br/>Create Framework-Specific Code<br/>Cypress, Playwright, or WebdriverIO]
-    E --> F[Step 5: Run Tests<br/>Execute via Framework Runner<br/>Optional --run flag]
-    F --> G[End: Tests Executed<br/>Ready for CI/CD]
+    E --> H[HITL Approval<br/>Optional --approve before save]
+    H --> F[Step 5: Run Tests<br/>Execute via Framework Runner<br/>Optional --run flag]
+    F --> R[Replay Snapshot<br/>--list-html-replays / --replay-html-analysis]
+    R --> G[End: Tests Executed<br/>Ready for CI/CD]
 
     style A fill:#e1f5fe,color:#333333,stroke:#666666
-    style B fill:#fff3e0,color:#333333,stroke:#666666
     style C fill:#c8e6c9,color:#333333,stroke:#666666
     style D fill:#ffcdd2,color:#333333,stroke:#666666
     style E fill:#f3e5f5,color:#333333,stroke:#666666
@@ -199,11 +208,11 @@ Generation follows a deterministic five-step flow:
 
 | Step | Name | Description |
 |------|------|-------------|
-| 1 | Initialize Vector Store | Load or create the Chroma pattern database |
 | 2 | Fetch Test Data | Analyze URL/HTML, extract selectors, generate fixtures |
 | 3 | Search Similar Patterns | Query vector store for matching historical patterns |
-| 4 | Generate Tests | Use AI + patterns to create framework-specific code |
+| 4 | Generate Tests | Use AI + patterns to create framework-specific code, optionally HITL-gated via `--approve` |
 | 5 | Run Tests | Optionally execute via framework runner (`--run`) |
+| Replay | Debug HTML Analysis | Replay stored HTML snapshots via CLI (`--list-html-replays`, `--replay-html-analysis`) |
 
 ## Technology Stack
 
@@ -211,7 +220,7 @@ Generation follows a deterministic five-step flow:
 |-------|------------|
 | Orchestration | Python CLI orchestration |
 | Workflow | LangChain + LangGraph |
-| Vector Store | ChromaDB vector store |
+| Vector Store | FAISS + SQLite |
 | LLM Backends | OpenAI / Anthropic / Google |
 | Test Runners | Cypress, Playwright, and WebdriverIO runners |
 | Observability | OpenTelemetry SDK and OTLP exporter |
@@ -237,6 +246,9 @@ ai-natural-language-tests/
 |-- prompt_specs/
 |-- vector_db/
 |-- qa_automation.py
+|-- qa_config.py
+|-- qa_runtime.py
+|-- qa_workflow.py
 |-- cypress.config.js
 |-- playwright.config.ts
 |-- wdio.conf.js
@@ -350,7 +362,7 @@ docker run --rm \
 | Tag | Use case |
 |-----|----------|
 | `latest` | Always the most recently published version — use for quick runs |
-| `v4.0.0` | Pinned to a specific release — use in CI/CD for reproducibility |
+| `v4.1.0` | Pinned to a specific release — use in CI/CD for reproducibility |
 
 For publishing and release management, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
