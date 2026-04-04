@@ -2,7 +2,7 @@
 
 # AI-Powered E2E Test Generation Platform
 
-> *Describe tests in plain English. AI writes the code.*
+> *Translate natural language requirements into production-ready end-to-end tests.*
 
 Enterprise-grade platform to generate and execute Cypress, Playwright, and WebdriverIO end-to-end tests from natural language requirements.
 
