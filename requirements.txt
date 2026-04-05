@@ -3,7 +3,7 @@ langgraph==0.6.11
 langchain-community==0.3.21
 langchain-core==0.3.83
 faiss-cpu==1.13.2
-sentence-transformers==3.1.1
+sentence-transformers==5.3.0
 python-dotenv==1.2.2
 requests==2.33.1
 langchain-anthropic==0.3.22
