@@ -112,7 +112,7 @@ graph TB
     subgraph "User Input"
         A[Natural Language<br/>Requirements]
         B[URL/HTML Data<br/>--url flag]
-        C[JSON Test Data<br/>--data flag]
+    C[CLI Requirement Text<br/>one or more prompts]
     end
 
     subgraph "AI & Workflow Engine"
@@ -267,8 +267,8 @@ ai-natural-language-tests/
 |-------------|------------------|
 | Python | 3.10+ |
 | Node.js | 22+ |
-| npm | latest |
-| Git | latest |
+| npm | Current stable release |
+| Git | Current stable release |
 | Playwright browsers | `npx playwright install chromium` |
 
 ## Installation
@@ -279,12 +279,15 @@ ai-natural-language-tests/
 ```bash
 git clone https://github.com/aiqualitylab/ai-natural-language-tests.git
 cd ai-natural-language-tests
+python -m venv .venv
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
 npm ci
 npx playwright install chromium
 ```
 
-Create `.env`:
+Create `.env` from `.env.example`, then set at least one provider key:
 
 ```bash
 OPENAI_API_KEY=your_key
@@ -415,6 +418,9 @@ GRAFANA_API_TOKEN=<logs_write_token>
 | Failure Analysis | `python qa_automation.py --analyze "error message"` |
 | Pattern Inventory | `python qa_automation.py --list-patterns` |
 
+> [!NOTE]
+> The current CLI supports URL-driven generation via `--url`. A direct `--data` JSON input flag is not implemented in this repository yet.
+
 **Natural Language Prompt Examples**
 
 | What you type | What AI generates |
@@ -527,7 +533,7 @@ python qa_automation.py --list-patterns
 flowchart TD
     A[Code Changes<br/>Pushed to Repo] --> B[CI/CD Pipeline<br/>Triggers]
     B --> C[Install Dependencies<br/>pip install -r requirements.txt<br/>npm install]
-    C --> D[Generate Tests<br/>python qa_automation.py<br/>--url or --data]
+    C --> D[Generate Tests<br/>python qa_automation.py<br/>--url]
     D --> E[Run Tests<br/>npx cypress run<br/>npx playwright test<br/>npx wdio run]
     E --> F{Tests Pass?}
     F -->|Yes| G[Deploy Application<br/>Success]
@@ -623,7 +629,7 @@ Release notes are maintained in [`CHANGELOG.md`](CHANGELOG.md) using a standard 
 
 ---
 
-*Built with AI. Tested by AI. Ready for CI.*
+*Production-focused AI-assisted E2E test generation for modern QA teams.*
 
 <table width="100%"><tr>
 <td><em>© 2026 AI Quality Lab / <a href="https://www.linkedin.com/in/sreekanthharigovindan/">Sreekanth Harigovindan.</a></em></td>
