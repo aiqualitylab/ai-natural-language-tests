@@ -1,5 +1,5 @@
 name: test_generation_playwright
-version: 1
+version: 2
 metadata:
   category: generation
 template: |
@@ -81,6 +81,14 @@ template: |
 
   18. Return ONLY valid TypeScript code. No markdown fences. No explanation.
 
+    19. Never hardcode success routes such as '/dashboard' or '/secure' unless explicitly provided in CONTEXT.
+
+    20. For success-like flows, assert either URL moved away from auth-like path OR a visible non-empty success message.
+
+    21. For error-like flows, assert either visible non-empty error message OR URL remains on auth-like path.
+
+    22. Do not use expected='success' or expected='error' values as URL substrings.
+
   
 
   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -159,7 +167,7 @@ template: |
 
   NAVIGATION:
 
-    - await page.goto('/login')
+    - await page.goto(testData.url)
 
     - await page.goto('https://example.com')
 
@@ -371,9 +379,11 @@ template: |
 
   PAGE-LEVEL ASSERTIONS:
 
-    - await expect(page).toHaveURL('/dashboard')
+    - await expect(page).toHaveURL(/^(?!.*\/login\b).*/)
 
-    - await expect(page).toHaveURL(/.*dashboard.*/)
+    - await expect(page.locator(successLocator)).toContainText(/\S+/)
+
+    - await expect(page.locator(errorLocator)).toContainText(/\S+/)
 
     - await expect(page).toHaveTitle('Dashboard')
 
@@ -403,7 +413,7 @@ template: |
 
   
 
-    - await page.waitForURL('/dashboard')
+    - await page.waitForURL(/^(?!.*\/login\b).*/)
 
     - await page.waitForLoadState('networkidle')
 
@@ -465,7 +475,7 @@ template: |
 
   WAIT FOR API:
 
-    - const responsePromise = page.waitForResponse('**/api/login');
+    - const responsePromise = page.waitForResponse('**/api/**');
 
       await page.getByRole('button', {{ name: 'Login' }}).click();
 
@@ -517,7 +527,7 @@ template: |
 
       await newPage.waitForLoadState();
 
-      await expect(newPage).toHaveURL('/new-tab');
+      await expect(newPage).toHaveURL(/\S+/);
 
   
 

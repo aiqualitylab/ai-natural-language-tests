@@ -130,12 +130,12 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python qa_automation.py "Test login" --url https://example.com/login
-  python qa_automation.py "Test login" --url https://example.com/login --framework playwright
-  python qa_automation.py "Test login" --url https://example.com/login --framework webdriverio
-  python qa_automation.py "Test login" --url https://example.com/login --use-prompt
-  python qa_automation.py "Test login" --url https://example.com/login --run
-  python qa_automation.py "Test login" --url https://example.com/login --llm anthropic
+    python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login
+    python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright
+    python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework webdriverio
+    python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --use-prompt
+    python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --run
+    python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --llm anthropic
   python qa_automation.py --analyze "CypressError: Element not found"
   python qa_automation.py --analyze -f error.log
   python qa_automation.py --list-patterns

@@ -411,6 +411,10 @@ GRAFANA_API_TOKEN=<logs_write_token>
 > - Keep `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS`, `GRAFANA_LOKI_URL`, `GRAFANA_INSTANCE_ID`, and `GRAFANA_API_TOKEN` unset to avoid telemetry/log shipping.
 > - Use masked or synthetic test data for sensitive fields.
 
+> [!TIP]
+> Need to support a new URL and tune prompts safely?
+> Follow the step-by-step guide in [PROMPT_UPDATE_GUIDE.md](PROMPT_UPDATE_GUIDE.md).
+
 ## Usage
 
 **Quick Reference**
@@ -424,6 +428,11 @@ GRAFANA_API_TOKEN=<logs_write_token>
 | Generate + Execute | `python qa_automation.py "requirement" --url <url> --run` |
 | Failure Analysis | `python qa_automation.py --analyze "error message"` |
 | Pattern Inventory | `python qa_automation.py --list-patterns` |
+
+> [!TIP]
+> If your global `python` misses project dependencies, run with the repository virtual environment:
+>
+> `./.venv/Scripts/python.exe qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright --run`
 
 > [!NOTE]
 > The current CLI supports URL-driven generation via `--url`. A direct `--data` JSON input flag is not implemented in this repository yet.
