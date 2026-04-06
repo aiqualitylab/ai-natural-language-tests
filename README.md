@@ -404,6 +404,13 @@ GRAFANA_API_TOKEN=<logs_write_token>
 
 </details>
 
+> [!TIP]
+> **Privacy-first setup:**
+>
+> - Use an LLM provider account/plan that guarantees no training or zero-retention for API data.
+> - Keep `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS`, `GRAFANA_LOKI_URL`, `GRAFANA_INSTANCE_ID`, and `GRAFANA_API_TOKEN` unset to avoid telemetry/log shipping.
+> - Use masked or synthetic test data for sensitive fields.
+
 ## Usage
 
 **Quick Reference**
