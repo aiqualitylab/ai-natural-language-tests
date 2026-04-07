@@ -40,6 +40,7 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 
 ### Getting Started
 - [Overview](#overview)
+- [Quick Start (5 Minutes)](#quick-start-5-minutes)
 - [Business Value](#business-value)
 - [Core Capabilities](#core-capabilities)
 
@@ -62,8 +63,14 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 ### Operations
 - [Security and Compliance Guidance](#security-and-compliance-guidance)
 - [Troubleshooting](#troubleshooting)
+- [Compliance and Data Handling](#compliance-and-data-handling)
+- [Operational Expectations](#operational-expectations)
+- [Support Matrix](#support-matrix)
 
 ### Project Info
+- [Documentation Map](#documentation-map)
+- [Versioning and Release Policy](#versioning-and-release-policy)
+- [Support and Security Reporting](#support-and-security-reporting)
 - [Changelog](#changelog)
 
 ## Overview
@@ -77,6 +84,31 @@ The platform translates natural language requirements into executable E2E tests 
 | WebdriverIO | `.spec.js` | Mocha runner with Jest-like `expect` |
 
 It supports both local engineering workflows and automated pipeline execution. The generator uses contextual data from live HTML analysis and historical pattern matching to produce stable, maintainable test assets.
+
+## Quick Start (5 Minutes)
+
+```bash
+git clone https://github.com/aiqualitylab/ai-natural-language-tests.git
+cd ai-natural-language-tests
+python -m venv .venv
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+npm ci
+npx playwright install chromium
+```
+
+Create `.env` and set at least one provider key:
+
+```bash
+OPENAI_API_KEY=your_key
+```
+
+Generate and run one Playwright test:
+
+```bash
+python qa_automation.py "Test login with valid credentials" --url https://the-internet.herokuapp.com/login --framework playwright --run
+```
 
 ## Business Value
 
@@ -293,6 +325,12 @@ Create `.env` from `.env.example`, then set at least one provider key:
 OPENAI_API_KEY=your_key
 ```
 
+PowerShell quick set for current session:
+
+```powershell
+$env:OPENAI_API_KEY = "your_key"
+```
+
 </details>
 
 ### Optional: GitAgent (Repo-Specific)
@@ -432,7 +470,8 @@ GRAFANA_API_TOKEN=<logs_write_token>
 > [!TIP]
 > If your global `python` misses project dependencies, run with the repository virtual environment:
 >
-> `./.venv/Scripts/python.exe qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright --run`
+> - PowerShell: `.\.venv\Scripts\python.exe qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright --run`
+> - Bash: `./.venv/Scripts/python.exe qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright --run`
 
 > [!NOTE]
 > The current CLI supports URL-driven generation via `--url`. A direct `--data` JSON input flag is not implemented in this repository yet.
@@ -638,6 +677,75 @@ Recommended pipeline stages:
 > - Optional: mainly for Linux visual debugging.
 
 > - Retry with generated single-spec command from logs.
+
+## Documentation Map
+
+| Document | Purpose |
+|----------|---------|
+| `README.md` | Platform overview, setup, usage, and operations |
+| `CONTRIBUTING.md` | Contribution standards, review checks, and branch/PR flow |
+| `CHANGELOG.md` | Release history and notable changes |
+| `PROMPT_UPDATE_GUIDE.md` | Prompt and URL-tuning workflow |
+| `RULES.md` | Repository automation and behavior constraints |
+
+## Versioning and Release Policy
+
+| Policy Area | Guidance |
+|-------------|----------|
+| Release model | Changelog-driven, documented in `CHANGELOG.md` |
+| Production pinning | Prefer version tags such as `v4.1.0` instead of `latest` |
+| `latest` usage | Use for local exploration, not for controlled CI/CD |
+| Upgrade notes | Breaking changes and upgrade guidance are captured per release |
+
+## Support and Security Reporting
+
+| Topic | Recommended Action |
+|-------|--------------------|
+| Usage and feature requests | Open a GitHub issue with reproduction steps and environment details |
+| Vulnerability reporting | Avoid public exploit details; share minimal impact + repro details privately |
+| Exposed credentials | Revoke and rotate tokens before sharing logs or artifacts |
+
+## Compliance and Data Handling
+
+| Control Area | Guidance |
+|--------------|----------|
+| Data minimization | Use synthetic or masked data in prompts, fixtures, and generated tests |
+| Secret hygiene | Keep keys in secret managers; never commit secrets |
+| Telemetry control | Keep OpenTelemetry and Loki export optional and environment-driven |
+| Access control | Use least-privilege tokens for providers and observability |
+| Auditability | Use pinned image tags and changelog-referenced releases |
+
+For implementation details and contribution controls, see CONTRIBUTING.md.
+
+## Operational Expectations
+
+These are practical runbook-style expectations for delivery teams. They are operational targets, not contractual SLAs.
+
+| Area | Target | Notes |
+|------|--------|-------|
+| Deterministic generation flow | Stable multi-step workflow execution | Uses fixed workflow stages with optional HITL gate |
+| CI pipeline repeatability | Reproducible runs with pinned dependencies | Prefer pinned Docker/image tags and locked dependency files |
+| Failure triage | Fast first-pass diagnosis | Use --analyze output for CATEGORY, REASON, and FIX guidance |
+| Incident containment | Rapid credential isolation | Revoke and rotate provider/observability tokens if exposed |
+
+## Support Matrix
+
+The matrix below reflects currently configured and documented project baselines.
+
+| Component | Baseline |
+|-----------|----------|
+| Python | 3.10+ |
+| Node.js | 22+ |
+| Cypress | 15.8.1+ |
+| Playwright | 1.58.1+ |
+| WebdriverIO | 8.46.0+ |
+| Chromedriver | 145.0.6+ |
+
+| Environment Guidance | Recommendation |
+|----------------------|----------------|
+| Shell compatibility | Use documented commands for both Windows PowerShell and Unix-like shells |
+| Playwright runtime | Install Chromium browsers before first Playwright execution |
+| Enterprise rollout | Pin versions and run smoke tests in each target environment |
 
 ## Changelog
 
