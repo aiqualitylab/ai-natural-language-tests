@@ -7,7 +7,7 @@ import gradio as gr
 
 
 def _generate_placeholder(requirements_text: str, framework: str, url: str) -> str:
-    line_count = len([line for line in requirements_text.splitlines() if line.strip()])
+    line_count = sum(1 for line in requirements_text.splitlines() if line.strip())
     url_value = url.strip() or "(no url)"
     return (
         "Step 1 scaffold only.\n"
@@ -38,12 +38,12 @@ This is the basic UI structure only.
         )
 
         with gr.Accordion("Provider Keys (masked)", open=False):
-            gr.Textbox(label="OpenAI API Key", type="password", lines=1)
-            gr.Textbox(label="Anthropic API Key", type="password", lines=1)
-            gr.Textbox(label="Google API Key", type="password", lines=1)
+            openai_key = gr.Textbox(label="OpenAI API Key", type="password", lines=1)
+            anthropic_key = gr.Textbox(label="Anthropic API Key", type="password", lines=1)
+            google_key = gr.Textbox(label="Google API Key", type="password", lines=1)
 
         with gr.Tab("Generate Tests"):
-            requirements_text = gr.Textbox(label="Requirements (one per line)", lines=8)
+            requirements_text = gr.Textbox(label="Test requirements (one per line)", lines=8)
             framework = gr.Dropdown(
                 label="Framework",
                 choices=["cypress", "playwright", "webdriverio"],
