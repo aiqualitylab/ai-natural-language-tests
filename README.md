@@ -721,20 +721,41 @@ These are practical runbook-style expectations for delivery teams. They are oper
 
 The matrix below reflects currently configured and documented project baselines.
 
-| Component | Baseline |
-|-----------|----------|
-| Python | 3.10+ |
-| Node.js | 22+ |
-| Cypress | 15.8.1+ |
-| Playwright | 1.58.1+ |
-| WebdriverIO | 8.46.0+ |
-| Chromedriver | 145.0.6+ |
+<table width="100%">
+<tr>
+<td width="50%" valign="top">
 
-| Environment Guidance | Recommendation |
-|----------------------|----------------|
-| Shell compatibility | Use documented commands for both Windows PowerShell and Unix-like shells |
-| Playwright runtime | Install Chromium browsers before first Playwright execution |
-| Enterprise rollout | Pin versions and run smoke tests in each target environment |
+<table>
+<thead>
+<tr><th align="left">Component</th><th align="left">Baseline</th></tr>
+</thead>
+<tbody>
+<tr><td>Python</td><td>3.10+</td></tr>
+<tr><td>Node.js</td><td>22+</td></tr>
+<tr><td>Cypress</td><td>15.8.1+</td></tr>
+<tr><td>Playwright</td><td>1.58.1+</td></tr>
+<tr><td>WebdriverIO</td><td>8.46.0+</td></tr>
+<tr><td>Chromedriver</td><td>145.0.6+</td></tr>
+</tbody>
+</table>
+
+</td>
+<td width="50%" valign="top">
+
+<table>
+<thead>
+<tr><th align="left">Environment Guidance</th><th align="left">Recommendation</th></tr>
+</thead>
+<tbody>
+<tr><td>Shell compatibility</td><td>Use documented commands for both Windows PowerShell and Unix-like shells</td></tr>
+<tr><td>Playwright runtime</td><td>Install Chromium browsers before first Playwright execution</td></tr>
+<tr><td>Enterprise rollout</td><td>Pin versions and run smoke tests in each target environment</td></tr>
+</tbody>
+</table>
+
+</td>
+</tr>
+</table>
 
 ## Changelog
 
