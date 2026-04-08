@@ -16,6 +16,7 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-FFD700?logo=openai&logoColor=black)
 ![Anthropic](https://img.shields.io/badge/Anthropic-Claude-FF9933?logoColor=white)
 ![Google](https://img.shields.io/badge/Google-Gemini-003087?logo=google&logoColor=white)
+
 ![Cypress](https://img.shields.io/badge/Cypress-FF9933?logo=cypress&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-003087?logo=playwright&logoColor=white)
 ![WebdriverIO](https://img.shields.io/badge/WebdriverIO-EA5906?logo=webdriverio&logoColor=white)
@@ -24,6 +25,7 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 ![FAISS](https://img.shields.io/badge/FAISS-003087?logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-07405E?logo=sqlite&logoColor=white)
 ![Sentence-Transformers](https://img.shields.io/badge/Sentence--Transformers-FF9933?logoColor=white)
+
 ![Docker](https://img.shields.io/badge/Docker-Apache%202.0-808080?logo=docker&logoColor=white)
 ![GHCR](https://img.shields.io/badge/GitHub%20Packages-GHCR-181717?logo=github&logoColor=white)
 ![Grafana](https://img.shields.io/badge/Grafana-AGPL%20v3-FF9933?logo=grafana&logoColor=white)
@@ -38,44 +40,31 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 
 ## Table of Contents
 
-### Getting Started
-- [Overview](#overview)
-- [Quick Start (5 Minutes)](#quick-start-5-minutes)
-- [Business Value](#business-value)
-- [Core Capabilities](#core-capabilities)
-
-### Platform Design
-- [Architecture](#architecture)
-- [Workflow](#workflow)
-- [Technology Stack](#technology-stack)
-
-### Setup & Configuration
-- [Repository Structure](#repository-structure)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [GitHub Registry (GHCR)](#github-registry-ghcr)
-- [Configuration](#configuration)
-
-### Using the Platform
-- [Usage](#usage)
-- [CI/CD Integration](#cicd-integration)
-
-### Operations
-- [Security and Compliance Guidance](#security-and-compliance-guidance)
-- [Troubleshooting](#troubleshooting)
-- [Compliance and Data Handling](#compliance-and-data-handling)
-- [Operational Expectations](#operational-expectations)
-- [Support Matrix](#support-matrix)
-
-### Project Info
-- [Documentation Map](#documentation-map)
-- [Versioning and Release Policy](#versioning-and-release-policy)
-- [Support and Security Reporting](#support-and-security-reporting)
-- [Changelog](#changelog)
+| Section | Links |
+|---------|-------|
+| Getting Started | [Overview](#overview)<br/>[Quick Start (5 Minutes)](#quick-start-5-minutes)<br/>[Business Value](#business-value)<br/>[Core Capabilities](#core-capabilities) |
+| Platform Design | [Architecture](#architecture)<br/>[Workflow](#workflow)<br/>[Technology Stack](#technology-stack) |
+| Setup and Configuration | [Repository Structure](#repository-structure)<br/>[Prerequisites](#prerequisites)<br/>[Installation](#installation)<br/>[GitHub Registry (GHCR)](#github-registry-ghcr)<br/>[Configuration](#configuration) |
+| Using the Platform | [Usage](#usage)<br/>[CI/CD Integration](#cicd-integration) |
+| Operations | [Security and Compliance Guidance](#security-and-compliance-guidance)<br/>[Troubleshooting](#troubleshooting)<br/>[Compliance and Data Handling](#compliance-and-data-handling)<br/>[Operational Expectations](#operational-expectations)<br/>[Support Matrix](#support-matrix) |
+| Project Info | [Documentation Map](#documentation-map)<br/>[Versioning and Release Policy](#versioning-and-release-policy)<br/>[Support and Security Reporting](#support-and-security-reporting)<br/>[Changelog](#changelog) |
 
 ## Overview
 
 The platform translates natural language requirements into executable E2E tests for:
+
+```mermaid
+flowchart LR
+  A[AI-Powered E2E Test Generation]
+  A --> C[Cypress<br/>.cy.js<br/>Traditional and prompt-powered]
+  A --> P[Playwright<br/>.spec.ts<br/>TypeScript async/await]
+  A --> W[WebdriverIO<br/>.spec.js<br/>Mocha with Jest-like expect]
+
+  style A fill:#e3f2fd,color:#333333,stroke:#666666
+  style C fill:#c8e6c9,color:#333333,stroke:#666666
+  style P fill:#ffcdd2,color:#333333,stroke:#666666
+  style W fill:#ffe0b2,color:#333333,stroke:#666666
+```
 
 | Framework | Output | Style |
 |-----------|--------|-------|
@@ -749,7 +738,7 @@ The matrix below reflects currently configured and documented project baselines.
 
 ## Changelog
 
-Release notes are maintained in [`CHANGELOG.md`](CHANGELOG.md) using a standard Keep a Changelog format.
+Release notes are maintained in [CHANGELOG.md](CHANGELOG.md), following the Keep a Changelog format.
 
 ---
 
@@ -759,6 +748,3 @@ Release notes are maintained in [`CHANGELOG.md`](CHANGELOG.md) using a standard 
 <td><em>© 2026 AI Quality Lab / <a href="https://www.linkedin.com/in/sreekanthharigovindan/">Sreekanth Harigovindan.</a></em></td>
 <td width="1" align="right" nowrap><a href="https://tests.aiqualitylab.org"><img src=".github/images/aiqualitylab_qr.png" alt="tests.aiqualitylab.org" width="100" /></a><br/><sub><a href="https://tests.aiqualitylab.org">tests.aiqualitylab.org</a></sub></td>
 </tr></table>
-
----
-Documentation licensed under CC BY 4.0.
