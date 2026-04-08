@@ -13,3 +13,4 @@ opentelemetry-sdk
 opentelemetry-exporter-otlp-proto-http
 python-logging-loki
 PyYAML==6.0.2
+gradio==5.24.0
