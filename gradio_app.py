@@ -2,20 +2,45 @@
 """Gradio scaffold for step-by-step development."""
 
 import argparse
+import json
+from datetime import datetime
+from typing import List
 
 import gradio as gr
 
+from qa_workflow import TestState
 
-def _generate_placeholder(requirements_text: str, framework: str, url: str) -> str:
-    line_count = sum(1 for line in requirements_text.splitlines() if line.strip())
-    url_value = url.strip() or "(no url)"
-    return (
-        "Step 1 scaffold only.\n"
-        f"Requirements lines: {line_count}\n"
-        f"Framework: {framework}\n"
-        f"URL: {url_value}\n"
-        "Next step will connect this button to qa_workflow.create_workflow()."
+
+def _split_requirements(requirements_text: str) -> List[str]:
+    return [line.strip() for line in requirements_text.splitlines() if line.strip()]
+
+
+def _build_state_preview(requirements_text: str, framework: str, url: str) -> str:
+    requirements = _split_requirements(requirements_text)
+    if not requirements:
+        return "Add at least one requirement (one line per requirement)."
+
+    state = TestState(
+        requirements=requirements,
+        output_dir="cypress/e2e",
+        use_prompt=False,
+        approve=False,
+        framework=framework,
+        url=url.strip() or None,
+        run_tests=False,
+        llm_provider="openai",
+        run_id=datetime.now().strftime("%Y%m%d_%H%M%S"),
     )
+
+    preview = {
+        "requirements_count": len(state.requirements),
+        "framework": state.framework,
+        "url": state.url,
+        "output_dir": state.output_dir,
+        "run_id": state.run_id,
+        "requirements": state.requirements,
+    }
+    return json.dumps(preview, indent=2)
 
 
 def _analyze_placeholder(log_text: str) -> str:
@@ -25,15 +50,11 @@ def _analyze_placeholder(log_text: str) -> str:
 
 
 def _build_ui() -> gr.Blocks:
-    with gr.Blocks(title="AI Test Generator UI - Step 1") as app:
+    with gr.Blocks(title="AI Test Generator UI") as app:
         gr.Markdown(
             """
-# AI-Powered E2E Test Generator (Step 1)
-
-This is the basic UI structure only.
-- Keys are masked.
-- Actions are placeholders.
-- Backend wiring comes in the next commits.
+# AI-Powered E2E Test Generator
+This is a scaffold for a Gradio UI to interact with the AI test generation workflow. It includes two tabs: "Generate Tests" and "Analyze Failure". The "Generate Tests" tab allows you to input test requirements, select a framework, and optionally provide a URL. The "Analyze Failure" tab is a placeholder for future functionality to analyze test failure logs.
             """
         )
 
@@ -49,11 +70,11 @@ This is the basic UI structure only.
                 choices=["cypress", "playwright", "webdriverio"],
                 value="cypress",
             )
-            url = gr.Textbox(label="URL (optional)")
+            url = gr.Textbox(label="URL")
             generate_button = gr.Button("Generate")
             generate_output = gr.Textbox(label="Output", lines=8)
             generate_button.click(
-                _generate_placeholder,
+                _build_state_preview,
                 inputs=[requirements_text, framework, url],
                 outputs=[generate_output],
             )
