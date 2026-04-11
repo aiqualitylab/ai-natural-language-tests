@@ -1,39 +1,53 @@
-  - name: Build filtered deploy bundle
-    run: |
-      rm -rf .hf-deploy
-      mkdir -p .hf-deploy
-      mkdir -p .hf-deploy/prompt_specs
+name: Deploy selected files to Hugging Face Space
 
-      # Required Space files
-      cp [app.py](http://_vscodecontentref_/0) .hf-deploy/
-      cp [requirements.txt](http://_vscodecontentref_/1) .hf-deploy/
-      cp [README.md](http://_vscodecontentref_/2) .hf-deploy/
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
 
-      # Runtime dependencies
-      cp [qa_config.py](http://_vscodecontentref_/3) .hf-deploy/
-      cp [qa_runtime.py](http://_vscodecontentref_/4) .hf-deploy/
-      cp [qa_workflow.py](http://_vscodecontentref_/5) .hf-deploy/
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # Required prompt templates/specs
-      cp -r prompt_specs/* .hf-deploy/prompt_specs/
+      - name: Build filtered deploy bundle
+        run: |
+          rm -rf .hf-deploy
+          mkdir -p .hf-deploy
+          mkdir -p .hf-deploy/prompt_specs
 
-  - name: Push bundle to Hugging Face Space
-    env:
-      HF_TOKEN: ${{ secrets.HF_TOKEN }}
-    run: |
-      if [ -z "$HF_TOKEN" ]; then
-        echo "HF_TOKEN secret is not set."
-        exit 1
-      fi
+          # Required Space files
+          cp app.py .hf-deploy/
+          cp requirements.txt .hf-deploy/
+          cp README.md .hf-deploy/
 
-      cd .hf-deploy
-      git init
-      git config user.email "ci@github.com"
-      git config user.name "CI"
-      git add -A
-      git commit -m "Deploy selected files to HF Space"
+          # Runtime dependencies
+          cp qa_config.py .hf-deploy/
+          cp qa_runtime.py .hf-deploy/
+          cp qa_workflow.py .hf-deploy/
 
-      HF_REMOTE="https://aiqualitylab:${HF_TOKEN}@huggingface.co/spaces/aiqualitylab/ai-natural-language-tests"
-      git branch -M main
-      git remote add hf "$HF_REMOTE"
-      git push hf main --force
+          # Required prompt templates/specs
+          cp -r prompt_specs/* .hf-deploy/prompt_specs/
+
+      - name: Push bundle to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "HF_TOKEN secret is not set."
+            exit 1
+          fi
+
+          cd .hf-deploy
+          git init
+          git config user.email "ci@github.com"
+          git config user.name "CI"
+          git add -A
+          git commit -m "Deploy selected files to HF Space"
+
+          HF_REMOTE="https://aiqualitylab:${HF_TOKEN}@huggingface.co/spaces/aiqualitylab/ai-natural-language-tests"
+          git branch -M main
+          git remote add hf "$HF_REMOTE"
+          git push hf main --force
