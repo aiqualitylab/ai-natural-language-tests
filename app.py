@@ -278,7 +278,7 @@ def main() -> None:
     args = parser.parse_args()
 
     app = _build_ui()
-    app.launch(server_name=args.server_name, server_port=args.server_port, share=args.share)
+    app.launch(server_name=args.server_name, server_port=args.server_port, share=args.share, ssr_mode=False)
 
 
 if __name__ == "__main__":

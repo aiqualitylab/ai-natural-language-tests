@@ -52,11 +52,19 @@ def _setup_loki_logging() -> logging.Logger:
     try:
         import logging_loki
 
+        loki_url = os.getenv("GRAFANA_LOKI_URL", "").strip()
+        grafana_instance_id = os.getenv("GRAFANA_INSTANCE_ID", "").strip()
+        grafana_api_token = os.getenv("GRAFANA_API_TOKEN", "").strip()
+
+        if not loki_url or not grafana_instance_id or not grafana_api_token:
+            _logger.info("[LOKI] Skipped: missing Grafana Loki environment variables")
+            return _logger
+
         _logger.addHandler(
             logging_loki.LokiHandler(
-                url=f"{os.getenv('GRAFANA_LOKI_URL').strip()}/loki/api/v1/push",
+                url=f"{loki_url}/loki/api/v1/push",
                 tags={"service_name": "ai-natural-language-tests", "app": "ai-quality-lab"},
-                auth=(os.getenv("GRAFANA_INSTANCE_ID").strip(), os.getenv("GRAFANA_API_TOKEN").strip()),
+                auth=(grafana_instance_id, grafana_api_token),
                 version="1",
             )
         )
