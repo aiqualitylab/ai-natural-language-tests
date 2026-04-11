@@ -412,7 +412,7 @@ docker run --rm \
 | Tag | Use case |
 |-----|----------|
 | `latest` | Always the most recently published version — use for quick runs |
-| `v4.1.0` | Pinned to a specific release — use in CI/CD for reproducibility |
+| `v4.2.0` | Pinned to a specific release — use in CI/CD for reproducibility |
 
 For publishing and release management, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -702,7 +702,7 @@ Recommended pipeline stages:
 | Policy Area | Guidance |
 |-------------|----------|
 | Release model | Changelog-driven, documented in `CHANGELOG.md` |
-| Production pinning | Prefer version tags such as `v4.1.0` instead of `latest` |
+| Production pinning | Prefer version tags such as `v4.2.0` instead of `latest` |
 | `latest` usage | Use for local exploration, not for controlled CI/CD |
 | Upgrade notes | Breaking changes and upgrade guidance are captured per release |
 

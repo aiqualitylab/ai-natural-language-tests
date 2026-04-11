@@ -75,3 +75,6 @@ test-results/
 playwright-report/
 coverage/
 .nyc_output/
+
+# Local playbooks
+docs/releases/

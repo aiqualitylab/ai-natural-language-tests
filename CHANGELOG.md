@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.2.0] - 2026-04-12
+### Added
+- Added reusable release execution playbook at `docs/releases/release-playbook-4.2.0.md`.
+
+### Changed
+- Bumped release metadata and container tags from `4.1.0`/`v4.1.0` to `4.2.0`/`v4.2.0` across package, agent, Docker, and Compose files.
+- Updated release documentation examples to use `v4.2.0` for pinned tag guidance.
+
 ## [4.1.0] - 2026-04-02
 ### Added
 - Added HITL (human-in-the-loop) approval checkpoint during generated test save flow using `--approve`.
