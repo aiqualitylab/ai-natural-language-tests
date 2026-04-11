@@ -1,3 +1,11 @@
+---
+title: AI Natural Language Tests
+sdk: gradio
+sdk_version: 6.12.0
+app_file: app.py
+pinned: false
+---
+
 <div align="center">
 
 # AI-Powered E2E Test Generation Platform

@@ -1,0 +1,28 @@
+name: Deploy to Hugging Face Space
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "HF_TOKEN secret is not set."
+            exit 1
+          fi
+
+          HF_REMOTE="https://aiqualitylab:${HF_TOKEN}@huggingface.co/spaces/aiqualitylab/ai-natural-language-tests"
+          git remote add hf "$HF_REMOTE"
+          git push hf main:main --force
