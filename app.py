@@ -272,7 +272,7 @@ https://tests.aiqualitylab.org/
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Gradio scaffold")
-    parser.add_argument("--server-name", default="127.0.0.1")
+    parser.add_argument("--server-name", default="0.0.0.0")
     parser.add_argument("--server-port", type=int, default=7860)
     parser.add_argument("--share", action="store_true")
     args = parser.parse_args()
