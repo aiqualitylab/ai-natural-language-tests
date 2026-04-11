@@ -1,11 +1,3 @@
----
-title: AI Natural Language Tests
-sdk: gradio
-sdk_version: 6.12.0
-app_file: app.py
-pinned: false
----
-
 <div align="center">
 
 # AI-Powered E2E Test Generation Platform
@@ -785,3 +777,13 @@ Release notes are maintained in [CHANGELOG.md](CHANGELOG.md), following the Keep
 <td><em>© 2026 AI Quality Lab / <a href="https://www.linkedin.com/in/sreekanthharigovindan/">Sreekanth Harigovindan.</a></em></td>
 <td width="1" align="right" nowrap><a href="https://tests.aiqualitylab.org"><img src=".github/images/aiqualitylab_qr.png" alt="tests.aiqualitylab.org" width="100" /></a><br/><sub><a href="https://tests.aiqualitylab.org">tests.aiqualitylab.org</a></sub></td>
 </tr></table>
+
+---
+
+```yaml
+title: AI Natural Language Tests
+sdk: gradio
+sdk_version: 6.12.0
+app_file: app.py
+pinned: false
+```
