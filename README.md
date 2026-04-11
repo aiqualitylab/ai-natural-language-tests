@@ -42,7 +42,15 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 
 [![Website](https://img.shields.io/badge/Website-tests.aiqualitylab.org-4a7cff?style=flat-square&logo=google-chrome&logoColor=white)](https://tests.aiqualitylab.org)
 
+[![Hugging Face Spaces](https://img.shields.io/badge/Hugging%20Face-Spaces-FFD700?logo=huggingface&logoColor=black)](https://huggingface.co/spaces/aiqualitylab/ai-natural-language-tests)
+
 </div>
+
+---
+
+## Try It Live
+
+**[ai-natural-language-tests on Hugging Face Spaces](https://huggingface.co/spaces/aiqualitylab/ai-natural-language-tests)** — Try the platform directly in your browser without installation.
 
 ---
 
