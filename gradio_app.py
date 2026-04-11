@@ -20,13 +20,21 @@ def _build_state_preview(requirements_text: str, framework: str, url: str) -> st
     if not requirements:
         return "Add at least one requirement (one line per requirement)."
 
+    url_value = url.strip()
+    if not url_value:
+        return json.dumps({"error": "URL is mandatory. Enter exactly one URL."}, indent=2)
+
+    # Step 2 guardrail: this field accepts one URL value only.
+    if len(url_value.split()) > 1 or "," in url_value:
+        return json.dumps({"error": "Enter only one URL in the URL field."}, indent=2)
+
     state = TestState(
         requirements=requirements,
         output_dir="cypress/e2e",
         use_prompt=False,
         approve=False,
         framework=framework,
-        url=url.strip() or None,
+        url=url_value,
         run_tests=False,
         llm_provider="openai",
         run_id=datetime.now().strftime("%Y%m%d_%H%M%S"),
@@ -45,8 +53,19 @@ def _build_state_preview(requirements_text: str, framework: str, url: str) -> st
 
 def _analyze_placeholder(log_text: str) -> str:
     if not log_text.strip():
-        return "Paste log text to continue."
-    return "Step 1 scaffold only. Next step will connect this tab to analyze_test_failure()."
+        return json.dumps(
+            {
+                "message": "Paste log text to continue.",
+            },
+            indent=2,
+        )
+    return json.dumps(
+        {
+            "message": "Analyze placeholder response.",
+            "log_length": len(log_text),
+        },
+        indent=2,
+    )
 
 
 def _build_ui() -> gr.Blocks:
@@ -54,25 +73,25 @@ def _build_ui() -> gr.Blocks:
         gr.Markdown(
             """
 # AI-Powered E2E Test Generator
-This is a scaffold for a Gradio UI to interact with the AI test generation workflow. It includes two tabs: "Generate Tests" and "Analyze Failure". The "Generate Tests" tab allows you to input test requirements, select a framework, and optionally provide a URL. The "Analyze Failure" tab is a placeholder for future functionality to analyze test failure logs.
+This is a scaffold for a Gradio UI to interact with the AI test generation workflow. It includes tabs for "Generate Tests", "Analyze Failure", and "Settings".
             """
         )
 
-        with gr.Accordion("Provider Keys (masked)", open=False):
-            openai_key = gr.Textbox(label="OpenAI API Key", type="password", lines=1)
-            anthropic_key = gr.Textbox(label="Anthropic API Key", type="password", lines=1)
-            google_key = gr.Textbox(label="Google API Key", type="password", lines=1)
-
         with gr.Tab("Generate Tests"):
-            requirements_text = gr.Textbox(label="Test requirements (one per line)", lines=8)
-            framework = gr.Dropdown(
-                label="Framework",
-                choices=["cypress", "playwright", "webdriverio"],
-                value="cypress",
-            )
-            url = gr.Textbox(label="URL")
-            generate_button = gr.Button("Generate")
-            generate_output = gr.Textbox(label="Output", lines=8)
+            with gr.Row():
+                with gr.Column(scale=1):
+                    requirements_text = gr.Textbox(label="Test requirements (one per line)", lines=12)
+                    framework = gr.Dropdown(
+                        label="Framework",
+                        choices=["cypress", "playwright", "webdriverio"],
+                        value="cypress",
+                    )
+                    url = gr.Textbox(label="URL (mandatory, one URL only)", placeholder="https://example.com/login")
+                    generate_button = gr.Button("Generate")
+
+                with gr.Column(scale=1):
+                    generate_output = gr.Code(label="Output", language="json")
+
             generate_button.click(
                 _build_state_preview,
                 inputs=[requirements_text, framework, url],
@@ -80,10 +99,21 @@ This is a scaffold for a Gradio UI to interact with the AI test generation workf
             )
 
         with gr.Tab("Analyze Failure"):
-            log_text = gr.Textbox(label="Log Text", lines=10)
-            analyze_button = gr.Button("Analyze")
-            analyze_output = gr.Textbox(label="Output", lines=4)
+            with gr.Row():
+                with gr.Column(scale=1):
+                    log_text = gr.Textbox(label="Log Text", lines=12)
+                    analyze_button = gr.Button("Analyze")
+
+                with gr.Column(scale=1):
+                    analyze_output = gr.Code(label="Output", language="json")
+
             analyze_button.click(_analyze_placeholder, inputs=[log_text], outputs=[analyze_output])
+
+        with gr.Tab("Settings"):
+            gr.Markdown("Configure provider keys here. These fields are masked.")
+            openai_key = gr.Textbox(label="OpenAI API Key", type="password", lines=1)
+            anthropic_key = gr.Textbox(label="Anthropic API Key", type="password", lines=1)
+            google_key = gr.Textbox(label="Google API Key", type="password", lines=1)
 
     return app
 
