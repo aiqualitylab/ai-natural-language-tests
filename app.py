@@ -4,6 +4,7 @@
 import argparse
 import json
 import logging
+import os
 import queue
 import threading
 import time
@@ -65,11 +66,26 @@ class _QueueLogHandler(logging.Handler):
         self.out_queue.put(self.format(record))
 
 
+def _apply_api_keys(openai_key: str, anthropic_key: str, google_key: str) -> None:
+    """Set API keys as environment variables if provided by the user."""
+    if openai_key.strip():
+        os.environ["OPENAI_API_KEY"] = openai_key.strip()
+    if anthropic_key.strip():
+        os.environ["ANTHROPIC_API_KEY"] = anthropic_key.strip()
+    if google_key.strip():
+        os.environ["GOOGLE_API_KEY"] = google_key.strip()
+
+
 def _run_generation(
     requirements_text: str,
     framework: str,
     url: str,
+    openai_key: str = "",
+    anthropic_key: str = "",
+    google_key: str = "",
 ) -> Generator[tuple[str, str, str, str | None], None, None]:
+    _apply_api_keys(openai_key, anthropic_key, google_key)
+
     requirements = _split_requirements(requirements_text)
     if not requirements:
         yield json.dumps({"error": "Add at least one requirement (one line per requirement)."}, indent=2), "", "", None
@@ -221,10 +237,15 @@ Translate natural language requirements into production-ready end-to-end tests.
 
 Enterprise-grade platform to generate and execute Cypress, Playwright, and WebdriverIO end-to-end tests from natural language requirements.
 
-© 2026 AI Quality Lab / [Sreekanth Harigovindan](https://www.linkedin.com/in/sreekanthharigovindan/).
-https://tests.aiqualitylab.org/
+© 2026 AI Quality Lab / https://tests.aiqualitylab.org/
             """
         )
+
+        with gr.Tab("Settings"):
+            gr.Markdown("Configure provider keys here. These fields are masked. Keys entered here override any environment variables.")
+            openai_key = gr.Textbox(label="OpenAI API Key", type="password", lines=1)
+            anthropic_key = gr.Textbox(label="Anthropic API Key", type="password", lines=1)
+            google_key = gr.Textbox(label="Google API Key", type="password", lines=1)
 
         with gr.Tab("Generate Tests"):
             with gr.Row():
@@ -246,7 +267,7 @@ https://tests.aiqualitylab.org/
 
             generate_button.click(
                 _run_generation,
-                inputs=[requirements_text, framework, url],
+                inputs=[requirements_text, framework, url, openai_key, anthropic_key, google_key],
                 outputs=[generate_output, generate_logs, generated_test_code, generated_code_file],
             )
 
@@ -260,12 +281,6 @@ https://tests.aiqualitylab.org/
                     analyze_output = gr.Code(label="Output", language="json")
 
             analyze_button.click(_analyze_placeholder, inputs=[log_text], outputs=[analyze_output])
-
-        with gr.Tab("Settings"):
-            gr.Markdown("Configure provider keys here. These fields are masked.")
-            openai_key = gr.Textbox(label="OpenAI API Key", type="password", lines=1)
-            anthropic_key = gr.Textbox(label="Anthropic API Key", type="password", lines=1)
-            google_key = gr.Textbox(label="Google API Key", type="password", lines=1)
 
     return app
 
