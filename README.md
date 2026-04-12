@@ -58,11 +58,21 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 
 ---
 
+## Product Preview
+
+<p align="center">
+  <img src=".github/images/hugging-face-generate-tests-preview.png" alt="Generate Tests workflow preview" width="100%" />
+</p>
+
+<p align="center"><em>Generate tests from plain-English requirements, inspect workflow logs, review structured output, and download the generated spec from a single interface.</em></p>
+
+---
+
 ## Table of Contents
 
 | Section | Links |
 |---------|-------|
-| Getting Started | [Overview](#overview)<br/>[Quick Start (5 Minutes)](#quick-start-5-minutes)<br/>[Business Value](#business-value)<br/>[Core Capabilities](#core-capabilities) |
+| Getting Started | [Product Preview](#product-preview)<br/>[Overview](#overview)<br/>[Quick Start (5 Minutes)](#quick-start-5-minutes)<br/>[Business Value](#business-value)<br/>[Core Capabilities](#core-capabilities) |
 | Platform Design | [Architecture](#architecture)<br/>[Workflow](#workflow)<br/>[Technology Stack](#technology-stack) |
 | Setup and Configuration | [Repository Structure](#repository-structure)<br/>[Prerequisites](#prerequisites)<br/>[Installation](#installation)<br/>[GitHub Registry (GHCR)](#github-registry-ghcr)<br/>[Configuration](#configuration) |
 | Using the Platform | [Usage](#usage)<br/>[CI/CD Integration](#cicd-integration) |
