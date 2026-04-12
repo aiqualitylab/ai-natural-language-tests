@@ -16,6 +16,7 @@ from typing import Generator, List
 import gradio as gr
 
 from qa_config import FRAMEWORK_CONFIG
+from qa_runtime import analyze_test_failure
 from qa_workflow import TestState, create_workflow
 
 
@@ -211,21 +212,16 @@ def _run_generation(
         capture_handler.close()
 
 
-def _analyze_placeholder(log_text: str) -> str:
+def _run_analysis(log_text: str, openai_key: str, anthropic_key: str, google_key: str) -> str:
     if not log_text.strip():
-        return json.dumps(
-            {
-                "message": "Paste log text to continue.",
-            },
-            indent=2,
-        )
-    return json.dumps(
-        {
-            "message": "Analyze placeholder response.",
-            "log_length": len(log_text),
-        },
-        indent=2,
-    )
+        return "Paste log text to continue."
+
+    _apply_api_keys(openai_key, anthropic_key, google_key)
+
+    try:
+        return analyze_test_failure(log_text)
+    except Exception as exc:
+        return f"Analysis failed: {exc}"
 
 
 def _build_ui() -> gr.Blocks:
@@ -278,9 +274,13 @@ Enterprise-grade platform to generate and execute Cypress, Playwright, and Webdr
                     analyze_button = gr.Button("Analyze")
 
                 with gr.Column(scale=1):
-                    analyze_output = gr.Code(label="Output", language="json")
+                    analyze_output = gr.Textbox(label="Output", lines=12)
 
-            analyze_button.click(_analyze_placeholder, inputs=[log_text], outputs=[analyze_output])
+            analyze_button.click(
+                _run_analysis,
+                inputs=[log_text, openai_key, anthropic_key, google_key],
+                outputs=[analyze_output],
+            )
 
     return app
 
