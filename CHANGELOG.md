@@ -9,28 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [4.2.0] - 2026-04-12
 ### Added
-- Added reusable release execution playbook at `docs/releases/release-playbook-4.2.0.md`.
+- **HITL (Human-In-The-Loop) Approval Flow**: New `--approve` flag to insert manual approval checkpoint during generated test save, enabling QA engineers to review and validate tests before persistence.
+- **HTML Replay Utilities**: 
+  - `--list-html-replays`: List all stored HTML analysis replay snapshots with metadata.
+  - `--replay-html-analysis <run_id>`: Replay and re-analyze a specific HTML snapshot run for debugging and root cause analysis.
+- **Replay Persistence Layer**: HTML analysis debug snapshots automatically stored under `vector_db/html_analysis_debug/` for audit trails and failure investigation.
+- **Reusable Release Execution Playbook**: `docs/releases/release-playbook-4.2.0.md` as a standardized checklist and guide for repeatable, low-error release processes.
 
 ### Changed
-- Bumped release metadata and container tags from `4.1.0`/`v4.1.0` to `4.2.0`/`v4.2.0` across package, agent, Docker, and Compose files.
-- Updated release documentation examples to use `v4.2.0` for pinned tag guidance.
-
-## [4.1.0] - 2026-04-02
-### Added
-- Added HITL (human-in-the-loop) approval checkpoint during generated test save flow using `--approve`.
-- Added HTML replay utilities:
-	- `--list-html-replays`
-	- `--replay-html-analysis <run_id>`
-- Added replay snapshot persistence under `vector_db/html_analysis_debug/`.
-
-### Changed
-- Refactored from single-file runtime into a modular architecture:
-	- `qa_automation.py` (CLI entrypoint)
-	- `qa_config.py` (configuration and prompt/model loading)
-	- `qa_runtime.py` (runtime services: logging, tracing, storage, replay)
-	- `qa_workflow.py` (LangGraph workflow/state/nodes)
-- Updated workflow implementation to keep orchestration in LangGraph and business logic in service modules.
-- Simplified implementation paths for readability while preserving behavior.
+- **Modular Architecture Refactor** - Separated single-file runtime into specialized modules:
+  - `qa_automation.py`: CLI entrypoint and command routing only.
+  - `qa_config.py`: Configuration loading, prompt spec YAML parsing, and LLM model initialization.
+  - `qa_runtime.py`: Runtime services (logging, distributed tracing, vector storage, replay management).
+  - `qa_workflow.py`: LangGraph workflow definition, state machine, and node implementations.
+  - **Benefit**: Clearer separation of concerns, easier testing, improved code maintainability.
+- **Orchestration vs Business Logic**: LangGraph remains the orchestration layer; business logic moved into dedicated service modules for better reusability.
+- **Release Metadata Versioning**: Bumped from `4.0.0`/`v4.0.0` to `4.2.0`/`v4.2.0` across:
+  - `package.json` and root `package-lock.json`
+  - `agent.yaml` (agent version and tag references)
+  - `Dockerfile` (`ARG RELEASE_TAG`)
+  - `docker-compose.yml` (image tags and build context)
+  - `README.md` (pinned release tag table for users)
+  - `CONTRIBUTING.md` (publish examples and tag conventions)
+  - GitHub Actions workflow files (publisher tags and GHCR references)
+- **Updated Release Documentation**: All examples now reference `v4.2.0` for tag pinning guidance and reproducible deployments.
+- **Simplified Implementation Paths**: Refactored logic for readability without changing end-user behavior or API contracts.
 
 ## [4.0.0] - 2026-03-28
 ### Changed
