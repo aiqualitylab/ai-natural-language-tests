@@ -229,9 +229,8 @@ def _build_ui() -> gr.Blocks:
         gr.Markdown(
             """
 # AI-Powered E2E Test Generation Platform
-Translate natural language requirements into production-ready end-to-end tests.
 
-Enterprise-grade platform to generate and execute Cypress, Playwright, and WebdriverIO end-to-end tests from natural language requirements.
+Enterprise-grade platform to generate Cypress, Playwright, and WebdriverIO end-to-end tests from natural language requirements.
 
 © 2026 AI Quality Lab / https://tests.aiqualitylab.org/
             """
