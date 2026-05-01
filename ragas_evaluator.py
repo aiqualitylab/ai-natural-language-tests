@@ -18,3 +18,15 @@ def run(requirement, test_file, url):
         "contexts":     [page_html],  
         "ground_truth": requirement, 
     }])
+
+    result = evaluate(
+    dataset=dataset,
+    metrics=[faithfulness, answer_relevancy, context_precision, context_recall],
+    llm=ChatOpenAI(model="gpt-4o-mini", temperature=0),
+    embeddings=OpenAIEmbeddings(model="text-embedding-3-small"),
+    )
+
+    print(f"\n  Faithfulness      : {result['faithfulness']:.2f}")
+    print(f"  Answer Relevancy  : {result['answer_relevancy']:.2f}")
+    print(f"  Context Precision : {result['context_precision']:.2f}")
+    print(f"  Context Recall    : {result['context_recall']:.2f}")
