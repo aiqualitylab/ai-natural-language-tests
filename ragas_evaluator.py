@@ -30,3 +30,11 @@ def run(requirement, test_file, url):
     print(f"  Answer Relevancy  : {result['answer_relevancy']:.2f}")
     print(f"  Context Precision : {result['context_precision']:.2f}")
     print(f"  Context Recall    : {result['context_recall']:.2f}")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("requirement", help="e.g. 'Test login with valid credentials'")
+    parser.add_argument("--test", required=True, help="Path to generated test file")
+    parser.add_argument("--url", help="URL the test was generated from")
+    args = parser.parse_args()
+    run(args.requirement, args.test, args.url)    
