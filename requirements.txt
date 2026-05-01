@@ -15,4 +15,4 @@ python-logging-loki
 PyYAML==6.0.2
 gradio==6.12.0
 ragas==0.1.0
-datasets==3.2.0
+datasets==3.6.0
