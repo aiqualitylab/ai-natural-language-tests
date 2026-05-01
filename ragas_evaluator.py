@@ -17,19 +17,21 @@ def run(requirement, test_file, url):
 
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
-    summary = llm.invoke(f"""
-    You are a QA assistant. Read this test code and describe ONLY what it literally does,
-    step by step. Do not add assumptions. Do not mention things not in the code.
-    Test code:
-    {test_code[:2000]}
-    """).content
-    answer = f"This test verifies: {requirement}. {summary}"
+    answer = llm.invoke(f"""
+You are a QA assistant. Based only on this page HTML, describe in 2-3 sentences
+what a user can do on this page that is relevant to: {requirement}
+
+Only use information visible in the HTML. Do not mention test code or Cypress.
+
+Page HTML:
+{page_html[:2000]}
+""").content
 
     ground_truth = llm.invoke(f"""
-    In 2-3 sentences, describe only what a user can observe on this page that is relevant to: {requirement}
-    Base your answer only on what would be visible on the page at {url}.
-    Keep it factual and simple.
-    """).content
+In 2-3 sentences, describe only what a user can observe on this page that is relevant to: {requirement}
+Base your answer only on what would be visible on the page at {url}.
+Keep it factual and simple.
+""").content
 
     dataset = Dataset.from_list([{
         "question":     requirement,
