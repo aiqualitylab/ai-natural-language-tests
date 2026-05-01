@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def run(requirement, test_file, url):
-
     page_html = requests.get(url, timeout=10).text[:4000] if url else "No context."
 
     test_code = open(test_file).read()
@@ -19,17 +18,17 @@ def run(requirement, test_file, url):
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
     summary = llm.invoke(f"""
-    You are a QA assistant. Summarize what this test does in 3-4 plain English sentences.
-    Requirement: {requirement}
+    You are a QA assistant. Read this test code and describe ONLY what it literally does,
+    step by step. Do not add assumptions. Do not mention things not in the code.
     Test code:
     {test_code[:2000]}
     """).content
-    answer = f"This test covers: {requirement}.\n{summary}"
+    answer = f"This test verifies: {requirement}. {summary}"
 
     ground_truth = llm.invoke(f"""
-    In 2-3 sentences, describe what a good automated test for this requirement should do:
-    Requirement: {requirement}
-    URL: {url}
+    In 2-3 sentences, describe only what a user can observe on this page that is relevant to: {requirement}
+    Base your answer only on what would be visible on the page at {url}.
+    Keep it factual and simple.
     """).content
 
     dataset = Dataset.from_list([{
