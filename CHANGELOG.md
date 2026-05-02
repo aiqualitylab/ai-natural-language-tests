@@ -5,21 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
 ## [5.0.0] - 2026-05-02
 ### Added
-- **BLEU Scoring in NLP Baseline**: `ragas_nlp_evaluator.py` now computes corpus BLEU (via sacrebleu) alongside ROUGE and NonLLMStringSimilarity; overall average is the mean of all three metrics.
-- **Threshold-based Quality Gate**: Both `ragas_nlp_evaluator.py` (`--threshold`, default 0.50) and `ragas_evaluator.py` (`PASS_THRESHOLD = 0.60`) now exit with code 1 when scores fall below threshold, blocking CI on low-quality test generation.
-- **Per-sample Pass/Fail Status**: Each sample in the NLP baseline now prints `[PASS]` or `[FAIL]` status alongside its scores.
-- **Min/Max Summary Stats**: NLP baseline summary now includes minimum and maximum sample scores in addition to the overall average.
-- **Ragas Score Persistence**: `ragas_evaluator.py` accepts `--out <json>` to append per-framework scores to a JSON artifact, uploaded by CI for historical tracking.
+- **Scoring in NLP Baseline**: `ragas_nlp_evaluator.py` now computes ROUGE and NonLLMStringSimilarity; overall average is the mean of all metrics.
 - **Overall Quality Score**: `ragas_evaluator.py` now computes and prints an `Overall Score` (mean of all four Ragas metrics) with pass/fail status per evaluation run.
 
 ### Changed
 - **Python 3.12 in CI**: Both `nlp-baseline` and `test` jobs upgraded from Python 3.11 to Python 3.12 to match the Dockerfile base image.
 - **CI Dependency Caching**: Added `actions/cache@v4` for pip (per-framework keyed on `requirements.txt`) and npm (keyed on `package-lock.json`) to reduce install times.
-- **Ragas Score Artifact**: CI uploads `ragas-scores-<framework>.json` alongside test outputs for every framework run.
 - **Release Metadata Versioning**: Bumped from `4.2.0`/`v4.2.0` to `5.0.0`/`v5.0.0` across:
   - `package.json` and root `package-lock.json`
   - `agent.yaml`
