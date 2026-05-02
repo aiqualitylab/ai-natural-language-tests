@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Login - happy path",
+    "response": "Navigate to login page. Enter valid username and valid password. Click login button. Assert success message is visible.",
+    "reference": "Visit login page, enter valid credentials, submit the form, verify success message appears."
+  },
+  {
+    "name": "Login - wrong password",
+    "response": "Navigate to login page. Enter valid username and incorrect password. Click login. Assert error message is visible.",
+    "reference": "Visit login page, enter valid username and invalid password, submit form, verify error message is shown."
+  },
+  {
+    "name": "Login - empty username",
+    "response": "Navigate to login page. Leave username blank. Enter any password. Click login. Assert validation error is shown.",
+    "reference": "Visit login page, submit form with empty username field, verify a validation error message appears."
+  },
+  {
+    "name": "Login - empty password",
+    "response": "Navigate to login page. Enter any username. Leave password blank. Click login. Assert error message is shown.",
+    "reference": "Visit login page, submit form with empty password field, verify an error message is displayed."
+  },
+  {
+    "name": "Login - empty both fields",
+    "response": "Navigate to login page. Leave both fields blank. Click login. Assert error message is shown.",
+    "reference": "Visit login page, submit form without entering any credentials, verify an error message appears."
+  },
+  {
+    "name": "Dropdown - select first option",
+    "response": "Navigate to dropdown page. Select the first available option from the dropdown. Assert the selected option is displayed.",
+    "reference": "Visit dropdown page, select the first option from the dropdown, verify it is displayed as selected."
+  },
+  {
+    "name": "Dropdown - select second option",
+    "response": "Navigate to dropdown page. Select the second available option from the dropdown. Assert the selected option is displayed.",
+    "reference": "Visit dropdown page, select the second option from the dropdown, verify it is displayed as selected."
+  },
+  {
+    "name": "Dropdown - default state",
+    "response": "Navigate to dropdown page. Assert no option is selected by default.",
+    "reference": "Visit dropdown page, verify the dropdown shows a default placeholder and no option is pre-selected."
+  },
+  {
+    "name": "Checkbox - check unchecked box",
+    "response": "Navigate to checkboxes page. Click an unchecked checkbox. Assert it is now checked.",
+    "reference": "Visit checkboxes page, click an unchecked checkbox, verify it becomes checked."
+  },
+  {
+    "name": "Checkbox - uncheck checked box",
+    "response": "Navigate to checkboxes page. Click a checkbox that is already checked. Assert it is now unchecked.",
+    "reference": "Visit checkboxes page, click a checked checkbox, verify it becomes unchecked."
+  },
+  {
+    "name": "Checkbox - verify all checked",
+    "response": "Navigate to checkboxes page. Check all available checkboxes. Assert all are in checked state.",
+    "reference": "Visit checkboxes page, check all checkboxes, verify all are in checked state."
+  },
+  {
+    "name": "Form - fill all fields",
+    "response": "Navigate to form page. Fill in all required fields with valid data. Click submit. Assert success message is shown.",
+    "reference": "Visit form page, fill in all required fields with valid data, submit the form, verify a success confirmation appears."
+  },
+  {
+    "name": "Form - missing required field",
+    "response": "Navigate to form page. Leave one required field empty. Click submit. Assert validation error is shown for that field.",
+    "reference": "Visit form page, leave a required field empty, submit the form, verify a validation error appears for that field."
+  },
+  {
+    "name": "Drag and drop - move element",
+    "response": "Navigate to drag and drop page. Drag the first element onto the second element. Assert the positions have swapped.",
+    "reference": "Visit drag and drop page, drag the first element onto the second, verify the elements have swapped positions."
+  },
+  {
+    "name": "Hover - reveal hidden content",
+    "response": "Navigate to hover page. Hover over an element. Assert hidden content becomes visible.",
+    "reference": "Visit hover page, hover over an element, verify hidden content or tooltip appears."
+  },
+  {
+    "name": "Alert - accept alert",
+    "response": "Navigate to alerts page. Trigger an alert. Accept it. Assert the result confirms acceptance.",
+    "reference": "Visit alerts page, trigger a JavaScript alert, accept it, verify the result message confirms acceptance."
+  },
+  {
+    "name": "Alert - dismiss confirm dialog",
+    "response": "Navigate to alerts page. Trigger a confirm dialog. Dismiss it. Assert the result confirms dismissal.",
+    "reference": "Visit alerts page, trigger a JavaScript confirm dialog, dismiss it, verify the result message confirms dismissal."
+  },
+  {
+    "name": "File upload - upload a file",
+    "response": "Navigate to file upload page. Select a file using the file input. Click upload. Assert the filename appears on the page.",
+    "reference": "Visit file upload page, select a file, submit the upload, verify the uploaded filename appears on the page."
+  },
+  {
+    "name": "Dynamic content - content changes on reload",
+    "response": "Navigate to dynamic content page. Capture the current content. Reload the page. Assert the content has changed.",
+    "reference": "Visit dynamic content page, capture the current content, reload the page, verify the content has changed."
+  },
+  {
+    "name": "Infinite scroll - load more content",
+    "response": "Navigate to infinite scroll page. Scroll to the bottom. Assert new content loads dynamically.",
+    "reference": "Visit infinite scroll page, scroll to the bottom, verify additional content is dynamically loaded and appears on screen."
+  }
+]
