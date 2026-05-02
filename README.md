@@ -718,7 +718,6 @@ flowchart TD
     H --> I[Auto-Fix & Regenerate<br/>If possible]
     I --> E
     H --> J[Notify Developers<br/>Manual intervention]
-
     style A fill:#e1f5fe,color:#333333,stroke:#666666
     style B fill:#fff3e0,color:#333333,stroke:#666666
     style C fill:#c8e6c9,color:#333333,stroke:#666666
