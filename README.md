@@ -687,6 +687,8 @@ It fetches the page, asks GPT-4o-mini to answer the requirement using page HTML,
 python ragas_evaluator.py "Test user login with valid credentials" \
   --test cypress/e2e/generated/login.cy.js \
   --url https://the-internet.herokuapp.com/login
+```
+
 ---
 
 ### How they fit into CI
@@ -694,37 +696,36 @@ python ragas_evaluator.py "Test user login with valid credentials" \
 CI runs `ragas_nlp_evaluator.py` first (no API key, fast) as a quality gate. If it passes, the three framework jobs run in parallel — each generates tests, then calls `ragas_evaluator.py` against every generated file before running the tests themselves.
 
 ```
-nlp-baseline (no API key)
-       |
-       ▼
-test [cypress | playwright | webdriverio]  ← parallel
-  1. Generate tests
-  2. Ragas evaluation (LLM-based, per file)
-  3. Run tests
-  4. AI failure analysis if tests fail
+nlp-baseline job
+  1. Install nlp dependencies
+  2. Run ragas dataset baseline on test_dataset.json
+
+if baseline passes
+  test matrix jobs run in parallel
+  1. Install dependencies
+  2. Generate tests
+  3. Run ragas generated test evaluation per file
+  4. Run tests
+  5. AI failure analysis if tests fail
 ```
 
 ## CI/CD Integration
 
 ```mermaid
 flowchart TD
-    A[Code Changes<br/>Pushed to Repo] --> B[CI/CD Pipeline<br/>Triggers]
-    B --> C[Install Dependencies<br/>pip install -r requirements.txt<br/>npm install]
-    C --> D[Generate Tests<br/>python qa_automation.py<br/>--url]
-    D --> E[Run Tests<br/>npx cypress run<br/>npx playwright test<br/>npx wdio run]
-    E --> F{Tests Pass?}
-    F -->|Yes| G[Deploy Application<br/>Success]
-    F -->|No| H[AI Failure Analysis<br/>--analyze in pipeline]
-    H --> I[Auto-Fix & Regenerate<br/>If possible]
-    I --> E
-    H --> J[Notify Developers<br/>Manual intervention]
-    style A fill:#e1f5fe,color:#333333,stroke:#666666
-    style B fill:#fff3e0,color:#333333,stroke:#666666
-    style C fill:#c8e6c9,color:#333333,stroke:#666666
-    style D fill:#ffcdd2,color:#333333,stroke:#666666
-    style E fill:#f3e5f5,color:#333333,stroke:#666666
-    style G fill:#e8f5e8,color:#333333,stroke:#666666
-    style J fill:#ffebee,color:#333333,stroke:#666666
+  A[Code changes pushed to repo] --> B[Pipeline starts]
+  B --> C[Install dependencies]
+  C --> D[Run ragas dataset baseline]
+  D --> E[Generate tests]
+  E --> F[Run ragas generated test evaluation]
+  F --> G[Run tests]
+  G --> H[Tests pass]
+  G --> I[Tests fail]
+  H --> J[Deploy application]
+  I --> K[Analyze failures]
+  K --> L[Regenerate tests]
+  L --> G
+  K --> M[Notify developers]
 ```
 
 Recommended pipeline stages:
@@ -733,10 +734,12 @@ Recommended pipeline stages:
 |-------|--------|
 | 1 | Install Python and Node dependencies |
 | 2 | Validate environment variables and secrets injection |
-| 3 | Generate tests from requirements |
-| 4 | Execute generated tests |
-| 5 | Publish artifacts and reports |
-| 6 | Export telemetry to observability stack |
+| 3 | Run Ragas dataset baseline on test dataset |
+| 4 | Generate tests from requirements |
+| 5 | Run Ragas evaluation on generated tests |
+| 6 | Execute generated tests |
+| 7 | Publish artifacts and reports |
+| 8 | Export telemetry to observability stack |
 
 ## Security and Compliance Guidance
 
