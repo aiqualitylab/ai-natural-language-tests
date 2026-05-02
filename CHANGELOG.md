@@ -5,9 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [5.0.0] - 2026-05-02
+### Added
+- **Scoring in NLP Baseline**: `ragas_nlp_evaluator.py` now computes ROUGE and NonLLMStringSimilarity; overall average is the mean of all metrics.
+- **Overall Quality Score**: `ragas_evaluator.py` now computes and prints an `Overall Score` (mean of all four Ragas metrics) with pass/fail status per evaluation run.
 
-## [4.2.0] - 2026-04-12
+### Changed
+- **Python 3.12 in CI**: Both `nlp-baseline` and `test` jobs upgraded from Python 3.11 to Python 3.12 to match the Dockerfile base image.
+- **CI Dependency Caching**: Added `actions/cache@v4` for pip (per-framework keyed on `requirements.txt`) and npm (keyed on `package-lock.json`) to reduce install times.
+- **Release Metadata Versioning**: Bumped from `4.2.0`/`v4.2.0` to `5.0.0`/`v5.0.0` across:
+  - `package.json` and root `package-lock.json`
+  - `agent.yaml`
+  - `Dockerfile` (`ARG RELEASE_TAG`)
+  - `docker-compose.yml` (image tags and build context)
+  - `README.md` (pinned release tag table)
+  - `CONTRIBUTING.md` (publish examples and tag conventions)
+  - `.github/workflows/publish-ghcr.yml` (tag comment)
+
+
 ### Added
 - **HITL (Human-In-The-Loop) Approval Flow**: New `--approve` flag to insert manual approval checkpoint during generated test save, enabling QA engineers to review and validate tests before persistence.
 - **HTML Replay Utilities**: 

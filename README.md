@@ -422,7 +422,7 @@ docker run --rm \
 | Tag | Use case |
 |-----|----------|
 | `latest` | Always the most recently published version — use for quick runs |
-| `v4.2.0` | Pinned to a specific release — use in CI/CD for reproducibility |
+| `v5.0.0` | Pinned to a specific release — use in CI/CD for reproducibility |
 
 For publishing and release management, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -601,6 +601,92 @@ python qa_automation.py --list-patterns
 
 </details>
 
+## AI Quality Evaluation (Ragas)
+
+The project ships two evaluation scripts that measure whether the AI-generated tests are actually grounded in the page under test. They run automatically in CI but can also be run locally at any time.
+
+---
+
+### Why these scripts exist
+
+Generating test code from natural language is only useful if the generated tests match what the page actually contains. Without evaluation, you have no signal on whether GPT-4o-mini produced a test that talks about the right form fields, the right URL, or the right expected outcomes. These two scripts give that signal using [Ragas](https://docs.ragas.io), a framework designed to evaluate LLM outputs.
+
+---
+
+### `ragas_nlp_evaluator.py` — No API key needed
+
+This script compares the AI's generated text against reference answers using three classical NLP metrics that run fully offline.
+
+| Metric | What it measures |
+|--------|-----------------|
+| ROUGE  | Recall-oriented word overlap between response and reference |
+| SIM    | Non-LLM string similarity (edit-distance based) |
+
+The overall score for each sample is the average of all.
+
+**Run locally:**
+
+```bash
+pip install ragas==0.4.3 sacrebleu rapidfuzz rouge-score
+python ragas_nlp_evaluator.py
+```
+
+By default it reads `test_dataset.json`. Each entry in that file needs:
+
+```json
+{
+  "name": "login valid",
+  "response": "The generated text from the AI",
+  "reference": "The expected correct answer"
+}
+```
+
+**Pass a custom dataset or threshold:**
+
+```bash
+python ragas_nlp_evaluator.py --dataset my_dataset.json --threshold 0.60
+```
+
+The script exits with code 1 if any sample scores below the threshold, which lets CI block on low-quality output. It also prints min, max, and overall average at the end.
+
+---
+
+### `ragas_evaluator.py` — Requires `OPENAI_API_KEY`
+
+This script evaluates the generated test file against the live page HTML using four LLM-based Ragas metrics.
+
+| Metric | What it measures |
+|--------|-----------------|
+| Faithfulness | Is the answer consistent with the page HTML? |
+| Answer Relevancy | Does the answer address the requirement? |
+| Context Precision | Is the retrieved HTML focused on what matters? |
+| Context Recall | Does the HTML contain everything needed to answer? |
+
+It fetches the page, asks GPT-4o-mini to answer the requirement using page HTML, and scores how well that answer holds up.
+
+**Run locally:**
+
+```bash
+python ragas_evaluator.py "Test user login with valid credentials" \
+  --test cypress/e2e/generated/login.cy.js \
+  --url https://the-internet.herokuapp.com/login
+---
+
+### How they fit into CI
+
+CI runs `ragas_nlp_evaluator.py` first (no API key, fast) as a quality gate. If it passes, the three framework jobs run in parallel — each generates tests, then calls `ragas_evaluator.py` against every generated file before running the tests themselves.
+
+```
+nlp-baseline (no API key)
+       |
+       ▼
+test [cypress | playwright | webdriverio]  ← parallel
+  1. Generate tests
+  2. Ragas evaluation (LLM-based, per file)
+  3. Run tests
+  4. AI failure analysis if tests fail
+```
+
 ## CI/CD Integration
 
 ```mermaid
@@ -712,7 +798,7 @@ Recommended pipeline stages:
 | Policy Area | Guidance |
 |-------------|----------|
 | Release model | Changelog-driven, documented in `CHANGELOG.md` |
-| Production pinning | Prefer version tags such as `v4.2.0` instead of `latest` |
+| Production pinning | Prefer version tags such as `v5.0.0` instead of `latest` |
 | `latest` usage | Use for local exploration, not for controlled CI/CD |
 | Upgrade notes | Breaking changes and upgrade guidance are captured per release |
 
