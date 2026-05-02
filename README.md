@@ -284,6 +284,8 @@ Generation follows a deterministic five-step flow:
 
 ```text
 ai-natural-language-tests/
+|-- .github/
+|-- docs/
 |-- cypress/
 |   |-- e2e/
 |   |   |-- generated/
@@ -294,19 +296,34 @@ ai-natural-language-tests/
 |-- webdriverio/
 |   `-- tests/
 |       `-- generated/
+|-- web/
 |-- prompt_specs/
+|-- skills/
+|-- services/
+|-- knowledge/
+|-- generated_exports/
+|-- rag_failure_analysis/
 |-- vector_db/
 |-- qa_automation.py
 |-- qa_config.py
 |-- qa_runtime.py
 |-- qa_workflow.py
+|-- ragas_evaluator.py
+|-- ragas_nlp_evaluator.py
 |-- cypress.config.js
 |-- playwright.config.ts
 |-- wdio.conf.js
 |-- package.json
+|-- package-lock.json
 |-- requirements.txt
 |-- Dockerfile
 |-- docker-compose.yml
+|-- agent.yaml
+|-- SOUL.md
+|-- RULES.md
+|-- PROMPT_UPDATE_GUIDE.md
+|-- CONTRIBUTING.md
+|-- CHANGELOG.md
 `-- README.md
 ```
 
