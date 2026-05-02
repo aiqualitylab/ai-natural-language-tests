@@ -1,4 +1,4 @@
-# ragas_evaluator.py
+
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -57,11 +57,13 @@ Keep it factual and simple.
         embeddings=OpenAIEmbeddings(model="text-embedding-3-small"),
     )
 
-    # Step 7: print scores
-    print(f"\n  Faithfulness      : {result['faithfulness']:.2f}")
-    print(f"  Answer Relevancy  : {result['answer_relevancy']:.2f}")
-    print(f"  Context Precision : {result['context_precision']:.2f}")
-    print(f"  Context Recall    : {result['context_recall']:.2f}")
+    # Step 7: print scores to console
+    scores = result.to_pandas()
+    print(f"\n  Faithfulness      : {scores['faithfulness'].mean():.2f}")
+    print(f"  Answer Relevancy  : {scores['answer_relevancy'].mean():.2f}")
+    print(f"  Context Precision : {scores['context_precision'].mean():.2f}")
+    print(f"  Context Recall    : {scores['context_recall'].mean():.2f}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
