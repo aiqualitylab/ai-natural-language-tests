@@ -2,19 +2,26 @@ import json
 import logging
 import os
 import sqlite3
+import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import requests
 from dotenv import load_dotenv
-from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.output_parsers import BaseOutputParser
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+try:
+    from langchain_huggingface import HuggingFaceEmbeddings
+except ImportError:
+    from langchain_community.embeddings import HuggingFaceEmbeddings
 
 from qa_config import (
     ALLOWED_FAILURE_CATEGORIES,
@@ -52,6 +59,22 @@ def _setup_loki_logging() -> logging.Logger:
     try:
         import logging_loki
 
+        class _SafeLokiHandler(logging_loki.LokiHandler):
+            """Drop noisy transport exceptions (e.g., transient 502) without traceback spam."""
+
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
+                super().__init__(*args, **kwargs)
+                self._last_warn_ts = 0.0
+
+            def emit(self, record: logging.LogRecord) -> None:
+                try:
+                    super().emit(record)
+                except Exception as exc:
+                    now = time.time()
+                    if now - self._last_warn_ts >= 60:
+                        self._last_warn_ts = now
+                        _logger.warning(f"[LOKI] Emit failed (suppressed): {exc}")
+
         loki_url = os.getenv("GRAFANA_LOKI_URL", "").strip()
         grafana_instance_id = os.getenv("GRAFANA_INSTANCE_ID", "").strip()
         grafana_api_token = os.getenv("GRAFANA_API_TOKEN", "").strip()
@@ -61,7 +84,7 @@ def _setup_loki_logging() -> logging.Logger:
             return _logger
 
         _logger.addHandler(
-            logging_loki.LokiHandler(
+            _SafeLokiHandler(
                 url=f"{loki_url}/loki/api/v1/push",
                 tags={"service_name": "ai-natural-language-tests", "app": "ai-quality-lab"},
                 auth=(grafana_instance_id, grafana_api_token),
@@ -76,6 +99,32 @@ def _setup_loki_logging() -> logging.Logger:
 
 logger = _setup_loki_logging()
 _PATTERN_STORE: Optional["TestPatternStore"] = None
+
+
+class JsonFenceParser(BaseOutputParser[Dict[str, Any]]):
+    def parse(self, text: str) -> Dict[str, Any]:
+        content = text.strip()
+        if "```" in content:
+            content = content.split("```", 1)[1].replace("json", "", 1).strip()
+        return json.loads(content)
+
+
+class FailureAnalysisParser(BaseOutputParser[Dict[str, str]]):
+    def parse(self, text: str) -> Dict[str, str]:
+        keys = ("CATEGORY", "REASON", "FIX")
+        result: Dict[str, str] = {key: "" for key in keys}
+        for raw_line in text.splitlines():
+            line = raw_line.strip()
+            for key in keys:
+                prefix = f"{key}:"
+                if line.upper().startswith(prefix):
+                    result[key] = line[len(prefix):].strip()
+                    break
+        return result
+
+
+HTML_ANALYSIS_PARSER = JsonFenceParser()
+FAILURE_ANALYSIS_PARSER = FailureAnalysisParser()
 
 
 class TestPatternStore:
@@ -224,10 +273,51 @@ def get_pattern_store() -> TestPatternStore:
 
 
 def fetch_html_content(url: str) -> str:
+    """
+    Fetch page HTML using Playwright headless browser (primary) with a
+    requests fallback. Playwright handles JS-rendered SPAs, lazy-loaded
+    content, and sites that block simple HTTP clients.
+    """
     logger.info(f"Fetching URL: {url}")
-    response = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+
+    # ── Primary: Playwright headless scrape ──────────────────────────────────
+    try:
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(headless=True)
+            page = browser.new_page(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                           "AppleWebKit/537.36 (KHTML, like Gecko) "
+                           "Chrome/120.0.0.0 Safari/537.36"
+            )
+            page.goto(url, wait_until="networkidle", timeout=20000)
+
+            # Extract only meaningful elements — keeps the payload compact
+            # and avoids wasting LLM context on scripts/styles
+            html = page.evaluate("""() => {
+                // Remove noise: scripts, styles, svg, hidden elements
+                ['script','style','svg','noscript','template'].forEach(tag => {
+                    document.querySelectorAll(tag).forEach(el => el.remove());
+                });
+                // Return the cleaned body HTML
+                return document.body ? document.body.innerHTML : document.documentElement.innerHTML;
+            }""")
+            browser.close()
+
+        # Smart truncation: keep first 8000 chars — enough for most pages
+        html = html[:8000]
+        logger.info(f"Playwright scraped {len(html)} chars (JS-rendered)")
+        return html
+
+    except Exception as e:
+        logger.warning(f"Playwright scrape failed ({e}) — falling back to requests")
+
+    # ── Fallback: plain requests ─────────────────────────────────────────────
+    import requests as _requests
+    response = _requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
     html = response.text[:5000]
-    logger.info(f"Got {len(html)} characters of HTML")
+    logger.info(f"requests fallback: {len(html)} chars")
     return html
 
 
@@ -235,13 +325,8 @@ def build_html_analysis_result(url: str, html: str, llm_provider: str) -> tuple[
     llm = get_llm(llm_provider)
     prompt = load_prompt_template("html_analysis.yaml", url=url, html=html)
     ai_response = llm.invoke(prompt)
-    content = ai_response.content.strip()
-    raw_response = content
-
-    if "```" in content:
-        content = content.split("```")[1].replace("json", "").strip()
-
-    test_data = json.loads(content)
+    raw_response = ai_response.content if isinstance(ai_response.content, str) else str(ai_response.content)
+    test_data = HTML_ANALYSIS_PARSER.parse(raw_response)
     return test_data, prompt, raw_response
 
 
@@ -291,22 +376,13 @@ def build_run_command(framework: str, generated_tests: List, output_dir: str, us
     return f"npx cypress run --spec 'cypress/e2e/{folder_name}/**/*.cy.js'"
 
 
-def build_failure_analysis_messages(log_text: str) -> List[Dict[str, str]]:
+def build_failure_analysis_messages(log_text: str) -> List[Any]:
     system_content = load_prompt_system("failure_analysis.yaml")
     user_content = load_prompt_template("failure_analysis.yaml", log=log_text)
     return [
-        {"role": "system", "content": system_content},
-        {"role": "user", "content": user_content},
+        SystemMessage(content=system_content),
+        HumanMessage(content=user_content),
     ]
-
-
-def _read_value(content: str, key: str) -> str:
-    prefix = f"{key}:"
-    for line in content.splitlines():
-        clean_line = line.strip()
-        if clean_line.upper().startswith(prefix):
-            return clean_line[len(prefix):].strip()
-    return ""
 
 
 FAILURE_DEFAULTS = {
@@ -316,9 +392,10 @@ FAILURE_DEFAULTS = {
 
 
 def format_failure_analysis(content: str) -> str:
-    category = _read_value(content, "CATEGORY").upper()
-    reason = _read_value(content, "REASON") or FAILURE_DEFAULTS["REASON"]
-    fix = _read_value(content, "FIX") or FAILURE_DEFAULTS["FIX"]
+    parsed = FAILURE_ANALYSIS_PARSER.parse(content)
+    category = parsed.get("CATEGORY", "").upper()
+    reason = parsed.get("REASON") or FAILURE_DEFAULTS["REASON"]
+    fix = parsed.get("FIX") or FAILURE_DEFAULTS["FIX"]
     if category not in ALLOWED_FAILURE_CATEGORIES:
         category = "CONFIGURATION"
     return f"CATEGORY: {category}\nREASON: {reason}\nFIX: {fix}"
