@@ -14,10 +14,22 @@ from datetime import datetime
 from typing import Generator, List
 
 import gradio as gr
+from langchain_core.runnables import RunnableLambda
 
 from qa_config import FRAMEWORK_CONFIG
 from qa_runtime import analyze_test_failure
 from qa_workflow import TestState, create_workflow
+
+
+WORKFLOW_INVOKER = RunnableLambda(
+    lambda payload: create_workflow().invoke(
+        payload["state"],
+        config={"configurable": {"thread_id": payload["thread_id"]}},
+    )
+)
+
+
+FAILURE_ANALYZER = RunnableLambda(analyze_test_failure)
 
 
 def _split_requirements(requirements_text: str) -> List[str]:
@@ -135,10 +147,7 @@ def _run_generation(
                 run_id=run_id,
             )
 
-            final_state = create_workflow().invoke(
-                state,
-                config={"configurable": {"thread_id": run_id}},
-            )
+            final_state = WORKFLOW_INVOKER.invoke({"state": state, "thread_id": run_id})
 
             generated_tests = final_state.get("generated_tests", [])
             similar_patterns = final_state.get("similar_patterns", [])
@@ -219,7 +228,7 @@ def _run_analysis(log_text: str, openai_key: str, anthropic_key: str, google_key
     _apply_api_keys(openai_key, anthropic_key, google_key)
 
     try:
-        return analyze_test_failure(log_text)
+        return FAILURE_ANALYZER.invoke(log_text)
     except Exception as exc:
         return f"Analysis failed: {exc}"
 
