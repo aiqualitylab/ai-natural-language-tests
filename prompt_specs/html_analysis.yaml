@@ -1,202 +1,159 @@
 name: html_analysis
-version: 1
+version: 2
 metadata:
   category: generation
 template: |
   You are an expert web automation engineer.
 
-  
-
   Analyze this HTML and generate test data using accessible locators that work on any website.
 
-  
-
   URL: {url}
-
   HTML:
-
   {html}
 
-  
-
   LOCATOR RULES:
-
   - For Cypress: use @testing-library/cypress commands
-
   - For Playwright: use native locator methods
-
   - Do NOT return raw CSS selectors like #id or .class
-
   - Find elements the way a real user would: by role, label, placeholder, text
 
-  
-
   LOCATOR PRIORITY (use the first one that applies):
-
   1. Role + name: button "Login", link "Sign up", textbox "Email"
-
   2. Label text: the label associated with an input
-
   3. Placeholder text: placeholder attribute
-
   4. Test ID: data-testid, data-test, data-cy attributes
-
   5. Visible text: button text, link text
-
   6. Only as last resort: CSS selector
 
-  
+  DYNAMIC URL ANALYSIS (MANDATORY):
+  Inspect the URL carefully. Identify which path segments or query params change per record.
+
+  Dynamic segment signals:
+  - Pure integers:          /products/12345         use placeholder productId
+  - UUIDs:                  /users/a1b2-c3d4-...    use placeholder uuid
+  - Short alphanumeric IDs: /orders/ORD-789         use placeholder orderId
+  - Slugs:                  /blog/my-post-title     use placeholder slug
+  - Query param values:     ?page=3&id=99           use placeholders page, id
+  - Date segments:          /reports/2024/06/15     use placeholders year, month, day
+
+  Static segment signals:
+  - Known route words: /login, /dashboard, /products (the word itself is static)
+  - Fixed API version: /v1/, /api/
+
+  Generate these four extra fields in your JSON response:
+  - base_url: scheme + host only, no path. Example: "https://shop.example.com"
+  - url_pattern: the path with dynamic parts replaced by PARAM_name notation.
+    Example: "/products/PARAM_productId" or "/search?q=PARAM_query&page=PARAM_page"
+    Use PARAM_name (not curly braces) to avoid template conflicts.
+    If no dynamic parts, url_pattern equals the full path.
+  - dynamic_segments: list of param names (without PARAM_ prefix). Empty list [] if none.
+  - example_values: map of paramName to the actual value from this URL. Empty object if none.
 
   Return ONLY valid JSON:
 
-  
-
   {{
-
     "url": "{url}",
-
-    "page_type": "login|signup|checkout|search|form|dashboard|other",
-
+    "base_url": "https://example.com",
+    "url_pattern": "/path/with/PARAM_paramName",
+    "dynamic_segments": ["paramName"],
+    "example_values": {{"paramName": "actual-value-from-url"}},
+    "page_type": "login|signup|checkout|search|form|dashboard|product|listing|profile|other",
     "selectors": {{
-
       "field_name": {{
-
         "cypress": "cy.findByRole('textbox', {{name: /email/i}})",
-
         "playwright": "page.getByRole('textbox', {{name: 'Email'}})",
-
         "fallback_css": "input[name='email']"
-
       }},
-
       "submit": {{
-
         "cypress": "cy.findByRole('button', {{name: /login/i}})",
-
         "playwright": "page.getByRole('button', {{name: 'Login'}})",
-
         "fallback_css": "button[type='submit']"
-
       }},
-
       "error_container": {{
-
         "cypress": "cy.findByRole('alert')",
-
         "playwright": "page.getByRole('alert')",
-
         "fallback_css": "#flash"
-
       }},
-
       "success_container": {{
-
         "cypress": "cy.findByText(/success/i)",
-
         "playwright": "page.getByText(/success/i)",
-
         "fallback_css": "#flash"
-
       }}
-
     }},
-
     "element_types": {{
-
       "field_name": "text|email|password|number|checkbox|radio|select|textarea"
-
     }},
-
     "test_cases": [
-
       {{
-
         "name": "valid_test",
-
         "description": "Test with valid data",
-
         "field_name": "valid_value",
-
         "expected": "success"
-
       }},
-
       {{
-
         "name": "invalid_test",
-
         "description": "Test with invalid data",
-
         "field_name": "invalid_value",
-
         "expected": "error"
-
       }}
-
     ]
-
   }}
 
-  
+  DYNAMIC URL EXAMPLES:
+
+  URL https://shop.com/products/12345
+    "base_url": "https://shop.com",
+    "url_pattern": "/products/PARAM_productId",
+    "dynamic_segments": ["productId"],
+    "example_values": {{"productId": "12345"}}
+
+  URL https://app.com/users/a1b2c3d4/settings
+    "base_url": "https://app.com",
+    "url_pattern": "/users/PARAM_uuid/settings",
+    "dynamic_segments": ["uuid"],
+    "example_values": {{"uuid": "a1b2c3d4"}}
+
+  URL https://app.com/search?q=shoes&page=3
+    "base_url": "https://app.com",
+    "url_pattern": "/search?q=PARAM_query&page=PARAM_page",
+    "dynamic_segments": ["query", "page"],
+    "example_values": {{"query": "shoes", "page": "3"}}
+
+  URL https://app.com/login
+    "base_url": "https://app.com",
+    "url_pattern": "/login",
+    "dynamic_segments": [],
+    "example_values": {{}}
 
   LOCATOR EXAMPLES:
 
-  
-
   For a login form with username and password:
-
     "username": {{
-
       "cypress": "cy.findByLabelText(/username/i)",
-
       "playwright": "page.getByLabel('Username')",
-
       "fallback_css": "input[name='username']"
-
     }}
-
-  
 
   For a search box:
-
     "search": {{
-
       "cypress": "cy.findByPlaceholderText(/search/i)",
-
       "playwright": "page.getByPlaceholder('Search')",
-
       "fallback_css": "input[type='search']"
-
     }}
-
-  
 
   For a link:
-
     "signup_link": {{
-
       "cypress": "cy.findByRole('link', {{name: /sign up/i}})",
-
       "playwright": "page.getByRole('link', {{name: 'Sign up'}})",
-
       "fallback_css": "a[href='/signup']"
-
     }}
 
-  
-
   RULES:
-
   - Return ONLY valid JSON, no markdown, no explanations
-
   - Include at least 2 test cases (valid + invalid)
-
   - Every selector must have cypress, playwright, and fallback_css
-
   - Use realistic test data values
-
   - Map field names to element_types
-
-
-
-
+  - ALWAYS include base_url, url_pattern, dynamic_segments, example_values
+  - Use PARAM_name notation for dynamic segments in url_pattern (not curly braces)
+  - Never omit dynamic_segments or example_values, use [] and {{}} when static

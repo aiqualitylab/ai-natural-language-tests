@@ -1,482 +1,288 @@
 name: test_generation_prompt_powered
-version: 1
+version: 2
 metadata:
   category: generation
 template: |
   You are an expert Cypress test automation engineer with deep knowledge of cy.prompt() and the complete Cypress API for self-healing test automation.
 
-  
-
   Generate a Cypress test file using cy.prompt() for adaptive, self-healing test capabilities.
-
-  
 
   REQUIREMENT: {requirement}
 
-  
-
   CONTEXT (if available): {context}
 
-  
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  DYNAMIC URL RULES (MANDATORY — read before writing any cy.visit())
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  CY.PROMPT() PHILOSOPHY:
+  The CONTEXT may contain these fields from the HTML analysis:
+    - base_url         e.g. "https://shop.example.com"
+    - url_pattern      e.g. "/products/{{productId}}"
+    - dynamic_segments e.g. ["productId"]
+    - example_values   e.g. {{"productId": "12345"}}
 
-  cy.prompt() enables natural language test steps that adapt to page changes. The AI agent interprets instructions and finds the best way to accomplish each step, making tests more resilient to UI changes.
+  RULES:
+  1. NEVER hardcode a URL, ID, UUID, slug, or numeric path segment inside cy.visit().
+  2. If dynamic_segments is non-empty:
+     - Include the buildUrl() helper function in the describe block.
+     - Get param values from the test case's url_params first, then Cypress.env(paramName).
+     - Navigate with: cy.visit(buildUrl(this.testData.base_url, this.testData.url_pattern, params))
+  3. If dynamic_segments is empty:
+     - Navigate with: cy.visit(this.testData.url)
+  4. example_values are illustrative only — do NOT paste them as literals into the test.
 
-  
+  DYNAMIC URL HELPER (include inside describe when dynamic_segments is non-empty):
+
+  ```javascript
+  function buildUrl(baseUrl, pattern, params) {{
+    let url = baseUrl + pattern;
+    Object.keys(params || {{}}).forEach(function (key) {{
+      url = url.replace('{{' + key + '}}', encodeURIComponent(params[key]));
+    }});
+    return url;
+  }}
+  ```
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CY.PROMPT() PHILOSOPHY
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  cy.prompt() enables natural language test steps that adapt to page changes. The AI agent
+  interprets instructions and finds the best way to accomplish each step, making tests more
+  resilient to UI changes.
 
   CYPRESS API AVAILABLE (Use with cy.prompt()):
-
   - All standard Cypress commands: visit, get, contains, click, type, select, check, etc.
-
   - Assertions: should(), expect(), assert()
-
   - Network: intercept(), wait(), request()
-
   - Navigation: go(), reload(), url(), location()
-
   - Waits: wait(), should('be.visible'), should('exist')
-
   - Storage: getCookie(), setCookie(), clearLocalStorage()
-
   - Window: window(), document(), title()
-
   - Files: fixture(), readFile(), writeFile()
-
   - Advanced: within(), then(), invoke(), its(), each(), wrap()
 
-  
-
   GUIDELINES:
-
   1. Use natural language prompts that describe WHAT to do, not HOW
-
   2. Break complex workflows into clear, atomic steps
-
   3. Use fixture data for dynamic values (NOT hardcoded!)
-
   4. Include verification steps between actions
-
   5. Add assertions to validate outcomes
-
   6. Use cy.prompt() for flexible element finding
-
   7. Combine cy.prompt() with standard Cypress for power + flexibility
-
-  
 
   PATTERN STRUCTURE:
 
-  
-
   ```javascript
-
   describe('Tests', function () {{
 
       function getSelector(selectorEntry) {{
-
-          if (!selectorEntry) {{
-
-              return null;
-
-          }}
-
-  
-
-          if (typeof selectorEntry === 'string') {{
-
-              return selectorEntry;
-
-          }}
-
-  
-
-          if (typeof selectorEntry === 'object') {{
-
-              return selectorEntry.fallback_css || null;
-
-          }}
-
-  
-
+          if (!selectorEntry) {{ return null; }}
+          if (typeof selectorEntry === 'string') {{ return selectorEntry; }}
+          if (typeof selectorEntry === 'object') {{ return selectorEntry.fallback_css || null; }}
           return null;
-
       }}
 
-  
+      function buildUrl(baseUrl, pattern, params) {{
+          let url = baseUrl + pattern;
+          Object.keys(params || {{}}).forEach(function (key) {{
+              url = url.replace('{{' + key + '}}', encodeURIComponent(params[key]));
+          }});
+          return url;
+      }}
 
       function fillFormFields(testCase, selectors) {{
-
           const values = testCase.field_name || testCase;
-
-  
-
           Object.keys(values).forEach(function (field) {{
-
               const selector = getSelector(selectors[field]);
-
               const value = values[field];
-
-  
-
               if (selector && typeof value === 'string' && value) {{
-
                   cy.get(selector).should('be.visible').clear().type(value);
-
               }}
-
           }});
-
       }}
 
-  
-
       beforeEach(function () {{
-
           cy.fixture('url_test_data').then((data) => {{
-
               this.testData = data;
-
           }});
-
       }});
-
-  
 
       it('should succeed with valid data', function () {{
-
-          // Navigate
-
-          cy.visit(this.testData.url);
-
-          
-
-          // Get test data
-
           const valid = this.testData.test_cases.find(tc => tc.name === 'valid_test');
-
           const selectors = this.testData.selectors;
+          const hasDynamicSegments = (this.testData.dynamic_segments || []).length > 0;
 
-          
+          if (hasDynamicSegments) {{
+              const params = valid.url_params || Cypress.env('urlParams') || {{}};
+              cy.visit(buildUrl(this.testData.base_url, this.testData.url_pattern, params));
+          }} else {{
+              cy.visit(this.testData.url);
+          }}
 
           // Use cy.prompt() for flexible element interaction
-
           cy.prompt([
-
               "Wait for the page to fully load",
-
-              "Find the email input field and type the email address",
-
-              "Find the password input field and type the password",
-
-              "Click the submit button",
-
-              "Verify successful login by checking for dashboard or success message"
-
+              "Find the main form fields and fill them with the valid test data",
+              "Submit the form",
+              "Verify a success indicator is visible"
           ]);
 
-          
-
           // OR use traditional Cypress with dynamic selectors
-
           fillFormFields(valid, selectors);
-
-  
-
           const submitSelector = getSelector(selectors.submit);
-
           cy.get(submitSelector).click();
 
-          
-
-          // Assertions
-
-          cy.url().should('include', valid.expected || 'success');
-
+          const successSelector = getSelector(selectors.success_container) || getSelector(selectors.error_container) || '#flash';
+          cy.get(successSelector).should('be.visible');
       }});
 
-  
-
       it('should fail with invalid data', function () {{
-
-          cy.visit(this.testData.url);
-
           const invalid = this.testData.test_cases.find(tc => tc.name === 'invalid_test');
-
           const selectors = this.testData.selectors;
+          const hasDynamicSegments = (this.testData.dynamic_segments || []).length > 0;
 
-          
-
-          // Dynamic form filling
+          if (hasDynamicSegments) {{
+              const params = invalid.url_params || Cypress.env('urlParams') || {{}};
+              cy.visit(buildUrl(this.testData.base_url, this.testData.url_pattern, params));
+          }} else {{
+              cy.visit(this.testData.url);
+          }}
 
           fillFormFields(invalid, selectors);
-
-  
-
           const submitSelector = getSelector(selectors.submit);
-
           cy.get(submitSelector).click();
-
-          
-
-          // Verify error state
 
           cy.prompt(["Verify that an error message is displayed"]);
 
-          // OR
-
-          cy.url().should('include', invalid.expected || 'error');
-
+          const errorSelector = getSelector(selectors.error_container) || getSelector(selectors.success_container) || '#flash';
+          cy.get(errorSelector).should('be.visible');
       }});
-
   }});
-
   ```
-
-  
 
   CY.PROMPT() EXAMPLES:
 
-  
-
   // Navigation & Waits
-
   cy.prompt(["Navigate to the homepage", "Wait for the page to load completely"]);
 
-  
-
   // Form Filling
-
   cy.prompt([
-
       "Find the username field and enter 'testuser'",
-
       "Find the password field and enter the password",
-
       "Click the login button"
-
   ]);
-
-  
 
   // Verification
-
   cy.prompt(["Verify the user is redirected to dashboard", "Check that welcome message is visible"]);
 
-  
-
   // Complex Workflows
-
   cy.prompt([
-
       "Add the first product to cart",
-
       "Navigate to cart page",
-
       "Proceed to checkout",
-
       "Fill in shipping information",
-
       "Complete the purchase"
-
   ]);
-
-  
 
   // API Testing with cy.prompt()
-
   cy.intercept('POST', '/api/login').as('loginAPI');
-
   cy.prompt(["Complete the login form and submit"]);
-
   cy.wait('@loginAPI').its('response.statusCode').should('eq', 200);
 
-  
-
   // Conditional Actions
-
   cy.prompt([
-
       "If a cookie banner appears, accept it",
-
       "If a modal is open, close it",
-
       "Then proceed with the main action"
-
   ]);
-
-  
 
   // Multi-step Forms
-
   cy.prompt([
-
       "Fill in personal information on step 1",
-
       "Click next to go to step 2",
-
       "Fill in address information on step 2",
-
       "Click next to go to step 3",
-
       "Review and submit the form"
-
   ]);
-
-  
 
   COMBINING CY.PROMPT() WITH STANDARD CYPRESS:
 
-  
-
   ```javascript
-
   it('hybrid approach', function () {{
-
-      cy.visit(this.testData.url);
-
       const valid = this.testData.test_cases.find(tc => tc.name === 'valid_test');
+      const hasDynamic = (this.testData.dynamic_segments || []).length > 0;
 
-      
-
-      // Use cy.prompt() for flexible navigation
+      if (hasDynamic) {{
+          const params = valid.url_params || Cypress.env('urlParams') || {{}};
+          cy.visit(buildUrl(this.testData.base_url, this.testData.url_pattern, params));
+      }} else {{
+          cy.visit(this.testData.url);
+      }}
 
       cy.prompt(["Navigate to login section"]);
 
-      
-
-      // Use standard Cypress for precise control
-
       const selectors = this.testData.selectors;
-
       const values = valid.field_name || valid;
 
-  
-
       cy.get(getSelector(selectors.username)).type(values.username);
-
       cy.get(getSelector(selectors.password)).type(values.password);
 
-      
-
-      // Use cy.prompt() for submission and verification
-
       cy.prompt([
-
           "Click the login button",
-
           "Wait for successful login",
-
           "Verify user is on dashboard"
-
       ]);
 
-      
-
-      // Standard assertion
-
-      cy.url().should('include', '/dashboard');
-
+      cy.url().should('not.include', '/login');
   }});
-
   ```
-
-  
 
   ADVANCED PATTERNS:
 
-  
-
   // Dropdown/Select
-
   cy.prompt(["Select 'United States' from country dropdown"]);
-
   // OR
-
   cy.get(selectors.country).select(valid.country);
 
-  
-
   // Checkbox/Radio
-
   cy.prompt(["Check the terms and conditions checkbox"]);
-
   // OR
-
   cy.get(selectors.terms).check();
 
-  
-
   // File Upload
-
   cy.prompt(["Upload the profile picture"]);
-
   // OR
-
   cy.get(selectors.fileInput).selectFile('path/to/file');
 
-  
-
   // Table Interactions
-
   cy.prompt(["Find the row with user 'John Doe' and click edit button"]);
 
-  
-
   // Dynamic Content
-
   cy.prompt([
-
       "Wait for the loading spinner to disappear",
-
       "Scroll to the bottom of the page",
-
       "Click the 'Load More' button",
-
       "Verify additional items are loaded"
-
   ]);
 
-  
-
   CRITICAL RULES:
-
   - Use function() NOT arrow =>
-
-  - cy.visit(this.testData.url) - URL from fixture!
-
+  - DYNAMIC URL: use buildUrl() when dynamic_segments is non-empty; cy.visit(this.testData.url) when empty
+  - NEVER hardcode a URL, ID, UUID, slug, or path segment as a string literal
   - Selectors can be strings or objects. Use fallback_css when selector entry is an object.
-
   - Test case values can be flat or nested under field_name. Support both.
-
   - cy.prompt() steps should be clear, natural language
-
   - Combine cy.prompt() with standard Cypress as needed
-
   - Add proper assertions after cy.prompt() actions
-
-  - DO NOT hardcode URLs, selectors, or test data
-
   - Use fixture data: this.testData.test_cases, this.testData.selectors
 
-  
-
   ADAPT BASED ON REQUIREMENT:
-
-  - Simple form â†’ Standard Cypress with dynamic selectors
-
-  - Complex workflow â†’ cy.prompt() for navigation + standard for precision
-
-  - API testing â†’ Standard intercept/wait + cy.prompt() for UI
-
-  - Multi-step process â†’ cy.prompt() for step navigation
-
-  - Dynamic content â†’ cy.prompt() for flexible waiting and finding
-
-  
+  - Simple form → Standard Cypress with dynamic selectors
+  - Complex workflow → cy.prompt() for navigation + standard for precision
+  - API testing → Standard intercept/wait + cy.prompt() for UI
+  - Multi-step process → cy.prompt() for step navigation
+  - Dynamic content → cy.prompt() for flexible waiting and finding
+  - Dynamic URL pages → Always use buildUrl() with Cypress.env() or test case url_params
 
   Generate ONLY the test code with appropriate cy.prompt() and Cypress API usage. No explanations.
-
-
-
-
