@@ -7,7 +7,9 @@
 import argparse
 import sys
 from datetime import datetime
+from pathlib import Path
 
+from langchain_core.runnables import RunnableLambda
 from qa_config import DEFAULT_LLM, FRAMEWORK_CONFIG, LLM_CONFIG
 from qa_runtime import (
     _otel_provider,
@@ -19,6 +21,17 @@ from qa_runtime import (
     tracer,
 )
 from qa_workflow import TestState, create_workflow
+
+
+WORKFLOW_INVOKER = RunnableLambda(
+    lambda payload: create_workflow().invoke(
+        payload["state"],
+        config={"configurable": {"thread_id": payload["thread_id"]}},
+    )
+)
+
+
+READ_TEXT = RunnableLambda(lambda path: Path(path).read_text(encoding="utf-8"))
 
 
 def list_all_patterns() -> None:
@@ -74,10 +87,7 @@ def generate_tests_action(args: argparse.Namespace) -> None:
             run_id=datetime.now().strftime("%Y%m%d_%H%M%S"),
         )
 
-        final_state = create_workflow().invoke(
-            state,
-            config={"configurable": {"thread_id": state.run_id}},
-        )
+        final_state = WORKFLOW_INVOKER.invoke({"state": state, "thread_id": state.run_id})
 
         _otel_provider.force_flush(timeout_millis=10000)
 
@@ -105,7 +115,7 @@ def dispatch_cli_mode(args: argparse.Namespace) -> None:
         return
 
     if args.analyze is not None or args.file:
-        log_text = open(args.file).read() if args.file else args.analyze or sys.stdin.read()
+        log_text = READ_TEXT.invoke(args.file) if args.file else args.analyze or sys.stdin.read()
         logger.info(analyze_test_failure(log_text))
         return
 
