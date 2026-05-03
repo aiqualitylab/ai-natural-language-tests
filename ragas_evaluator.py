@@ -2,8 +2,12 @@
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-import os, requests, argparse
+import argparse
+
+import requests
 from datasets import Dataset
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
 from ragas import evaluate
 from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -22,7 +26,8 @@ def run(requirement, test_file, url):
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
     # Step 3: answer must directly respond to the requirement using page HTML
-    answer = llm.invoke(f"""
+    answer_prompt = ChatPromptTemplate.from_template(
+        """
 You are a QA assistant. Answer this question directly in 2-3 sentences:
 
 Question: {requirement}
@@ -31,15 +36,22 @@ Use only what is visible in this page HTML to support your answer.
 Start your answer with words from the question itself.
 
 Page HTML:
-{page_html[:2000]}
-""").content
+{page_html_sample}
+"""
+    )
+    answer_chain = answer_prompt | llm | StrOutputParser()
+    answer = answer_chain.invoke({"requirement": requirement, "page_html_sample": page_html[:2000]})
 
     # Step 4: ground truth = what the page provides relevant to the requirement
-    ground_truth = llm.invoke(f"""
+    ground_truth_prompt = ChatPromptTemplate.from_template(
+        """
 In 2-3 sentences, describe only what a user can observe on this page that is relevant to: {requirement}
 Base your answer only on what would be visible on the page at {url}.
 Keep it factual and simple.
-""").content
+"""
+    )
+    ground_truth_chain = ground_truth_prompt | llm | StrOutputParser()
+    ground_truth = ground_truth_chain.invoke({"requirement": requirement, "url": url})
 
     # Step 5: build Ragas dataset
     dataset = Dataset.from_list([{
