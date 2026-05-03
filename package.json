@@ -19,18 +19,18 @@
     "gitagent:export": "npx @open-gitagent/gitagent export --format system-prompt -d ."
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.1",
+    "@testing-library/cypress": "^10.1.0",
     "@wdio/cli": "^8.46.0",
     "@wdio/globals": "^8.46.0",
     "@wdio/local-runner": "^8.46.0",
     "@wdio/mocha-framework": "^8.46.0",
     "@wdio/spec-reporter": "^8.43.0",
-    "@playwright/test": "^1.58.1",
-    "@testing-library/cypress": "^10.1.0",
-    "chromedriver": "^148.0.0",
+    "chromedriver": "^147.0.4",
     "cypress": "^15.8.1",
     "expect-webdriverio": "^4.15.4",
-    "webdriverio": "^8.46.0",
-    "wdio-chromedriver-service": "^8.1.1"
+    "wdio-chromedriver-service": "^8.1.1",
+    "webdriverio": "^8.46.0"
   },
   "dependencies": {
     "dotenv": "^16.0.3"
