@@ -9,15 +9,17 @@ Use target URL example: `https://the-internet.herokuapp.com/login`
 | 1 | Pick requirement and URL | Example requirement: `"Test login"` | Clear requirement and target URL chosen |
 | 2 | Generate context once | `python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework cypress --run` | Context artifacts created |
 | 3 | Validate fixture quality | `cypress/fixtures/url_test_data.json` | Usable selectors + valid/invalid test cases present |
-| 4 | Update prompt rules | `prompt_specs/test_generation_traditional.yaml` | Cypress rules updated |
-| 5 | Update prompt rules | `prompt_specs/test_generation_prompt_powered.yaml` | Cypress prompt-powered rules updated |
-| 6 | Update prompt rules | `prompt_specs/test_generation_playwright.yaml` | Playwright rules updated |
-| 7 | Update prompt rules | `prompt_specs/test_generation_webdriverio.yaml` | WebdriverIO rules updated |
-| 8 | Bump prompt version(s) | `version: 1` -> `version: 2` (or next) | Version incremented in all changed prompt files |
-| 9 | Validate Cypress | `python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework cypress --run` | Exit code 0 |
-| 10 | Validate Playwright | `./.venv/Scripts/python.exe qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright --run` | Exit code 0 |
-| 11 | Validate WebdriverIO | `python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework webdriverio --run` | Exit code 0 |
-| 12 | Analyze failures if needed | `python qa_automation.py --analyze -f <path-to-failure-log>` | Root cause identified and prompt refined |
+| 4 | Update HTML analysis contract | `prompt_specs/html_analysis.yaml` | JSON-only response contract still valid |
+| 5 | Update failure analysis contract | `prompt_specs/failure_analysis.yaml` | Exactly 3-line CATEGORY/REASON/FIX output remains valid |
+| 6 | Update prompt rules | `prompt_specs/test_generation_traditional.yaml` | Cypress rules updated |
+| 7 | Update prompt rules | `prompt_specs/test_generation_prompt_powered.yaml` | Cypress prompt-powered rules updated |
+| 8 | Update prompt rules | `prompt_specs/test_generation_playwright.yaml` | Playwright rules updated |
+| 9 | Update prompt rules | `prompt_specs/test_generation_webdriverio.yaml` | WebdriverIO rules updated |
+| 10 | Bump prompt version(s) | `version: n -> n+1` in each changed prompt spec | Version incremented in all changed prompt files |
+| 11 | Validate Cypress | `python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework cypress --run` | Exit code 0 |
+| 12 | Validate Playwright | `.\.venv\Scripts\python.exe qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright --run` | Exit code 0 |
+| 13 | Validate WebdriverIO | `python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework webdriverio --run` | Exit code 0 |
+| 14 | Analyze failures if needed | `python qa_automation.py --analyze -f <path-to-failure-log>` | Root cause identified and prompt refined |
 
 ## Framework Policy Table
 
@@ -52,3 +54,5 @@ Add these intents to each generation prompt:
 - Selectors are context-driven and resilient.
 - Assertions are observable and meaningful.
 - Prompt versions are incremented for all changed files.
+- `html_analysis.yaml` still returns parseable raw JSON only.
+- `failure_analysis.yaml` still returns strict 3-line output with valid category values.
