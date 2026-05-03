@@ -137,6 +137,7 @@ Update these files whenever applicable:
 - `README.md` for setup/config/usage changes.
 - `.env.example` for new environment variables.
 - `requirements.txt` / `package.json` for dependency changes.
+- `prompt_specs/*.yaml` for parser contract or output-shape changes.
 
 Avoid undocumented behavior changes.
 
@@ -153,6 +154,7 @@ For changes to tracing/logging:
 
 - Ensure OTLP config remains compatible with Grafana Tempo.
 - Ensure Loki config remains optional and non-blocking.
+- Ensure transient Loki transport failures do not crash or spam traceback output.
 - Validate that logs/spans still emit during normal generation flow.
 
 Recommended verification queries:
@@ -183,6 +185,7 @@ For `v5.0.0` and later, release notes should explicitly call out changes in thes
 - HITL behavior (`--approve` flow and approval UX)
 - Replay behavior (`--list-html-replays`, `--replay-html-analysis`)
 - Architecture updates across `qa_automation.py`, `qa_config.py`, `qa_runtime.py`, `qa_workflow.py`
+- Prompt contract changes affecting parser expectations (JSON-only or strict 3-line analysis output)
 
 ## Publishing a Docker Image (GHCR)
 
@@ -236,5 +239,11 @@ Starting in `v5.0.0`, keep contributions aligned to module responsibilities:
 - `qa_config.py`: static configuration, prompt loading, model factory
 - `qa_runtime.py`: external integrations (logging, tracing, persistence, replay, pattern store)
 - `qa_workflow.py`: LangGraph state, nodes, and graph assembly
+
+Current implementation notes:
+
+- Keep structured LLM output handling in parser classes (`BaseOutputParser`) rather than ad-hoc string parsing.
+- Keep workflow/app/CLI invocation wrappers in `RunnableLambda` when introducing new orchestration boundaries.
+- Keep embeddings imports compatible with `langchain-huggingface` first, then fallback only when needed.
 
 When adding features, prefer extending the relevant module over reintroducing monolithic logic into the CLI entry file.

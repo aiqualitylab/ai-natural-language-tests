@@ -5,14 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [5.0.0] - 2026-05-02
+## [5.0.0] - 2026-05-03
 ### Added
 - **Scoring in NLP Baseline**: `ragas_nlp_evaluator.py` now computes ROUGE and NonLLMStringSimilarity; overall average is the mean of all metrics.
 - **Overall Quality Score**: `ragas_evaluator.py` now computes and prints an `Overall Score` (mean of all four Ragas metrics) with pass/fail status per evaluation run.
+- **LangChain Parser Layer**: Introduced parser classes for structured output handling:
+  - `CodeFenceParser` in `qa_workflow.py`
+  - `JsonFenceParser` and `FailureAnalysisParser` in `qa_runtime.py`
+- **Runnable Wrappers**: Added `RunnableLambda` wrappers in CLI/UI and workflow generation paths to simplify orchestration boundaries.
 
 ### Changed
 - **Python 3.12 in CI**: Both `nlp-baseline` and `test` jobs upgraded from Python 3.11 to Python 3.12 to match the Dockerfile base image.
 - **CI Dependency Caching**: Added `actions/cache@v4` for pip (per-framework keyed on `requirements.txt`) and npm (keyed on `package-lock.json`) to reduce install times.
+- **Prompt Rendering Path**: Prompt formatting now uses LangChain `PromptTemplate` in configuration loading.
+- **Failure Analysis Messaging**: Runtime now sends analysis prompts using LangChain message classes (`SystemMessage`, `HumanMessage`).
+- **Evaluator Prompt Flow**: `ragas_evaluator.py` now uses `ChatPromptTemplate` and `StrOutputParser` chains for generated answer and ground-truth synthesis.
 - **Release Metadata Versioning**: Bumped from `4.2.0`/`v4.2.0` to `5.0.0`/`v5.0.0` across:
   - `package.json` and root `package-lock.json`
   - `agent.yaml`
@@ -21,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `README.md` (pinned release tag table)
   - `CONTRIBUTING.md` (publish examples and tag conventions)
   - `.github/workflows/publish-ghcr.yml` (tag comment)
+
+### Fixed
+- **Loki Non-Blocking Behavior**: Added safe Loki handler behavior that suppresses transient 5xx transport traceback noise and keeps generation flow uninterrupted.
+- **Embeddings Deprecation Path**: Prefer `langchain_huggingface.HuggingFaceEmbeddings` with fallback to `langchain_community` to reduce deprecation warnings.
 
 
 ### Added

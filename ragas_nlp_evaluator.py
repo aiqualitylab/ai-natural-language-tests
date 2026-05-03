@@ -2,12 +2,17 @@ import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 import json, asyncio, argparse
+from langchain_core.runnables import RunnableLambda
 from ragas.metrics.collections import RougeScore, NonLLMStringSimilarity
 
 
 # Load all test samples from the JSON file
 def load_samples(path):
     return json.load(open(path))
+
+
+LOAD_SAMPLES = RunnableLambda(load_samples)
+SCORE_AVERAGE = RunnableLambda(lambda values: round(sum(values) / len(values), 2) if values else 0.0)
 
 
 # Score one sample using ROUGE and SIM
@@ -19,7 +24,7 @@ async def score_one(response, reference):
 
 # Run evaluation on all samples
 async def run(path):
-    samples = load_samples(path)
+    samples = LOAD_SAMPLES.invoke(path)
     all_scores = []
 
     for sample in samples:
@@ -28,7 +33,7 @@ async def run(path):
         all_scores.append(avg)
         print(sample["name"], "→ ROUGE:", rouge, " SIM:", sim, " AVG:", avg)
 
-    print("\n  Overall Average:", round(sum(all_scores) / len(all_scores), 2))
+    print("\n  Overall Average:", SCORE_AVERAGE.invoke(all_scores))
 
 
 # Entry point

@@ -9,21 +9,28 @@ LangGraph workflows in AI-powered test automation license: GNU AFFERO GENERAL PU
 ## Workflow Pipeline
 
 ```
-ParseCLI -> LoadContext -> GenerateTests -> RunCypress -> END
+Step2FetchData -> Step3SearchPatterns -> Step4GenerateTests -> Step5RunTests(optional) -> END
 ```
 
 ## State Schema
 
 ```python
 @dataclass
-class TestGenerationState:
+class TestState:
     requirements: List[str]
     output_dir: str
     use_prompt: bool
-    docs_context: Optional[str]
-    generated_tests: List[Dict[str, Any]]
+    approve: bool = False
+    framework: str = "cypress"
+    url: Optional[str] = None
     run_tests: bool
-    error: Optional[str]
+    llm_provider: str = "openai"
+    test_data: Optional[Dict] = None
+    context: str = ""
+    similar_patterns: List = field(default_factory=list)
+    generated_tests: List = field(default_factory=list)
+    test_results: Optional[Dict] = None
+    run_id: str = ""
 ```
 
 ## Building Workflow
@@ -32,74 +39,44 @@ class TestGenerationState:
 from langgraph.graph import StateGraph, END
 
 def create_workflow() -> StateGraph:
-    workflow = StateGraph(TestGenerationState)
+    workflow = StateGraph(TestState)
     
-    workflow.add_node("parse_cli", parse_cli_node)
-    workflow.add_node("load_context", load_context_node)
-    workflow.add_node("generate_tests", generate_tests_node)
-    workflow.add_node("run_cypress", run_cypress_node)
+    workflow.add_node("step_2", step_2_fetch_test_data)
+    workflow.add_node("step_3", step_3_search_similar_patterns)
+    workflow.add_node("step_4", step_4_generate_tests)
+    workflow.add_node("step_5", step_5_run_tests)
     
-    workflow.set_entry_point("parse_cli")
-    workflow.add_edge("parse_cli", "load_context")
-    workflow.add_edge("load_context", "generate_tests")
-    workflow.add_edge("generate_tests", "run_cypress")
-    workflow.add_edge("run_cypress", END)
+    workflow.set_entry_point("step_2")
+    workflow.add_edge("step_2", "step_3")
+    workflow.add_edge("step_3", "step_4")
+    workflow.add_conditional_edges("step_4", should_run_tests, {"run_tests": "step_5", END: END})
+    workflow.add_edge("step_5", END)
     
-    return workflow.compile()
+    return workflow.compile(checkpointer=WORKFLOW_CHECKPOINTER)
 ```
 
 ## Node Pattern
 
 ```python
-def generate_tests_node(state: TestGenerationState) -> TestGenerationState:
-    generator = HybridTestGenerator()
-    
-    for idx, req in enumerate(state.requirements, 1):
-        content = generator.generate_test_content(
-            requirement=req,
-            context=state.docs_context or "",
-            use_prompt=state.use_prompt
-        )
-        result = generator.save_test_file(content, state.output_dir, idx)
-        state.generated_tests.append(result)
-    
+def step_4_generate_tests(state: TestState) -> TestState:
+    # Current implementation uses RunnableLambda for prompt generation
+    # and BaseOutputParser for code-fence extraction before file save.
     return state
 ```
 
 ## Mode Selection
 
 ```python
-# Template
-if state.use_prompt:
-    template = create_prompt_powered_test_prompt()
-else:
-    template = create_traditional_test_prompt()
-
-# Output folder
-if state.use_prompt:
-    folder = f"{output_dir}/prompt-powered"
-else:
-    folder = f"{output_dir}/generated"
+# Prompt mode applies only when framework supports it (currently Cypress)
+use_prompt_mode = state.use_prompt and FRAMEWORK_CONFIG[state.framework]["supports_prompt_mode"]
 ```
 
 ## Context Sources
 
 ```python
-# URL analysis
-if args.url:
-    context, data, path = generate_test_data_from_url(args.url)
-
-# JSON file
-if args.data:
-    with open(args.data) as f:
-        data = json.load(f)
-
-# Documentation
-if args.docs:
-    docs_context = loader.get_relevant_context(vector_store, query)
-
-# Combine all into docs_context
-full_context = (docs_context or "") + test_data_context
+# URL analysis in step_2 builds test_data and context block
+# Similar pattern retrieval in step_3 augments context
+# Final context is consumed by step_4 prompt template rendering
 ```
 
 ## Error Handling

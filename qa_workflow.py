@@ -1,7 +1,10 @@
 from dataclasses import dataclass, field
 from datetime import datetime
+from itertools import chain
 from typing import Any, Dict, List, Optional
 
+from langchain_core.output_parsers import BaseOutputParser
+from langchain_core.runnables import RunnableLambda
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 
@@ -19,6 +22,18 @@ from qa_runtime import (
 
 
 WORKFLOW_CHECKPOINTER = MemorySaver()
+
+
+class CodeFenceParser(BaseOutputParser[str]):
+    def parse(self, text: str) -> str:
+        fence_markers = ["```typescript", "```javascript", "```js", "```"]
+        marker = next((item for item in fence_markers if item in text), None)
+        if marker is None:
+            return text
+        return text.split(marker, 1)[1].split("```", 1)[0].strip()
+
+
+CODE_FENCE_PARSER = CodeFenceParser()
 
 
 @dataclass
@@ -40,12 +55,7 @@ class TestState:
 
 
 def extract_code_fence(content: str) -> str:
-    fence_markers = ["```typescript", "```javascript", "```js", "```"]
-    for marker in fence_markers:
-        if marker in content:
-            between = content.split(marker)[1].split("```")[0].strip()
-            return between
-    return content
+    return CODE_FENCE_PARSER.parse(content)
 
 
 def get_test_filepath(framework: str, output_dir: str, use_prompt_mode: bool, index: int, requirement: str) -> tuple:
@@ -134,9 +144,8 @@ def step_3_search_similar_patterns(state: TestState) -> TestState:
         span.set_attribute("requirements_count", len(state.requirements))
         store = get_pattern_store()
 
-        all_patterns = []
-        for requirement in state.requirements:
-            all_patterns.extend(store.search_similar_patterns(requirement))
+        search_chain = RunnableLambda(store.search_similar_patterns)
+        all_patterns = list(chain.from_iterable(search_chain.batch(state.requirements)))
 
         state.similar_patterns = all_patterns
         logger.info(f"Found {len(all_patterns)} similar patterns total")
@@ -166,6 +175,16 @@ def step_4_generate_tests(state: TestState) -> TestState:
         llm = get_llm(state.llm_provider)
         store = get_pattern_store()
         generated_tests = []
+        prompt_file = fw["prompt_file_prompt"] if use_prompt_mode else fw["prompt_file_standard"]
+        build_prompt = RunnableLambda(
+            lambda req: load_prompt_template(
+                prompt_file,
+                requirement=req,
+                context=state.context,
+                symbolic_rules=SYMBOLIC_RULES,
+            )
+        )
+        generation_chain = build_prompt | llm | CODE_FENCE_PARSER
 
         for index, requirement in enumerate(state.requirements, 1):
             with tracer.start_as_current_span("generate_single_test") as test_span:
@@ -174,16 +193,8 @@ def step_4_generate_tests(state: TestState) -> TestState:
                 test_span.set_attribute("index", index)
                 test_span.set_attribute("framework", state.framework)
 
-                prompt_file = fw["prompt_file_prompt"] if use_prompt_mode else fw["prompt_file_standard"]
-                prompt = load_prompt_template(
-                    prompt_file,
-                    requirement=requirement,
-                    context=state.context,
-                    symbolic_rules=SYMBOLIC_RULES,
-                )
-                ai_response = llm.invoke(prompt)
-                content = extract_code_fence(ai_response.content)
-                filepath, filename, folder_name = get_test_filepath(
+                content = generation_chain.invoke(requirement)
+                filepath, filename, _folder_name = get_test_filepath(
                     state.framework, state.output_dir, use_prompt_mode, index, requirement
                 )
 

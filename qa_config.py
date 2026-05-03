@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import yaml
+from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 
 try:
@@ -37,6 +38,29 @@ ALLOWED_FAILURE_CATEGORIES = {
     "NAVIGATION",
     "INTERACTION",
     "CONFIGURATION",
+    "DYNAMIC_URL",   # hardcoded ID/UUID/slug in visit/goto caused 404 or missing-resource
+    "ENVIRONMENT",   # infra problem the agent cannot fix by rewriting test code:
+                     # driver version mismatch, missing binary, port conflict, OS permission
+}
+
+# Per-category instructions injected into step_6 heal prompt.
+# Each value tells the LLM exactly HOW to fix that category of failure.
+HEAL_STRATEGIES = {
+    "SELECTOR":     "Fix the selector. Use data-testid, aria-label, or role-based selectors. Never use nth-child or XPath.",
+    "TIMING":       "Add an explicit wait before the failing action. Use cy.wait(), waitForSelector(), or waitForDisplayed().",
+    "ASSERTION":    "Fix the assertion. Check the actual element state, text, or URL that appears after the action.",
+    "NETWORK":      "Check the API endpoint pattern and HTTP method. Add or fix cy.intercept() / page.route() if needed.",
+    "STATE":        "Ensure required cookies, tokens, or session state are set up before the test step that fails.",
+    "NAVIGATION":   "Fix the URL or navigation step. Check redirects and ensure the page fully loads before interacting.",
+    "INTERACTION":  "The element exists but cannot be interacted with. Scroll it into view, wait for it to be enabled, or use force:true.",
+    "CONFIGURATION":"Fix the framework configuration, environment variable, or test runner setup causing this error.",
+    "ENVIRONMENT":  None,   # signals step_6 to skip rewriting and surface the error to user
+    "DYNAMIC_URL":  (
+        "The test contains a hardcoded ID, UUID, slug, or path segment that no longer exists or is environment-specific. "
+        "Replace every hardcoded dynamic value with a variable: use Cypress.env(), process.env, or a test-data parameter. "
+        "Use the buildUrl() helper to construct the URL from base_url + url_pattern + params. "
+        "NEVER substitute one hardcoded value for another — parameterise instead."
+    ),
 }
 
 SYMBOLIC_RULES = """
@@ -113,7 +137,7 @@ def load_prompt_spec(filename: str, required_keys: Optional[List[str]] = None) -
 
 def load_prompt_template(filename: str, **variables: Any) -> str:
     spec = load_prompt_spec(filename, required_keys=["template"])
-    template = str(spec.get("template", ""))
+    template = PromptTemplate.from_template(str(spec.get("template", "")))
     return template.format(**variables)
 
 
@@ -123,12 +147,12 @@ def load_prompt_system(filename: str) -> str:
 
 
 def _get_provider_constructor(provider: str) -> Any:
-    providers = {
+    constructor_map = {
         "openai": lambda cfg: ChatOpenAI(model=cfg["model"], temperature=0),
         "anthropic": lambda cfg: ChatAnthropic(model=cfg["model"], temperature=0) if ChatAnthropic else None,
         "google": lambda cfg: ChatGoogleGenerativeAI(model=cfg["model"], temperature=0) if ChatGoogleGenerativeAI else None,
     }
-    return providers.get(provider, lambda cfg: ChatOpenAI(model=cfg["model"], temperature=0))
+    return constructor_map.get(provider, constructor_map[DEFAULT_LLM])
 
 
 def get_llm(provider: str = DEFAULT_LLM) -> Any:

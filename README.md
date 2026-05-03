@@ -144,7 +144,9 @@ python qa_automation.py "Test login with valid credentials" --url https://the-in
 |------------|--------|
 | Test Generation | Natural language to executable E2E test generation |
 | Orchestration | LangGraph-based multi-step orchestration |
+| LangChain Runnables | `RunnableLambda` wrappers for workflow invocation in CLI/UI paths |
 | URL Analysis | Dynamic URL analysis and fixture generation |
+| Structured Parsing | LangChain `BaseOutputParser` classes for code fences, HTML JSON, and failure output |
 | Pattern Memory | Pattern storage and semantic retrieval using FAISS + SQLite |
 | LLM Support | Multi-provider: OpenAI, Anthropic, Google |
 | Cypress Modes | Traditional mode and Cypress prompt-powered mode |
@@ -226,10 +228,12 @@ graph TB
   - Handles model provider fallback and YAML template parsing.
 - Runtime services (`qa_runtime.py`)
   - Logging/tracing setup (OpenTelemetry, Grafana Loki) and persistent objects.
+  - Non-blocking Loki handler with suppressed transient transport tracebacks.
   - FAISS + SQLite pattern store lifecycle and query helpers.
-  - HTML analysis replay and failure analysis formatting.
+  - HTML analysis replay and parser-backed failure analysis formatting.
 - LangGraph workflow (`qa_workflow.py`)
   - Defines `TestState` and step nodes (fetch, pattern search, generate, run).
+  - Uses LangChain runnables/parsers for generation input/output shaping.
   - Builds workflow graph with conditional transitions and checkpointer.
 - Observability layer (OpenTelemetry + Loki)
 
@@ -271,7 +275,9 @@ Generation follows a deterministic five-step flow:
 |-------|------------|
 | Orchestration | Python CLI orchestration |
 | Workflow | LangChain + LangGraph |
+| Prompt and Output Handling | LangChain PromptTemplate + BaseOutputParser |
 | Vector Store | FAISS + SQLite |
+| Embeddings | `langchain-huggingface` (preferred) with `langchain-community` fallback |
 | LLM Backends | OpenAI / Anthropic / Google |
 | Test Runners | Cypress, Playwright, and WebdriverIO runners |
 | Observability | OpenTelemetry SDK and OTLP exporter |
@@ -603,7 +609,7 @@ python qa_automation.py --analyze -f error.log
 >
 > | Field | Description |
 > |-------|-------------|
-> | `CATEGORY` | Error type: `SELECTOR`, `TIMEOUT`, `ASSERTION`, `NETWORK`, etc. |
+> | `CATEGORY` | Error type: `SELECTOR`, `TIMING`, `ASSERTION`, `NETWORK`, `STATE`, `NAVIGATION`, `INTERACTION`, `CONFIGURATION`, `ENVIRONMENT`, or `DYNAMIC_URL` |
 > | `REASON` | Root cause explanation in plain English |
 > | `FIX` | Suggested code change or configuration fix |
 
@@ -768,6 +774,13 @@ Recommended pipeline stages:
 >
 > - Ensure token has `logs:write` scope.
 > - Confirm instance ID and logs endpoint match the same Grafana stack.
+
+> [!NOTE]
+> **Loki 5xx Transport Errors (for example, 502)**
+>
+> - Test generation continues; logging transport failures are treated as non-blocking.
+> - The runtime suppresses traceback spam and emits a throttled warning instead.
+> - Investigate Grafana stack health/network path if these warnings persist.
 
 > [!TIP]
 > **Docker Observability Validation**
