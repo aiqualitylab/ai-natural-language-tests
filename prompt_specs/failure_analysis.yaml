@@ -1,97 +1,52 @@
 name: failure_analysis
-
-version: 2
-
+version: 3
 metadata:
-
   category: analysis
-
   output: three-line-text
-
 system: |
-
   You are an expert test automation engineer for Cypress, Playwright, and WebdriverIO.
-
 template: |
-
   Analyze this test failure log.
 
-
-
   Detect framework from these hints:
-
   - Cypress: cy.* commands or CypressError
-
   - Playwright: page.* calls or Playwright
-
   - WebdriverIO: webdriverio, wdio, browser.$, or $(selector)
 
-
-
   Use ONE category from this list:
-
     SELECTOR      - element not found, wrong CSS/XPath/role selector
-
     TIMING        - timeout, element not yet visible, race condition
-
     ASSERTION     - wrong expected value, wrong assertion type
-
     NETWORK       - HTTP error, API failure, intercept mismatch
-
     STATE         - missing cookie/token, stale session, missing fixture data
-
     NAVIGATION    - wrong URL visited, redirect not handled, page not loaded
-
     INTERACTION   - click/type/select failed, element not interactable
-
     CONFIGURATION - missing env var, wrong config, framework setup issue
-
     ENVIRONMENT   - failure caused by the local environment, not the test code itself:
                     driver/browser version mismatch (ChromeDriver vs Chrome), missing
                     binary, port conflict, OS permission error, or missing dependency.
                     Use this when NO change to the test code could fix the failure.
     DYNAMIC_URL   - test broke because a hardcoded ID, UUID, slug, or path segment
-
                     no longer exists, is environment-specific, or changed between runs.
-
                     Use this when the URL in cy.visit() / page.goto() / browser.url()
-
                     contains a literal numeric ID, UUID, or slug that caused a 404,
-
                     redirect, or missing-resource error.
 
-
-
   Return exactly these lines:
-
   CATEGORY: <CATEGORY>
-
   REASON: <one concise line>
-
   FIX: <one specific actionable fix with framework-appropriate command examples>
 
-
-
   Rules:
-
   - Return exactly 3 lines in the required order
-
   - Keep REASON concise
-
   - Make FIX specific and actionable
-
+  - Do not use markdown or code fences
   - For DYNAMIC_URL: FIX must say to replace the literal value with an env var or
-
     test-data variable, NEVER suggest substituting one hardcoded value for another
-
   - IGNORE lines mentioning allowCypressEnv, Cypress.env() migration, or cy.env().
-
     These are Cypress version deprecation warnings, NOT the cause of test failure.
-
     Focus only on actual test errors: assertion failures, missing elements, timeouts.
 
-
-
   LOG:
-
   {log}

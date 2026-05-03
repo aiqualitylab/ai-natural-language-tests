@@ -11,12 +11,13 @@ Generate Cypress, Playwright, and WebdriverIO E2E tests from natural language us
 | `requirements` | Test descriptions (positional) |
 | `--framework`, `-f` | Target framework: `cypress`, `playwright`, or `webdriverio` (default: cypress) |
 | `--url`, `-u` | Fetch URL, analyze HTML, generate fixture |
-| `--data`, `-d` | Load JSON test data file |
 | `--use-prompt` | Generate cy.prompt() self-healing tests (Cypress only) |
 | `--run` | Execute tests after generation |
-| `--docs` | Add documentation context |
 | `--analyze`, `-a` | Diagnose test failure with AI |
 | `--file` | Log file to analyze |
+| `--list-patterns` | List all stored historical test patterns |
+| `--list-html-replays` | List saved HTML analysis replay IDs |
+| `--replay-html-analysis` | Print saved HTML analysis snapshot by run ID |
 
 ## Framework Modes
 
@@ -51,7 +52,7 @@ Generate Cypress, Playwright, and WebdriverIO E2E tests from natural language us
 - Loads existing test data file
 - Same structure as URL-generated data
 
-## Dynamic Test Pattern (v3.4)
+## Dynamic Test Pattern (v5.0)
 
 Tests use selectors dynamically from fixture - no hardcoded values:
 
@@ -158,7 +159,7 @@ OPENAI_API_KEY=your_key
 | `this.testData` undefined | Use `function()` not arrow functions (Cypress) |
 | Wrong selectors | Use `--url` to fetch real selectors |
 | cy.prompt() not working | Enable `experimentalPromptCommand: true` (Cypress only) |
-| Tests only work for one URL | Use normalized dynamic selector pattern (v3.4) |
+| Tests only work for one URL | Use normalized dynamic selector pattern (v5.0) |
 | Playwright locator timeouts | Use `page.waitForLoadState('networkidle')` before locating elements |
 | Browser context issues | Ensure proper `await` usage in Playwright tests |
 

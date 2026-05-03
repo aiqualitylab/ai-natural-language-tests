@@ -1,5 +1,5 @@
 name: html_analysis
-version: 2
+version: 3
 metadata:
   category: generation
 template: |
@@ -150,6 +150,7 @@ template: |
 
   RULES:
   - Return ONLY valid JSON, no markdown, no explanations
+  - Do not wrap JSON in code fences
   - Include at least 2 test cases (valid + invalid)
   - Every selector must have cypress, playwright, and fallback_css
   - Use realistic test data values
