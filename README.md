@@ -21,6 +21,7 @@ Enterprise-grade platform to generate and execute Cypress, Playwright, and Webdr
 This project combines LLM-driven generation, LangGraph workflow orchestration, and vector-based pattern learning to improve test authoring speed while maintaining repeatability and CI/CD readiness.
 
 [![CI](https://github.com/aiqualitylab/ai-natural-language-tests/actions/workflows/ci.yml/badge.svg)](https://github.com/aiqualitylab/ai-natural-language-tests/actions/workflows/ci.yml)
+![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Ready-4a7cff)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19535703.svg)](https://doi.org/10.5281/zenodo.19535703)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-003087?logo=python&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-22-FF9933?logo=node.js&logoColor=white)
@@ -747,18 +748,6 @@ Recommended pipeline stages:
 | 7 | Publish artifacts and reports |
 | 8 | Export telemetry to observability stack |
 
-## AI Transparency
-
-This platform sends your test requirements and page HTML to third-party AI providers to generate tests. No passwords, personal data, or production content should be included in requirements or URLs.
-
-| What gets sent | Where |
-|---|---|
-| Your test requirement text | OpenAI / Anthropic / Google (whichever key is configured) |
-| HTML of the page being tested | Same provider |
-| Nothing else | — |
-
-Data sent to providers is subject to their own terms of service. Use synthetic or masked data wherever possible. See [MODEL_CARD.md](MODEL_CARD.md) for full details.
-
 ## Security and Compliance Guidance
 
 > [!IMPORTANT]
@@ -836,8 +825,6 @@ Data sent to providers is subject to their own terms of service. Use synthetic o
 | `CHANGELOG.md` | Release history and notable changes |
 | `PROMPT_UPDATE_GUIDE.md` | Prompt and URL-tuning workflow |
 | `RULES.md` | Repository automation and behavior constraints |
-| [MODEL_CARD.md](MODEL_CARD.md) | AI providers, data handling, and known limitations |
-| [INCIDENT_RESPONSE.md](INCIDENT_RESPONSE.md) | What to do when something goes wrong |
 
 ## Versioning and Release Policy
 
@@ -861,12 +848,15 @@ Data sent to providers is subject to their own terms of service. Use synthetic o
 | Control Area | Guidance |
 |--------------|----------|
 | Data minimization | Use synthetic or masked data in prompts, fixtures, and generated tests |
-| Secret hygiene | Keep keys in secret managers; never commit secrets. Secret scanning runs on every push via [ci.yml](.github/workflows/ci.yml) |
+| Secret hygiene | Keep keys in secret managers; never commit secrets |
 | Telemetry control | Keep OpenTelemetry and Loki export optional and environment-driven |
 | Access control | Use least-privilege tokens for providers and observability |
 | Auditability | Use pinned image tags and changelog-referenced releases |
 
 For implementation details and contribution controls, see CONTRIBUTING.md.
+
+> [!NOTE]
+> This project follows EU AI Act readiness practices. See [MODEL_CARD.md](MODEL_CARD.md) and [INCIDENT_RESPONSE.md](INCIDENT_RESPONSE.md).
 
 ## Operational Expectations
 
