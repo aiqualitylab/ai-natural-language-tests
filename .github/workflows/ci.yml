@@ -21,8 +21,22 @@ env:
 
 jobs:
 
-  # ── JOB 1: NLP baseline — no API key, runs first ─────────────────────────
+  # ── JOB 1: Secret scanning — runs before everything else ─────────────────
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Scan for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+
+  # ── JOB 2: NLP baseline — no API key ─────────────────────────────────────
   nlp-baseline:
+    needs: secret-scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +45,7 @@ jobs:
       - run: pip install ragas==0.4.3 sacrebleu rapidfuzz rouge-score
       - run: python ragas_nlp_evaluator.py --dataset test_dataset.json
 
-  # ── JOB 2: Generate → Ragas → Run (3 frameworks in parallel) ─────────────
+  # ── JOB 3: Generate → Ragas → Run (3 frameworks in parallel) ─────────────
   test:
     needs: nlp-baseline
     runs-on: ubuntu-latest
