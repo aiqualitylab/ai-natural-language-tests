@@ -31,8 +31,7 @@ jobs:
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          base: main
-          head: HEAD
+          extra_args: --only-verified
 
   # ── JOB 2: NLP baseline — no API key ─────────────────────────────────────
   nlp-baseline:
