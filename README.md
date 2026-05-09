@@ -22,6 +22,8 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 
 [![CI](https://github.com/aiqualitylab/ai-natural-language-tests/actions/workflows/ci.yml/badge.svg)](https://github.com/aiqualitylab/ai-natural-language-tests/actions/workflows/ci.yml)
 ![EU AI Act](https://img.shields.io/badge/EU%20AI%20Act-Ready-4a7cff)
+[![Stars](https://img.shields.io/github/stars/aiqualitylab/ai-natural-language-tests?style=social)](https://github.com/aiqualitylab/ai-natural-language-tests/stargazers)
+![Last Commit](https://img.shields.io/github/last-commit/aiqualitylab/ai-natural-language-tests)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19535703.svg)](https://doi.org/10.5281/zenodo.19535703)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-003087?logo=python&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-22-FF9933?logo=node.js&logoColor=white)
