@@ -747,6 +747,18 @@ Recommended pipeline stages:
 | 7 | Publish artifacts and reports |
 | 8 | Export telemetry to observability stack |
 
+## AI Transparency
+
+This platform sends your test requirements and page HTML to third-party AI providers to generate tests. No passwords, personal data, or production content should be included in requirements or URLs.
+
+| What gets sent | Where |
+|---|---|
+| Your test requirement text | OpenAI / Anthropic / Google (whichever key is configured) |
+| HTML of the page being tested | Same provider |
+| Nothing else | — |
+
+Data sent to providers is subject to their own terms of service. Use synthetic or masked data wherever possible. See [MODEL_CARD.md](MODEL_CARD.md) for full details.
+
 ## Security and Compliance Guidance
 
 > [!IMPORTANT]
@@ -824,6 +836,8 @@ Recommended pipeline stages:
 | `CHANGELOG.md` | Release history and notable changes |
 | `PROMPT_UPDATE_GUIDE.md` | Prompt and URL-tuning workflow |
 | `RULES.md` | Repository automation and behavior constraints |
+| [MODEL_CARD.md](MODEL_CARD.md) | AI providers, data handling, and known limitations |
+| [INCIDENT_RESPONSE.md](INCIDENT_RESPONSE.md) | What to do when something goes wrong |
 
 ## Versioning and Release Policy
 
@@ -847,7 +861,7 @@ Recommended pipeline stages:
 | Control Area | Guidance |
 |--------------|----------|
 | Data minimization | Use synthetic or masked data in prompts, fixtures, and generated tests |
-| Secret hygiene | Keep keys in secret managers; never commit secrets |
+| Secret hygiene | Keep keys in secret managers; never commit secrets. Secret scanning runs on every push via [ci.yml](.github/workflows/ci.yml) |
 | Telemetry control | Keep OpenTelemetry and Loki export optional and environment-driven |
 | Access control | Use least-privilege tokens for providers and observability |
 | Auditability | Use pinned image tags and changelog-referenced releases |
@@ -917,5 +931,3 @@ Release notes are maintained in [CHANGELOG.md](CHANGELOG.md), following the Keep
 <td><em>© 2026 AI Quality Lab / <a href="https://www.linkedin.com/in/sreekanthharigovindan/">Sreekanth Harigovindan.</a></em></td>
 <td width="1" align="right" nowrap><a href="https://tests.aiqualitylab.org"><img src=".github/images/aiqualitylab_qr.png" alt="tests.aiqualitylab.org" width="100" /></a><br/><sub><a href="https://tests.aiqualitylab.org">tests.aiqualitylab.org</a></sub></td>
 </tr></table>
-
-
