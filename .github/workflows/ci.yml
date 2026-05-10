@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with: { python-version: '3.12' }
       - run: pip install ragas==0.4.3 sacrebleu rapidfuzz rouge-score
       - run: python ragas_nlp_evaluator.py --dataset test_dataset.json
@@ -55,7 +55,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with: { python-version: '3.12' }
       - uses: actions/setup-node@v4
         with: { node-version: '24' }
