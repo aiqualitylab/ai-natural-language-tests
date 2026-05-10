@@ -25,7 +25,7 @@ jobs:
   secret-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with: { fetch-depth: 0 }
       - name: Scan for secrets
         uses: trufflesecurity/trufflehog@main
@@ -38,7 +38,7 @@ jobs:
     needs: secret-scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with: { python-version: '3.12' }
       - run: pip install ragas==0.4.3 sacrebleu rapidfuzz rouge-score
@@ -54,7 +54,7 @@ jobs:
         framework: [cypress, playwright, webdriverio]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with: { python-version: '3.12' }
       - uses: actions/setup-node@v4
