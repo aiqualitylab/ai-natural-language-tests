@@ -6,7 +6,7 @@ langchain-core==0.3.84
 faiss-cpu==1.13.2
 sentence-transformers==5.4.1
 python-dotenv==1.2.2
-requests==2.33.1
+requests==2.34.2
 langchain-anthropic==0.3.22
 langchain-google-genai==2.1.12
 protobuf==5.29.3
