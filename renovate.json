@@ -1,4 +1,5 @@
 {
-  "extends": ["config:base"],
-  "labels": ["dependencies"]
+  "extends": ["config:recommended"],
+  "labels": ["dependencies"],
+  "dependencyDashboard": false
 }
