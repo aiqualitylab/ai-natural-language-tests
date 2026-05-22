@@ -1,6 +1,6 @@
 langchain-openai==0.3.35
 langgraph==0.6.11
-langchain-community==0.3.21
+langchain-community==0.4.2
 langchain-huggingface==0.3.1
 langchain-core==0.3.86
 faiss-cpu==1.13.2
