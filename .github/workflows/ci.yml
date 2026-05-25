@@ -41,7 +41,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with: { python-version: '3.12' }
-      - run: pip install ragas==0.4.3 sacrebleu rapidfuzz rouge-score
+      - run: pip install -r requirements.txt
       - run: python ragas_nlp_evaluator.py --dataset test_dataset.json
 
   # ── JOB 3: Generate → Ragas → Run (3 frameworks in parallel) ─────────────
