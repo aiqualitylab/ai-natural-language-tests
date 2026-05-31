@@ -1,4 +1,4 @@
-langchain-openai==0.3.35
+langchain-openai==1.2.2
 langgraph==0.6.11
 langchain-community==0.3.21
 langchain-huggingface==0.3.1
