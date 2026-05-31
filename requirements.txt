@@ -9,7 +9,7 @@ python-dotenv==1.2.2
 requests==2.34.2
 langchain-anthropic==0.3.22
 langchain-google-genai==2.1.12
-protobuf==5.29.6
+protobuf==7.35.0
 opentelemetry-sdk
 opentelemetry-exporter-otlp-proto-http
 python-logging-loki
