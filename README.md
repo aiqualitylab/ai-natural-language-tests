@@ -917,9 +917,9 @@ Release notes are maintained in [CHANGELOG.md](CHANGELOG.md), following the Keep
 
 ---
 
-*Production-focused AI-assisted E2E test generation for modern QA teams.*
+<p align="center"><strong>Production-focused AI-assisted E2E test generation for modern QA teams.</strong></p>
 
-<table width="100%"><tr>
-<td><em>© 2026 AI Quality Lab / <a href="https://www.linkedin.com/in/sreekanthharigovindan/">Sreekanth Harigovindan.</a></em></td>
-<td width="1" align="right" nowrap><a href="https://tests.aiqualitylab.org"><img src=".github/images/aiqualitylab_qr.png" alt="tests.aiqualitylab.org" width="100" /></a><br/><sub><a href="https://tests.aiqualitylab.org">tests.aiqualitylab.org</a></sub></td>
-</tr></table>
+<p align="center">
+  <em>© 2026 AI Quality Lab / <a href="https://www.linkedin.com/in/sreekanthharigovindan/">Sreekanth Harigovindan</a></em><br/>
+  <a href="https://tests.aiqualitylab.org">tests.aiqualitylab.org</a>
+</p>
