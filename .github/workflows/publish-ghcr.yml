@@ -21,7 +21,7 @@ jobs:
     steps:
       # Step 1: Check out the code so Docker can build from it
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # Step 2: Log in to GHCR using your GitHub username and a built-in token
       # GITHUB_TOKEN is automatically provided by GitHub Actions — no manual secret needed
