@@ -113,6 +113,16 @@ FRAMEWORK_CONFIG = {
         "prompt_file_standard": "test_generation_webdriverio.yaml",
         "supports_prompt_mode": False,
     },
+    "appium": {
+        "name": "Appium (WebdriverIO)",
+        "file_ext": ".spec.js",
+        "default_output": "webdriverio/tests",
+        "run_cmd": "npx wdio run wdio.appium.conf.js",
+        "code_fence": "javascript",
+        "prompt_file_standard": "test_generation_appium.yaml",
+        "prompt_file_prompt": "test_generation_appium_prompt_powered.yaml",
+        "supports_prompt_mode": True,
+    },
 }
 
 

@@ -2,7 +2,7 @@
 # Copyright (c) 2024-2026 Sreekanth Harigovindan / AI Quality Lab
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-"""AI-Powered Cypress, Playwright, and WebdriverIO test generator."""
+"""AI-Powered Cypress, Playwright, WebdriverIO, and Appium test generator."""
 
 import argparse
 import sys
@@ -132,17 +132,18 @@ def dispatch_cli_mode(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    logger.info("AI-Powered Test Generator (Cypress, Playwright, and WebdriverIO)")
+    logger.info("AI-Powered Test Generator (Cypress, Playwright, WebdriverIO, and Appium)")
     logger.info("With LangGraph Workflows and Vector Store Learning")
 
     parser = argparse.ArgumentParser(
-        description="AI Test Generator — Cypress, Playwright, and WebdriverIO",
+        description="AI Test Generator — Cypress, Playwright, WebdriverIO, and Appium",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
     python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login
     python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright
     python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework webdriverio
+    python qa_automation.py "Test login" --framework appium --use-prompt
     python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --use-prompt
     python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --run
     python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --llm anthropic
@@ -156,7 +157,7 @@ Examples:
     parser.add_argument(
         "--framework",
         "-fw",
-        choices=["cypress", "playwright", "webdriverio"],
+        choices=["cypress", "playwright", "webdriverio", "appium"],
         default="cypress",
     )
     parser.add_argument("--url", "-u")

@@ -1,19 +1,9 @@
+const { sharedConfig } = require('./wdio.shared.conf');
+
 exports.config = {
-    runner: 'local',
-    specs: ['./webdriverio/tests/generated/**/*.spec.js'],
-    maxInstances: 1,
-    logLevel: 'error',
-    bail: 0,
-    waitforTimeout: 10000,
-    connectionRetryTimeout: 120000,
-    connectionRetryCount: 2,
+    ...sharedConfig,
+    specs: ['./webdriverio/tests/{generated,prompt-powered}/**/*.spec.js'],
     services: ['chromedriver'],
-    framework: 'mocha',
-    reporters: ['spec'],
-    mochaOpts: {
-        ui: 'bdd',
-        timeout: 60000,
-    },
     capabilities: [{
         maxInstances: 1,
         browserName: 'chrome',

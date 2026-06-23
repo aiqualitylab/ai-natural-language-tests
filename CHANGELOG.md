@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.1.0] - 2026-06-23
+### Added
+- **Appium Mobile Support (Experimental):** WebdriverIO-based test generation for Android and iOS with prompt-powered self-healing
+  - Android (default, UiAutomator2) and iOS (XCUITest via `APP_PLATFORM=ios`)
+  - Dedicated folder structure: `webdriverio/tests/appium-tests/` for Appium tests
+  - Shared WDIO configuration base (`wdio.shared.conf.js`) for desktop and mobile runners
+
+### Changed
+- **Appium Test Output Folder:** Tests generated with `--framework appium --use-prompt` now output to `webdriverio/tests/appium-tests/` (instead of `prompt-powered`)
+- **WDIO Spec Pattern:** Updated shared config to include `appium-tests` in test discovery glob
+- Updated README with Appium setup prerequisites, environment variables, and emulator creation guide
+
+### Documentation
+- Added Appium section to README with Experimental status warnings and infrastructure requirements
+- Documented Android/iOS device setup and Appium server configuration
+- Updated CLI reference table with Appium commands and modes
+
 ## [5.0.0] - 2026-05-03
 ### Added
 - **Scoring in NLP Baseline**: `ragas_nlp_evaluator.py` now computes ROUGE and NonLLMStringSimilarity; overall average is the mean of all metrics.

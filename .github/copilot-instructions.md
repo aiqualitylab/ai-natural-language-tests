@@ -2,16 +2,16 @@
 
 ## Project Overview
 
-Generate Cypress, Playwright, and WebdriverIO E2E tests from natural language using OpenAI GPT-4o-mini and LangGraph.
+Generate Cypress, Playwright, WebdriverIO, and Appium E2E tests from natural language using OpenAI GPT-4o-mini and LangGraph.
 
 ## CLI Quick Reference
 
 | Flag | Purpose |
 |------|---------|
 | `requirements` | Test descriptions (positional) |
-| `--framework`, `-f` | Target framework: `cypress`, `playwright`, or `webdriverio` (default: cypress) |
+| `--framework`, `-f` | Target framework: `cypress`, `playwright`, `webdriverio`, or `appium` (default: cypress) |
 | `--url`, `-u` | Fetch URL, analyze HTML, generate fixture |
-| `--use-prompt` | Generate cy.prompt() self-healing tests (Cypress only) |
+| `--use-prompt` | Generate prompt-powered self-healing tests (Cypress and Appium) |
 | `--run` | Execute tests after generation |
 | `--analyze`, `-a` | Diagnose test failure with AI |
 | `--file` | Log file to analyze |
@@ -27,7 +27,6 @@ Generate Cypress, Playwright, and WebdriverIO E2E tests from natural language us
 - Fast, deterministic, best for CI/CD
 
 **Cypress cy.prompt()** (`cypress/e2e/prompt-powered/`)
-- Self-healing with natural language
 - Requires Cypress 15.8.1+ and `experimentalPromptCommand: true`
 - Best for development
 
@@ -40,6 +39,14 @@ Generate Cypress, Playwright, and WebdriverIO E2E tests from natural language us
 - JavaScript `.spec.js` tests using WebdriverIO with Mocha and Jest-like `expect`
 - CSS-first selectors with `browser.url()`, `$(selector)`, and resilient assertions
 - Runs through `wdio.conf.js` with Chrome + chromedriver service
+
+**Appium + WebdriverIO** (`webdriverio/tests/appium-tests/`)
+- JavaScript `.spec.js` tests using WebdriverIO with Appium service
+- Mobile test generation for Android (default) and iOS
+- Self-healing with prompt-powered natural language selectors
+- Mobile capabilities for Android by default, iOS via `APP_PLATFORM=ios`
+- Self-healing with prompt-powered natural language selectors
+- Runs through `wdio.appium.conf.js`
 
 ## Test Data Options
 
@@ -178,7 +185,9 @@ tests/
 
 webdriverio/
 └── tests/
-    └── generated/      # WebdriverIO tests
+    ├── generated/      # WebdriverIO tests
+    ├── appium-tests/   # Appium mobile tests (Android/iOS)
+    └── prompt-powered/ # WebdriverIO prompt-powered tests
 ```
 
 ## Code Style
