@@ -32,7 +32,6 @@ Use target URL example: `https://the-internet.herokuapp.com/login`
 | Playwright | Context-driven locators, non-empty message assertions, auth-like URL movement logic | Hardcoded route assertions, URL checks based on `expected` string, brittle fixed path assumptions |
 | WebdriverIO | Async-await consistency, context-driven selectors, URL/text fallback assertion logic | Missing `await`, hardcoded success routes, requiring both URL and message for invalid flow when one signal is enough |
 | Appium *(Experimental)* | Accessibility-first selectors (`~id`), async/await, mobile timing pauses, fallback selector strategies | Hardcoded device names, missing `await`, XPath-only selectors, assumptions about native app state |
-| Appium *(Experimental)* | Accessibility-first selectors (`~id`), async/await, mobile timing pauses, fallback selector strategies | Hardcoded device names, missing `await`, XPath-only selectors, assumptions about native app state |
 
 ## Copy-Paste Rule Block
 
