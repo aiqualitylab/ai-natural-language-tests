@@ -19,7 +19,7 @@ Use target URL example: `https://the-internet.herokuapp.com/login`
 | 11 | Update prompt rules | `prompt_specs/test_generation_appium_prompt_powered.yaml` | Appium self-healing rules updated |
 | 12 | Bump prompt version(s) | `version: n -> n+1` in each changed prompt spec | Version incremented in all changed prompt files |
 | 13 | Validate Cypress | `python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework cypress --run` | Exit code 0 |
-| 14 | Validate Playwright | `.\venv\Scripts\python.exe qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright --run` | Exit code 0 |
+| 14 | Validate Playwright | `.\.venv\Scripts\python.exe qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright --run` | Exit code 0 |
 | 15 | Validate WebdriverIO | `python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework webdriverio --run` | Exit code 0 |
 | 16 | Validate Appium (requires device) | `python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework appium` | Test file generated; execution needs Appium server + device |
 | 17 | Analyze failures if needed | `python qa_automation.py --analyze -f <path-to-failure-log>` | Root cause identified and prompt refined |
