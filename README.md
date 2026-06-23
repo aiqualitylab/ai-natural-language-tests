@@ -61,16 +61,6 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 
 ---
 
-## Product Preview
-
-<p align="center">
-  <img src=".github/images/hugging-face-generate-tests-preview.png" alt="Generate Tests workflow preview" />
-</p>
-
-<p align="center"><em>Generate tests from plain-English requirements, inspect workflow logs, review structured output, and download the generated spec from a single interface.</em></p>
-
----
-
 ## Table of Contents
 
 | Section | Links |
