@@ -11,7 +11,7 @@ Generate Cypress, Playwright, WebdriverIO, and Appium E2E tests from natural lan
 | `requirements` | Test descriptions (positional) |
 | `--framework`, `-f` | Target framework: `cypress`, `playwright`, `webdriverio`, or `appium` (default: cypress) |
 | `--url`, `-u` | Fetch URL, analyze HTML, generate fixture |
-| `--use-prompt` | Generate cy.prompt() self-healing tests (Cypress only) |
+| `--use-prompt` | Generate prompt-powered self-healing tests (Cypress and Appium) |
 | `--run` | Execute tests after generation |
 | `--analyze`, `-a` | Diagnose test failure with AI |
 | `--file` | Log file to analyze |
@@ -27,9 +27,6 @@ Generate Cypress, Playwright, WebdriverIO, and Appium E2E tests from natural lan
 - Fast, deterministic, best for CI/CD
 
 **Cypress cy.prompt()** (`cypress/e2e/prompt-powered/`)
-**Appium + WebdriverIO** (`webdriverio/tests/appium-tests/`)
-    - Mobile test generation for Android (default) and iOS
-    - Self-healing with prompt-powered natural language selectors
 - Requires Cypress 15.8.1+ and `experimentalPromptCommand: true`
 - Best for development
 
@@ -46,6 +43,7 @@ Generate Cypress, Playwright, WebdriverIO, and Appium E2E tests from natural lan
 **Appium + WebdriverIO** (`webdriverio/tests/appium-tests/`)
 - JavaScript `.spec.js` tests using WebdriverIO with Appium service
 - Mobile capabilities for Android by default, iOS via `APP_PLATFORM=ios`
+- Self-healing with prompt-powered natural language selectors
 - Runs through `wdio.appium.conf.js`
 
 ## Test Data Options
