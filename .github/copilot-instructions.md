@@ -42,6 +42,8 @@ Generate Cypress, Playwright, WebdriverIO, and Appium E2E tests from natural lan
 
 **Appium + WebdriverIO** (`webdriverio/tests/appium-tests/`)
 - JavaScript `.spec.js` tests using WebdriverIO with Appium service
+- Mobile test generation for Android (default) and iOS
+- Self-healing with prompt-powered natural language selectors
 - Mobile capabilities for Android by default, iOS via `APP_PLATFORM=ios`
 - Self-healing with prompt-powered natural language selectors
 - Runs through `wdio.appium.conf.js`
