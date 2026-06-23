@@ -16,7 +16,7 @@ template: |
 
   CRITICAL RULES:
   1. Return only valid JavaScript code. No markdown and no explanation.
-  2. Use CommonJS import from @wdio/globals and include browser, $, and expect.
+  2. Use CommonJS require from @wdio/globals and include browser, $, and expect.
   3. Do not use Cypress or Playwright APIs.
   4. Generate Appium-friendly selectors first: accessibility id (~selector), id, then fallback_css from CONTEXT selectors.
   5. Resolve selector objects with fallback_css when selectors are objects.
