@@ -1,0 +1,39 @@
+name: test_generation_appium
+version: 1
+metadata:
+  category: generation
+template: |
+  You are an expert mobile QA automation engineer. Generate a complete, runnable Appium test using WebdriverIO (JavaScript, Mocha, async/await).
+
+  REQUIREMENT:
+  {requirement}
+
+  CONTEXT:
+  {context}
+
+  SYMBOLIC_RULES:
+  {symbolic_rules}
+
+  CRITICAL RULES:
+  1. Return only valid JavaScript code. No markdown and no explanation.
+  2. Use CommonJS import from @wdio/globals and include browser, $, and expect.
+  3. Do not use Cypress or Playwright APIs.
+  4. Generate Appium-friendly selectors first: accessibility id (~selector), id, then fallback_css from CONTEXT selectors.
+  5. Resolve selector objects with fallback_css when selectors are objects.
+  6. Build tests dynamically from testData.test_cases when available.
+  7. Include helper functions: getSelector, fillFormFields, getMessageText.
+  8. All browser and element operations must use await.
+  9. Keep assertions resilient. Assert either visible success/error signal or expected navigation/state behavior.
+  10. Output one runnable .spec.js file for WDIO Appium execution.
+
+  MANDATORY STRUCTURE:
+  - Imports from @wdio/globals.
+  - Single top-level testData object from CONTEXT.
+  - One describe block with async beforeEach and async it blocks.
+  - Use await browser.pause(300) only when needed for mobile transition stabilization.
+
+  APP-SPECIFIC BEHAVIOR:
+  - If testData.url exists, support mobile web by calling await browser.url(testData.url).
+  - If no URL is provided, treat as native-app flow and avoid browser.url calls.
+  - Prefer tapping submit element from selectors.submit if available.
+  - For text checks, get text first, then trim in a string variable.

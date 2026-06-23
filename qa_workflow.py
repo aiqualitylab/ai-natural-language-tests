@@ -63,7 +63,11 @@ def get_test_filepath(framework: str, output_dir: str, use_prompt_mode: bool, in
     import re
 
     fw = FRAMEWORK_CONFIG[framework]
-    folder_name = "prompt-powered" if framework == "cypress" and use_prompt_mode else "generated"
+    # Appium uses 'appium-tests' folder; other frameworks use 'prompt-powered' for prompt mode
+    if framework == "appium" and use_prompt_mode:
+        folder_name = "appium-tests"
+    else:
+        folder_name = "prompt-powered" if use_prompt_mode else "generated"
     output_base = output_dir if output_dir != "cypress/e2e" else fw["default_output"]
     folder = f"{output_base}/{folder_name}"
     os.makedirs(folder, exist_ok=True)

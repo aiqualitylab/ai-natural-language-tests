@@ -3,8 +3,8 @@ services:
     build:
       context: .
       args:
-        RELEASE_TAG: v5.0.0
-    image: ai-natural-language-tests:v5.0.0
+        RELEASE_TAG: v5.1.0
+    image: ai-natural-language-tests:v5.1.0
     env_file: .env
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
@@ -22,4 +22,5 @@ services:
       - ./cypress/fixtures:/app/cypress/fixtures
       - ./tests/generated:/app/tests/generated
       - ./webdriverio/tests/generated:/app/webdriverio/tests/generated
+      - ./webdriverio/tests/appium-tests:/app/webdriverio/tests/appium-tests
       - ./vector_db:/app/vector_db

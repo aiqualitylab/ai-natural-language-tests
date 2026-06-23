@@ -1,6 +1,6 @@
 # Model Card — AI Natural Language Tests
 
-**What it does:** Takes plain English requirements and writes automated tests for web applications.
+**What it does:** Takes plain English requirements and writes automated tests for web applications and mobile apps.
 
 ---
 
@@ -23,12 +23,14 @@ OpenAI · Anthropic · Google — one provider is active at a time based on your
 - Writes login, form, and navigation tests from plain English
 - Reads the page and picks the right selectors automatically
 - Explains test failures in plain language
+- Generates mobile tests for Android and iOS via Appium (Experimental)
 
 ## Known Limitations
 
 - May pick wrong selectors on complex or dynamic pages
 - Output quality depends on how clearly the requirement is written
 - Does not test accessibility, security, or performance
+- Appium tests require external Appium server and mobile device/emulator to execute
 
 ---
 
@@ -42,6 +44,7 @@ Use `--approve` to review every generated test before it is saved. Always review
 
 ✅ Writing end-to-end tests during development and QA  
 ✅ Speeding up test authoring for engineering teams  
+✅ Mobile test generation with Appium (Experimental, requires mobile infrastructure)
 
 ## Do Not Use This For
 

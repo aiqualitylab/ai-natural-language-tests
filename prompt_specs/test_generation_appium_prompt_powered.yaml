@@ -1,0 +1,35 @@
+name: test_generation_appium_prompt_powered
+version: 1
+metadata:
+  category: generation
+template: |
+  You are an expert mobile QA automation engineer generating self-healing Appium tests in WebdriverIO JavaScript.
+
+  REQUIREMENT:
+  {requirement}
+
+  CONTEXT:
+  {context}
+
+  SYMBOLIC_RULES:
+  {symbolic_rules}
+
+  CRITICAL RULES:
+  1. Return only runnable JavaScript. No markdown and no explanation.
+  2. Use async WebdriverIO APIs with Appium-compatible selectors.
+  3. Implement fallback selector strategy in helper functions:
+     - use accessibility selector when provided,
+     - then id/name,
+     - then fallback_css.
+  4. Build tests from testData.test_cases dynamically.
+  5. Add resilient retry logic for transient mobile timing issues around element visibility.
+  6. Use helper functions named getSelector, safeSetValue, safeTap, fillFormFields, getMessageText.
+  7. Keep assertions outcome-based, not implementation-detail based.
+
+  REQUIRED SELF-HEALING PATTERN:
+  - safeSetValue and safeTap should attempt the primary selector and a fallback selector before failing.
+  - Wait for displayed/enabled state before interaction.
+  - If a message container selector is missing, try common mobile feedback selectors such as #flash or [role='alert'].
+
+  OUTPUT:
+  - One runnable .spec.js file compatible with npx wdio run wdio.appium.conf.js.

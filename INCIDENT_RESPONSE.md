@@ -36,4 +36,4 @@ Do not post security details publicly. Follow [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
-Maintained by [AI Quality Lab](https://aiqualitylab.org) · Last updated May 2026
+Maintained by [AI Quality Lab](https://aiqualitylab.org) · Last updated June 2026

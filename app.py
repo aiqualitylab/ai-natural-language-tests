@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gradio UI for AI-Powered Cypress, Playwright, and WebdriverIO test generator."""
+"""Gradio UI for AI-Powered Cypress, Playwright, WebdriverIO, and Appium test generator."""
 
 import argparse
 import json
@@ -96,6 +96,7 @@ def _run_generation(
     openai_key: str = "",
     anthropic_key: str = "",
     google_key: str = "",
+    use_prompt: bool = False,
 ) -> Generator[tuple[str, str, str, str | None], None, None]:
     _apply_api_keys(openai_key, anthropic_key, google_key)
 
@@ -138,7 +139,7 @@ def _run_generation(
             state = TestState(
                 requirements=requirements,
                 output_dir=output_dir,
-                use_prompt=False,
+                use_prompt=use_prompt,
                 approve=False,
                 framework=framework,
                 url=url_value,
@@ -239,7 +240,7 @@ def _build_ui() -> gr.Blocks:
             """
 # AI-Powered E2E Test Generation Platform
 
-Enterprise-grade platform to generate Cypress, Playwright, and WebdriverIO end-to-end tests from natural language requirements.
+Enterprise-grade platform to generate Cypress, Playwright, WebdriverIO, and Appium end-to-end tests from natural language requirements.
 
 © 2026 AI Quality Lab / https://tests.aiqualitylab.org/
             """
@@ -257,8 +258,16 @@ Enterprise-grade platform to generate Cypress, Playwright, and WebdriverIO end-t
                     requirements_text = gr.Textbox(label="Test requirements (one per line)", lines=4)
                     framework = gr.Dropdown(
                         label="Framework",
-                        choices=["cypress", "playwright", "webdriverio"],
+                        choices=["cypress", "playwright", "webdriverio", "appium"],
                         value="cypress",
+                    )
+                    use_prompt = gr.Checkbox(
+                        label="Prompt-powered mode (Cypress self-healing / Appium mobile)",
+                        value=False,
+                    )
+                    appium_note = gr.Markdown(
+                        value="",
+                        visible=False,
                     )
                     url = gr.Textbox(label="URL (mandatory, one URL only)", placeholder="https://example.com/login")
                     generate_button = gr.Button("Generate")
@@ -271,8 +280,17 @@ Enterprise-grade platform to generate Cypress, Playwright, and WebdriverIO end-t
 
             generate_button.click(
                 _run_generation,
-                inputs=[requirements_text, framework, url, openai_key, anthropic_key, google_key],
+                inputs=[requirements_text, framework, url, openai_key, anthropic_key, google_key, use_prompt],
                 outputs=[generate_output, generate_logs, generated_test_code, generated_code_file],
+            )
+
+            framework.change(
+                fn=lambda fw: gr.update(
+                    value="> **Appium (Experimental):** Test generation works immediately. **Execution requires** a running Appium server (`appium --port 4723`) and an Android emulator or iOS device. See README for setup.",
+                    visible=(fw == "appium"),
+                ),
+                inputs=[framework],
+                outputs=[appium_note],
             )
 
         with gr.Tab("Analyze Failure"):

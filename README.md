@@ -16,7 +16,7 @@ pinned: false
 
 > *Translate natural language requirements into production-ready end-to-end tests.*
 
-Enterprise-grade platform to generate and execute Cypress, Playwright, and WebdriverIO end-to-end tests from natural language requirements.
+Enterprise-grade platform to generate and execute Cypress, Playwright, WebdriverIO, and Appium end-to-end tests from natural language requirements. (Appium is experimental and requires external mobile infrastructure.)
 
 This project combines LLM-driven generation, LangGraph workflow orchestration, and vector-based pattern learning to improve test authoring speed while maintaining repeatability and CI/CD readiness.
 
@@ -92,11 +92,13 @@ flowchart LR
   A --> C[Cypress<br/>.cy.js<br/>Traditional and prompt-powered]
   A --> P[Playwright<br/>.spec.ts<br/>TypeScript async/await]
   A --> W[WebdriverIO<br/>.spec.js<br/>Mocha with Jest-like expect]
+  A --> M["Appium ⚠️<br/>.spec.js<br/>Mobile/iOS/Android"]
 
   style A fill:#e3f2fd,color:#333333,stroke:#666666
   style C fill:#c8e6c9,color:#333333,stroke:#666666
   style P fill:#ffcdd2,color:#333333,stroke:#666666
   style W fill:#ffe0b2,color:#333333,stroke:#666666
+  style M fill:#f8bbd0,color:#333333,stroke:#666666
 ```
 
 | Framework | Output | Style |
@@ -104,6 +106,7 @@ flowchart LR
 | Cypress | `.cy.js` | Traditional & prompt-powered |
 | Playwright | `.spec.ts` | TypeScript async/await |
 | WebdriverIO | `.spec.js` | Mocha runner with Jest-like `expect` |
+| **Appium** *(Experimental)* | `.spec.js` | Mobile WebdriverIO + async/await |
 
 It supports both local engineering workflows and automated pipeline execution. The generator uses contextual data from live HTML analysis and historical pattern matching to produce stable, maintainable test assets.
 
@@ -155,11 +158,21 @@ python qa_automation.py "Test login with valid credentials" --url https://the-in
 | Cypress Modes | Traditional mode and Cypress prompt-powered mode |
 | Playwright | TypeScript generation |
 | WebdriverIO | JavaScript `.spec.js` generation with Mocha and Chrome runner support |
+| **Appium** *(Experimental)* | JavaScript `.spec.js` generation with WebdriverIO + async/await for Android/iOS |
 | HITL | Optional human approval gate with `--approve` |
 | Replay | HTML snapshot replay with `--list-html-replays` and `--replay-html-analysis` |
 | Execution | Optional immediate test execution after generation |
 | Tracing | OpenTelemetry trace export to Grafana Tempo |
 | Logging | Optional log shipping to Grafana Loki |
+
+> [!IMPORTANT]
+> **Appium Experimental Status:** Appium support is production-ready in code generation but requires:
+> - **External Appium Server:** Running separately (e.g., `appium --port 4723`)
+> - **Mobile Infrastructure:** Android emulator/device OR iOS simulator/device
+> - **Platform SDKs:** Android SDK, Xcode (iOS), or connected devices
+> - **Environment Setup:** ANDROID_HOME, platform-tools, emulator
+> 
+> Test generation works immediately; test *execution* depends on infrastructure availability.
 
 ## Architecture
 
@@ -306,6 +319,11 @@ ai-natural-language-tests/
 |   `-- tests/
 |       `-- generated/
 |-- web/
+|-- webdriverio/
+|   `-- tests/
+|       |-- generated/
+|       |-- appium-tests/
+|       `-- prompt-powered/
 |-- prompt_specs/
 |-- skills/
 |-- services/
@@ -448,7 +466,7 @@ docker run --rm \
 | Tag | Use case |
 |-----|----------|
 | `latest` | Always the most recently published version — use for quick runs |
-| `v5.0.0` | Pinned to a specific release — use in CI/CD for reproducibility |
+| `v5.1.0` | Pinned to a specific release — use in CI/CD for reproducibility |
 
 For publishing and release management, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -507,7 +525,10 @@ GRAFANA_API_TOKEN=<logs_write_token>
 | Cypress (default) | `python qa_automation.py "requirement" --url <url>` |
 | Playwright | `python qa_automation.py "requirement" --url <url> --framework playwright` |
 | WebdriverIO | `python qa_automation.py "requirement" --url <url> --framework webdriverio` |
+| **Appium Android** *(Experimental)* | `python qa_automation.py "requirement" --url <url> --framework appium` |
+| **Appium iOS** *(Experimental)* | `APP_PLATFORM=ios python qa_automation.py "requirement" --url <url> --framework appium` |
 | Prompt-powered Cypress | `python qa_automation.py "requirement" --url <url> --use-prompt` |
+| **Appium Prompt-Powered** *(Experimental)* | `python qa_automation.py "requirement" --url <url> --framework appium --use-prompt` |
 | Generate + Execute | `python qa_automation.py "requirement" --url <url> --run` |
 | Failure Analysis | `python qa_automation.py --analyze "error message"` |
 | Pattern Inventory | `python qa_automation.py --list-patterns` |
@@ -569,6 +590,69 @@ python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/lo
 
 ```bash
 python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework webdriverio
+```
+
+</details>
+
+### Generate Appium Test (Experimental)
+
+> [!WARNING]
+> Appium test generation works immediately, but **execution requires** external Appium server + mobile device/emulator running.
+
+<details>
+<summary>Show command</summary>
+
+```bash
+# Start Appium server in separate terminal
+appium --port 4723 &
+
+# Generate test (works without device)
+python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework appium
+```
+
+</details>
+
+### Appium Setup & Execution (Experimental)
+
+<details>
+<summary>Prerequisites & First-Run Setup</summary>
+
+**Install Appium globally:**
+```bash
+npm install -g appium@latest
+appium driver install uiautomator2   # Android
+appium driver install xcuitest       # iOS
+```
+
+**Environment Variables:**
+```bash
+# Windows PowerShell
+$env:ANDROID_HOME = "C:\Users\YourUser\AppData\Local\Android\Sdk"
+$env:PATH += ";$env:ANDROID_HOME\platform-tools"
+
+# macOS/Linux
+export ANDROID_HOME=~/Library/Android/sdk
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+```
+
+**Create Android Emulator (Android Studio GUI):**
+1. Open Android Studio → Device Manager
+2. Click **Create Device** → Select Pixel 5 → Android 14 API 34
+3. Click **Play** to start emulator
+4. Verify with: `adb devices`
+
+**Generate + Run Test:**
+```bash
+# Terminal 1: Start Appium server
+appium --port 4723
+
+# Terminal 2: Generate and run test
+python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework appium --run
+```
+
+**iOS Testing** (macOS only):
+```bash
+APP_PLATFORM=ios python qa_automation.py "Test login" --url <url> --framework appium --run
 ```
 
 </details>
@@ -833,7 +917,7 @@ Recommended pipeline stages:
 | Policy Area | Guidance |
 |-------------|----------|
 | Release model | Changelog-driven, documented in `CHANGELOG.md` |
-| Production pinning | Prefer version tags such as `v5.0.0` instead of `latest` |
+| Production pinning | Prefer version tags such as `v5.1.0` instead of `latest` |
 | `latest` usage | Use for local exploration, not for controlled CI/CD |
 | Upgrade notes | Breaking changes and upgrade guidance are captured per release |
 

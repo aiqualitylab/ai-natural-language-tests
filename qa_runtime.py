@@ -370,6 +370,13 @@ def build_run_command(framework: str, generated_tests: List, output_dir: str, us
             return f'npx wdio run wdio.conf.js --spec "{spec_arg}"'
         return "npx wdio run wdio.conf.js"
 
+    if framework == "appium":
+        spec_paths = [t["filepath"] for t in generated_tests if t.get("filepath", "").endswith(fw["file_ext"])]
+        spec_arg = ",".join(spec_paths)
+        if spec_arg:
+            return f'npx wdio run wdio.appium.conf.js --spec "{spec_arg}"'
+        return "npx wdio run wdio.appium.conf.js"
+
     folder_name = "generated"
     if use_prompt_mode:
         folder_name = "prompt-powered"
