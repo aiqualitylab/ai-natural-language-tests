@@ -21,6 +21,7 @@ services:
       - ./cypress/e2e/prompt-powered:/app/cypress/e2e/prompt-powered
       - ./cypress/fixtures:/app/cypress/fixtures
       - ./tests/generated:/app/tests/generated
+      - ./tests/puppeteer/generated:/app/tests/puppeteer/generated
       - ./webdriverio/tests/generated:/app/webdriverio/tests/generated
       - ./webdriverio/tests/appium-tests:/app/webdriverio/tests/appium-tests
       - ./vector_db:/app/vector_db
