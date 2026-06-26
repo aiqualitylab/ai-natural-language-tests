@@ -63,6 +63,18 @@ def get_test_filepath(framework: str, output_dir: str, use_prompt_mode: bool, in
     import re
 
     fw = FRAMEWORK_CONFIG[framework]
+    
+    # Puppeteer uses default_output directly (no prompt-powered subfolder)
+    if framework == "puppeteer":
+        output_base = fw["default_output"]
+        folder = output_base
+        os.makedirs(folder, exist_ok=True)
+        slug = re.sub(r"[^\w\s-]", "", requirement.lower()).replace(" ", "-")[:50]
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{index:02d}_{slug}_{timestamp}{fw['file_ext']}"
+        filepath = f"{folder}/{filename}"
+        return filepath, filename, "generated"
+    
     # Appium uses 'appium-tests' folder; other frameworks use 'prompt-powered' for prompt mode
     if framework == "appium" and use_prompt_mode:
         folder_name = "appium-tests"

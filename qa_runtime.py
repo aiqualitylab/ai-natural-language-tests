@@ -377,6 +377,12 @@ def build_run_command(framework: str, generated_tests: List, output_dir: str, us
             return f'npx wdio run wdio.appium.conf.js --spec "{spec_arg}"'
         return "npx wdio run wdio.appium.conf.js"
 
+    if framework == "puppeteer":
+        spec_paths = [t["filepath"] for t in generated_tests if t.get("filepath", "").endswith(fw["file_ext"])]
+        if spec_paths:
+            return f"npx jest {' '.join(spec_paths)}"
+        return f"npx jest {fw['default_output']}"
+
     folder_name = "generated"
     if use_prompt_mode:
         folder_name = "prompt-powered"
