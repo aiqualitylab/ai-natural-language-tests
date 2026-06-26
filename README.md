@@ -1,6 +1,6 @@
----
+﻿---
 title: AI Natural Language Tests
-emoji: 🧪
+emoji: ­ƒº¬
 colorFrom: blue
 colorTo: green
 sdk: gradio
@@ -16,7 +16,7 @@ pinned: false
 
 > *Translate natural language requirements into production-ready end-to-end tests.*
 
-Enterprise-grade platform to generate and execute Cypress, Playwright, WebdriverIO, and Appium end-to-end tests from natural language requirements. (Appium is experimental and requires external mobile infrastructure.)
+Enterprise-grade platform to generate and execute Cypress, Playwright, Puppeteer, WebdriverIO, and Appium end-to-end tests from natural language requirements. (Appium is experimental and requires external mobile infrastructure.)
 
 This project combines LLM-driven generation, LangGraph workflow orchestration, and vector-based pattern learning to improve test authoring speed while maintaining repeatability and CI/CD readiness.
 
@@ -34,6 +34,7 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 
 ![Cypress](https://img.shields.io/badge/Cypress-FF9933?logo=cypress&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-003087?logo=playwright&logoColor=white)
+![Puppeteer](https://img.shields.io/badge/Puppeteer-40B5A4?logo=puppeteer&logoColor=white)
 ![WebdriverIO](https://img.shields.io/badge/WebdriverIO-EA5906?logo=webdriverio&logoColor=white)
 ![LangChain](https://img.shields.io/badge/LangChain-1A1A1A?logo=langchain&logoColor=FF9933)
 ![LangGraph](https://img.shields.io/badge/LangGraph-FF9933?logoColor=white)
@@ -57,7 +58,7 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 
 ## Try It Live
 
-**[ai-natural-language-tests on Hugging Face Spaces](https://huggingface.co/spaces/aiqualitylab/ai-natural-language-tests)** — Try the platform directly in your browser without installation.
+**[ai-natural-language-tests on Hugging Face Spaces](https://huggingface.co/spaces/aiqualitylab/ai-natural-language-tests)** ÔÇö Try the platform directly in your browser without installation.
 
 ---
 
@@ -81,12 +82,14 @@ flowchart LR
   A[AI-Powered E2E Test Generation]
   A --> C[Cypress<br/>.cy.js<br/>Traditional and prompt-powered]
   A --> P[Playwright<br/>.spec.ts<br/>TypeScript async/await]
+  A --> U[Puppeteer<br/>.test.js<br/>Jest + async/await]
   A --> W[WebdriverIO<br/>.spec.js<br/>Mocha with Jest-like expect]
-  A --> M["Appium ⚠️<br/>.spec.js<br/>Mobile/iOS/Android"]
+  A --> M["Appium ÔÜá´©Å<br/>.spec.js<br/>Mobile/iOS/Android"]
 
   style A fill:#e3f2fd,color:#333333,stroke:#666666
   style C fill:#c8e6c9,color:#333333,stroke:#666666
   style P fill:#ffcdd2,color:#333333,stroke:#666666
+  style U fill:#b2dfdb,color:#333333,stroke:#666666
   style W fill:#ffe0b2,color:#333333,stroke:#666666
   style M fill:#f8bbd0,color:#333333,stroke:#666666
 ```
@@ -95,6 +98,7 @@ flowchart LR
 |-----------|--------|-------|
 | Cypress | `.cy.js` | Traditional & prompt-powered |
 | Playwright | `.spec.ts` | TypeScript async/await |
+| Puppeteer | `.test.js` | Jest with async/await |
 | WebdriverIO | `.spec.js` | Mocha runner with Jest-like `expect` |
 | **Appium** *(Experimental)* | `.spec.js` | Mobile WebdriverIO + async/await |
 
@@ -125,6 +129,12 @@ Generate and run one Playwright test:
 python qa_automation.py "Test login with valid credentials" --url https://the-internet.herokuapp.com/login --framework playwright --run
 ```
 
+Generate and run one Puppeteer test:
+
+```bash
+python qa_automation.py "Test login with valid credentials" --url https://the-internet.herokuapp.com/login --framework puppeteer --run
+```
+
 ## Business Value
 
 > [!NOTE]
@@ -147,6 +157,7 @@ python qa_automation.py "Test login with valid credentials" --url https://the-in
 | LLM Support | Multi-provider: OpenAI, Anthropic, Google |
 | Cypress Modes | Traditional mode and Cypress prompt-powered mode |
 | Playwright | TypeScript generation |
+| Puppeteer | JavaScript `.test.js` generation with Jest and async/await |
 | WebdriverIO | JavaScript `.spec.js` generation with Mocha and Chrome runner support |
 | **Appium** *(Experimental)* | JavaScript `.spec.js` generation with WebdriverIO + async/await for Android/iOS |
 | HITL | Optional human approval gate with `--approve` |
@@ -183,15 +194,18 @@ graph TB
     subgraph "Framework Generation"
         G{Cypress Framework}
         H{Playwright Framework}
+        U{Puppeteer Framework}
         W{WebdriverIO Framework}
         I[Cypress Tests<br/>.cy.js files<br/>Traditional & cy.prompt&#40;&#41;]
         J[Playwright Tests<br/>.spec.ts files<br/>TypeScript]
+        Q[Puppeteer Tests<br/>.test.js files<br/>Jest + async/await]
         X[WebdriverIO Tests<br/>.spec.js files<br/>Mocha + expect]
     end
 
     subgraph "Execution & Analysis"
         K[Cypress Runner<br/>npx cypress run]
         L[Playwright Runner<br/>npx playwright test]
+        O[Puppeteer Runner<br/>npx jest]
         M[AI Failure Analyzer<br/>--analyze flag<br/>Multi-Provider LLM]
         P[WebdriverIO Runner<br/>npx wdio run]
     end
@@ -204,15 +218,19 @@ graph TB
     F --> D
     D --> G
     D --> H
+    D --> U
     D --> W
     G --> I
     H --> J
+    U --> Q
     W --> X
     I --> K
     J --> L
+    Q --> O
     X --> P
     K --> M
     L --> M
+    O --> M
     P --> M
 
     style D fill:#e3f2fd,color:#333333,stroke:#666666
@@ -220,6 +238,7 @@ graph TB
     style F fill:#fff3e0,color:#333333,stroke:#666666
     style G fill:#c8e6c9,color:#333333,stroke:#666666
     style H fill:#ffcdd2,color:#333333,stroke:#666666
+    style U fill:#b2dfdb,color:#333333,stroke:#666666
     style W fill:#ffe0b2,color:#333333,stroke:#666666
 ```
 
@@ -251,7 +270,7 @@ graph TB
 flowchart TD
     A[Start: User Input<br/>Requirements + Framework] --> C[Step 2: Fetch Test Data<br/>Analyze URL/HTML<br/>Extract Selectors<br/>Generate Fixtures]
     C --> D[Step 3: Search Similar Patterns<br/>Query Vector Store<br/>Find Matching Test Patterns<br/>From Past Generations]
-    D --> E[Step 4: Generate Tests<br/>Use AI + Patterns<br/>Create Framework-Specific Code<br/>Cypress, Playwright, or WebdriverIO]
+    D --> E[Step 4: Generate Tests<br/>Use AI + Patterns<br/>Create Framework-Specific Code<br/>Cypress, Playwright, Puppeteer, WebdriverIO, or Appium]
     E --> H[HITL Approval<br/>Optional --approve before save]
     H --> F[Step 5: Run Tests<br/>Execute via Framework Runner<br/>Optional --run flag]
     F --> R[Replay Snapshot<br/>--list-html-replays / --replay-html-analysis]
@@ -304,7 +323,9 @@ ai-natural-language-tests/
 |   |   `-- prompt-powered/
 |   `-- fixtures/
 |-- tests/
-|   `-- generated/
+|   |-- generated/
+|   `-- puppeteer/
+|       `-- generated/
 |-- webdriverio/
 |   `-- tests/
 |       `-- generated/
@@ -436,7 +457,7 @@ Pre-built Docker images are published to GitHub Container Registry. No local clo
 
 | Without GHCR | With GHCR |
 |---|---|
-| Clone → install → build → run | `docker run` — done |
+| Clone ÔåÆ install ÔåÆ build ÔåÆ run | `docker run` ÔÇö done |
 | Each user builds their own image | One image built once, shared everywhere |
 | "Works on my machine" problems | Identical environment for every user |
 
@@ -455,8 +476,8 @@ docker run --rm \
 
 | Tag | Use case |
 |-----|----------|
-| `latest` | Always the most recently published version — use for quick runs |
-| `v5.1.0` | Pinned to a specific release — use in CI/CD for reproducibility |
+| `latest` | Always the most recently published version ÔÇö use for quick runs |
+| `v5.2.0` | Pinned to a specific release ÔÇö use in CI/CD for reproducibility |
 
 For publishing and release management, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -548,7 +569,7 @@ GRAFANA_API_TOKEN=<logs_write_token>
 >
 > - Be specific about the action: *"Test login"* vs *"Test login with valid credentials and verify dashboard loads"*
 > - Mention the expected outcome when it matters: *"...and verify error message appears"*
-> - Use `--url` to give the AI real page context — it reads the HTML and picks the right selectors automatically
+> - Use `--url` to give the AI real page context ÔÇö it reads the HTML and picks the right selectors automatically
 > - Chain multiple requirements in one run: `"Test login" "Test logout" --url <url>`
 
 ### Generate Cypress Test
@@ -626,8 +647,8 @@ export PATH=$PATH:$ANDROID_HOME/platform-tools
 ```
 
 **Create Android Emulator (Android Studio GUI):**
-1. Open Android Studio → Device Manager
-2. Click **Create Device** → Select Pixel 5 → Android 14 API 34
+1. Open Android Studio ÔåÆ Device Manager
+2. Click **Create Device** ÔåÆ Select Pixel 5 ÔåÆ Android 14 API 34
 3. Click **Play** to start emulator
 4. Verify with: `adb devices`
 
@@ -713,7 +734,7 @@ Generating test code from natural language is only useful if the generated tests
 
 ---
 
-### `ragas_nlp_evaluator.py` — No API key needed
+### `ragas_nlp_evaluator.py` ÔÇö No API key needed
 
 This script compares the AI's generated text against reference answers using three classical NLP metrics that run fully offline.
 
@@ -751,7 +772,7 @@ The script exits with code 1 if any sample scores below the threshold, which let
 
 ---
 
-### `ragas_evaluator.py` — Requires `OPENAI_API_KEY`
+### `ragas_evaluator.py` ÔÇö Requires `OPENAI_API_KEY`
 
 This script evaluates the generated test file against the live page HTML using four LLM-based Ragas metrics.
 
@@ -776,7 +797,7 @@ python ragas_evaluator.py "Test user login with valid credentials" \
 
 ### How they fit into CI
 
-CI runs `ragas_nlp_evaluator.py` first (no API key, fast) as a quality gate. If it passes, the three framework jobs run in parallel — each generates tests, then calls `ragas_evaluator.py` against every generated file before running the tests themselves.
+CI runs `ragas_nlp_evaluator.py` first (no API key, fast) as a quality gate. If it passes, the three framework jobs run in parallel ÔÇö each generates tests, then calls `ragas_evaluator.py` against every generated file before running the tests themselves.
 
 ```
 nlp-baseline job
@@ -877,7 +898,7 @@ Recommended pipeline stages:
 > - Or run: `npx cypress run --headed --spec 'cypress/e2e/generated/*.cy.js'`
 >
 > **Playwright:**
-> - Edit `playwright.config.ts` and change `headless: true` → `headless: false`
+> - Edit `playwright.config.ts` and change `headless: true` ÔåÆ `headless: false`
 > - Or run: `npx playwright test --headed tests/generated/`
 >
 > **WebdriverIO:**
@@ -907,7 +928,7 @@ Recommended pipeline stages:
 | Policy Area | Guidance |
 |-------------|----------|
 | Release model | Changelog-driven, documented in `CHANGELOG.md` |
-| Production pinning | Prefer version tags such as `v5.1.0` instead of `latest` |
+| Production pinning | Prefer version tags such as `v5.2.0` instead of `latest` |
 | `latest` usage | Use for local exploration, not for controlled CI/CD |
 | Upgrade notes | Breaking changes and upgrade guidance are captured per release |
 
@@ -994,6 +1015,6 @@ Release notes are maintained in [CHANGELOG.md](CHANGELOG.md), following the Keep
 <p align="center"><strong>Production-focused AI-assisted E2E test generation for modern QA teams.</strong></p>
 
 <p align="center">
-  <em>© 2026 AI Quality Lab / <a href="https://www.linkedin.com/in/sreekanthharigovindan/">Sreekanth Harigovindan</a></em><br/>
+  <em>┬® 2026 AI Quality Lab / <a href="https://www.linkedin.com/in/sreekanthharigovindan/">Sreekanth Harigovindan</a></em><br/>
   <a href="https://tests.aiqualitylab.org">tests.aiqualitylab.org</a>
 </p>
