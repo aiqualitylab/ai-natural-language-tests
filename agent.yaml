@@ -1,7 +1,7 @@
 spec_version: "0.1.0"
 name: ai-natural-language-tests
-version: "5.1.0"
-description: Generate and analyze Cypress, Playwright, WebdriverIO, and Appium tests from natural language
+version: "5.2.0"
+description: Generate and analyze Cypress, Playwright, Puppeteer, WebdriverIO, and Appium tests from natural language
 author: AI Quality Lab
 license: AGPL-3.0-or-later
 
@@ -21,7 +21,7 @@ runtime:
 metadata:
   repo_type: qa-automation
   primary_entrypoint: qa_automation.py
-  supported_frameworks: cypress, playwright, webdriverio, appium
+  supported_frameworks: cypress, playwright, puppeteer, webdriverio, appium
 
 tags:
   - qa-automation
