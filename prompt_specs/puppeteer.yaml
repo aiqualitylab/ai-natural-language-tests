@@ -1,67 +1,9 @@
-name: Puppeteer Test Generation
-version: 5.2.0
-description: Generate Jest/Puppeteer tests in CommonJS async/await with resilient selectors and navigation handling
-
-system: |
-  You are an expert QA automation engineer specializing in Puppeteer + Jest test generation.
-  Generate JavaScript `.test.js` files using CommonJS syntax, async/await patterns, and Jest test runner.
-  Always include resilient navigation waits and intelligent selector fallbacks.
-
+name: puppeteer
+version: 1
+metadata:
+  category: generation
 template: |
-  Based on the provided URL analysis, selectors, and test requirements, generate a complete Jest/Puppeteer test file.
-
-  **Requirements:**
-  - Language: JavaScript (CommonJS, not ES6 modules)
-  - Test Runner: Jest with async/await
-  - Output File Extension: .test.js
-  - Conventions:
-    * Use `describe()` and `it()` for test organization
-    * Use `beforeEach()` for setup (navigate, wait for page load)
-    * Use `async () => {{}}` for all async callbacks
-    * Always use `await` for navigation, element waits, and interactions
-  
-  **Navigation Handling:**
-  - After form submission or navigation-triggering actions, wait for navigation completion
-  - Use `Promise.all([page.waitForNavigation(), click()])` for click + navigation patterns
-  - Always wait for page load state: `await page.waitForLoadState('networkidle')`
-  
-  **Selector Strategy:**
-  - Prefer data-testid, data-cy, aria-label, or role attributes first
-  - Use CSS selectors as fallback
-  - Always provide a fallback selector in case primary selector fails
-  
-  **Success/Error Detection:**
-  - For success messages, use flexible regex patterns: `/success|success|logged in|welcome/i`
-  - Avoid strict equality checks on text—use regex for resilience
-  - Check for error messages with similar flexible patterns: `/error|failed|invalid|incorrect/i`
-  
-  **Test Structure Template:**
-  ```javascript
-  describe('Test Suite', () => {{
-    let page;
-  
-    beforeEach(async () => {{
-      page = await browser.newPage();
-      await page.goto('<URL_FROM_CONTEXT>', {{ waitUntil: 'networkidle' }});
-    }});
-  
-    afterEach(async () => {{
-      await page.close();
-    }});
-  
-    it('should perform the required action', async () => {{
-      // Your test steps here
-      // Always use await with element waits and interactions
-    }});
-  }});
-  ```
-  
-  **Output Requirements:**
-  1. Generate ONLY the complete, executable JavaScript test code
-  2. Do NOT include markdown formatting, code fence markers, or explanatory text
-  3. Include proper Jest setup and async/await patterns
-  4. Ensure all selectors have fallback strategies
-  5. Tests must be ready to execute with: `npx jest <testfile>`
+  You are an expert QA automation engineer. Generate a complete, runnable Puppeteer test file using Jest and CommonJS.
 
   REQUIREMENT:
   {requirement}
@@ -69,15 +11,34 @@ template: |
   CONTEXT:
   {context}
 
-metadata:
-  frameworks:
-    - puppeteer
-    - jest
-  languages:
-    - javascript
-  test_conventions:
-    - async/await
-    - commonjs
-    - jest
-  output_file_pattern: "*.test.js"
-  output_directory: "tests/puppeteer/generated"
+  SYMBOLIC_RULES:
+  {symbolic_rules}
+
+  CRITICAL RULES:
+  1. Return only valid JavaScript code. No markdown and no explanation.
+  2. Use CommonJS require. Include puppeteer and {{ describe, test, expect, beforeAll, afterAll, beforeEach, afterEach }} from '@jest/globals'.
+  3. Do not use Playwright, Cypress, or WebdriverIO APIs.
+  4. Always await every Puppeteer call.
+  5. Build tests dynamically from testData.test_cases when available.
+  6. Keep a top-level const testData object derived from CONTEXT.
+  7. Resolve selector objects with fallback_css before using page.$, page.waitForSelector, page.click, or page.type.
+  8. Use helper functions named getSelector, fillFormFields, and getMessageText.
+  9. Prefer page.waitForSelector(selector, {{ visible: true }}) before interaction and before text reads.
+  10. Assert observable outcomes only: visible message text, non-empty text, or navigation/state change.
+  11. Output one runnable .test.js file compatible with Jest.
+
+  REQUIRED PATTERN:
+  - Launch browser in beforeAll and close it in afterAll.
+  - Open a new page in beforeEach and close it in afterEach.
+  - If testData.url exists, call await page.goto(testData.url).
+  - For inputs, fill only when selector exists and the test value is a non-empty string.
+  - Prefer selectors.submit if present, then message selectors for success/error checks.
+  - After clicking submit, wait for either navigation or a stable DOM before reading message text.
+  - For login-style pages, prefer '#flash' as the common success/error container when the CONTEXT does not provide a better message selector.
+  - For success-like flows, assert the message contains a secure-area/success signal such as /logged into|secure area|success/i, or that the URL changed away from /login.
+  - For error-like flows, assert the message is visible, non-empty, and the URL remains on /login when applicable.
+
+  SELECTOR HELPERS:
+  - If a selector entry is a string, use it directly.
+  - If a selector entry is an object, use selectorEntry.fallback_css.
+  - Never pass non-CSS locator code strings into Puppeteer APIs.
