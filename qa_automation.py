@@ -142,6 +142,7 @@ def main() -> None:
 Examples:
     python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login
     python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework playwright
+    python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework puppeteer
     python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework webdriverio
     python qa_automation.py "Test login" --framework appium --use-prompt
     python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --use-prompt
@@ -157,7 +158,7 @@ Examples:
     parser.add_argument(
         "--framework",
         "-fw",
-        choices=["cypress", "playwright", "webdriverio", "appium"],
+        choices=["cypress", "playwright", "puppeteer", "webdriverio", "appium"],
         default="cypress",
     )
     parser.add_argument("--url", "-u")
