@@ -240,7 +240,7 @@ def _build_ui() -> gr.Blocks:
             """
 # AI-Powered E2E Test Generation Platform
 
-Enterprise-grade platform to generate Cypress, Playwright, WebdriverIO, and Appium end-to-end tests from natural language requirements.
+Enterprise-grade platform to generate Cypress, Playwright, Puppeteer, WebdriverIO, and Appium end-to-end tests from natural language requirements.
 
 © 2026 AI Quality Lab / https://tests.aiqualitylab.org/
             """
@@ -258,7 +258,7 @@ Enterprise-grade platform to generate Cypress, Playwright, WebdriverIO, and Appi
                     requirements_text = gr.Textbox(label="Test requirements (one per line)", lines=4)
                     framework = gr.Dropdown(
                         label="Framework",
-                        choices=["cypress", "playwright", "webdriverio", "appium"],
+                        choices=["cypress", "playwright", "puppeteer", "webdriverio", "appium"],
                         value="cypress",
                     )
                     use_prompt = gr.Checkbox(
