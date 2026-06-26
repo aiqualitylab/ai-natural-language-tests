@@ -17,7 +17,7 @@ template: |
   - Conventions:
     * Use `describe()` and `it()` for test organization
     * Use `beforeEach()` for setup (navigate, wait for page load)
-    * Use `async () => {}` for all async callbacks
+    * Use `async () => {{}}` for all async callbacks
     * Always use `await` for navigation, element waits, and interactions
   
   **Navigation Handling:**
@@ -37,23 +37,23 @@ template: |
   
   **Test Structure Template:**
   ```javascript
-  describe('Test Suite', () => {
+  describe('Test Suite', () => {{
     let page;
   
-    beforeEach(async () => {
+    beforeEach(async () => {{
       page = await browser.newPage();
-      await page.goto('{url}', { waitUntil: 'networkidle' });
-    });
+      await page.goto('{url}', {{ waitUntil: 'networkidle' }});
+    }});
   
-    afterEach(async () => {
+    afterEach(async () => {{
       await page.close();
-    });
+    }});
   
-    it('should perform the required action', async () => {
+    it('should perform the required action', async () => {{
       // Your test steps here
       // Always use await with element waits and interactions
-    });
-  });
+    }});
+  }});
   ```
   
   **Output Requirements:**
@@ -62,6 +62,12 @@ template: |
   3. Include proper Jest setup and async/await patterns
   4. Ensure all selectors have fallback strategies
   5. Tests must be ready to execute with: `npx jest <testfile>`
+
+  REQUIREMENT:
+  {requirement}
+
+  CONTEXT:
+  {context}
 
 metadata:
   frameworks:
