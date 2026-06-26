@@ -1,15 +1,15 @@
-# GitHub Copilot Instructions for AI Natural Language Tests
+﻿# GitHub Copilot Instructions for AI Natural Language Tests
 
 ## Project Overview
 
-Generate Cypress, Playwright, WebdriverIO, and Appium E2E tests from natural language using OpenAI GPT-4o-mini and LangGraph.
+Generate Cypress, Playwright, Puppeteer, WebdriverIO, and Appium E2E tests from natural language using OpenAI GPT-4o-mini and LangGraph.
 
 ## CLI Quick Reference
 
 | Flag | Purpose |
 |------|---------|
 | `requirements` | Test descriptions (positional) |
-| `--framework`, `-f` | Target framework: `cypress`, `playwright`, `webdriverio`, or `appium` (default: cypress) |
+| `--framework`, `-f` | Target framework: `cypress`, `playwright`, `puppeteer`, `webdriverio`, or `appium` (default: cypress) |
 | `--url`, `-u` | Fetch URL, analyze HTML, generate fixture |
 | `--use-prompt` | Generate prompt-powered self-healing tests (Cypress and Appium) |
 | `--run` | Execute tests after generation |
@@ -34,6 +34,11 @@ Generate Cypress, Playwright, WebdriverIO, and Appium E2E tests from natural lan
 - TypeScript tests with modern async/await
 - Multi-browser support (Chromium, Firefox, WebKit)
 - Intelligent locator strategies
+
+**Puppeteer Standard** (`tests/puppeteer/generated/`)
+- JavaScript `.test.js` tests with Jest runner
+- CommonJS async/await pattern
+- Resilient navigation and assertion guidance
 
 **WebdriverIO Standard** (`webdriverio/tests/generated/`)
 - JavaScript `.spec.js` tests using WebdriverIO with Mocha and Jest-like `expect`
@@ -174,20 +179,20 @@ OPENAI_API_KEY=your_key
 
 ```
 cypress/
-├── e2e/
-│   ├── generated/       # Traditional Cypress tests
-│   └── prompt-powered/  # cy.prompt() Cypress tests
-└── fixtures/
-    └── url_test_data.json
+Ôö£ÔöÇÔöÇ e2e/
+Ôöé   Ôö£ÔöÇÔöÇ generated/       # Traditional Cypress tests
+Ôöé   ÔööÔöÇÔöÇ prompt-powered/  # cy.prompt() Cypress tests
+ÔööÔöÇÔöÇ fixtures/
+    ÔööÔöÇÔöÇ url_test_data.json
 
 tests/
-└── generated/          # Playwright tests
+ÔööÔöÇÔöÇ generated/          # Playwright tests
 
 webdriverio/
-└── tests/
-    ├── generated/      # WebdriverIO tests
-    ├── appium-tests/   # Appium mobile tests (Android/iOS)
-    └── prompt-powered/ # WebdriverIO prompt-powered tests
+ÔööÔöÇÔöÇ tests/
+    Ôö£ÔöÇÔöÇ generated/      # WebdriverIO tests
+    Ôö£ÔöÇÔöÇ appium-tests/   # Appium mobile tests (Android/iOS)
+    ÔööÔöÇÔöÇ prompt-powered/ # WebdriverIO prompt-powered tests
 ```
 
 ## Code Style

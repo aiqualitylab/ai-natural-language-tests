@@ -1,4 +1,4 @@
-# Model Card — AI Natural Language Tests
+﻿# Model Card ÔÇö AI Natural Language Tests
 
 **What it does:** Takes plain English requirements and writes automated tests for web applications and mobile apps.
 
@@ -6,21 +6,21 @@
 
 ## AI Providers
 
-OpenAI · Anthropic · Google — one provider is active at a time based on your API key.
+OpenAI ┬À Anthropic ┬À Google ÔÇö one provider is active at a time based on your API key.
 
 ---
 
 ## What Gets Sent to the AI
 
-✅ Your test requirement text  
-✅ The HTML of the page being tested  
-❌ Passwords, personal data, or production content — never sent
+Ô£à Your test requirement text  
+Ô£à The HTML of the page being tested  
+ÔØî Passwords, personal data, or production content ÔÇö never sent
 
 ---
 
 ## What It Does Well
 
-- Writes login, form, and navigation tests from plain English
+- Writes login, form, and navigation tests from plain English with Cypress, Playwright, Puppeteer, WebdriverIO, or Appium
 - Reads the page and picks the right selectors automatically
 - Explains test failures in plain language
 - Generates mobile tests for Android and iOS via Appium (Experimental)
@@ -42,14 +42,14 @@ Use `--approve` to review every generated test before it is saved. Always review
 
 ## Use This For
 
-✅ Writing end-to-end tests during development and QA  
-✅ Speeding up test authoring for engineering teams  
-✅ Mobile test generation with Appium (Experimental, requires mobile infrastructure)
+Ô£à Writing end-to-end tests during development and QA  
+Ô£à Speeding up test authoring for engineering teams  
+Ô£à Mobile test generation with Appium (Experimental, requires mobile infrastructure)
 
 ## Do Not Use This For
 
-❌ Replacing human judgment in test strategy  
-❌ Fully automated production deployments without review  
+ÔØî Replacing human judgment in test strategy  
+ÔØî Fully automated production deployments without review  
 
 ---
 
@@ -61,8 +61,8 @@ This is a general-purpose development tool. It is not high-risk under the EU AI 
 
 ## Report a Problem
 
-Open an issue → [github.com/aiqualitylab/ai-natural-language-tests/issues](https://github.com/aiqualitylab/ai-natural-language-tests/issues)
+Open an issue ÔåÆ [github.com/aiqualitylab/ai-natural-language-tests/issues](https://github.com/aiqualitylab/ai-natural-language-tests/issues)
 
 ---
 
-Maintained by [AI Quality Lab](https://aiqualitylab.org) · Last updated May 2026
+Maintained by [AI Quality Lab](https://aiqualitylab.org) ┬À Last updated May 2026

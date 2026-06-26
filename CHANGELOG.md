@@ -1,9 +1,28 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [5.2.0] - 2026-06-25
+### Added
+- **Puppeteer Framework Support:** Added Puppeteer as a first-class framework option across CLI, config, runtime command construction, and Gradio UI.
+- **Puppeteer Prompt Spec:** Introduced `prompt_specs/puppeteer.yaml` for JavaScript `.test.js` generation with Jest/CommonJS conventions.
+- **Generated Folder Support:** Added `tests/puppeteer/generated/` output structure for generated Puppeteer test artifacts.
+
+### Changed
+- **CLI Framework Choices:** `qa_automation.py --framework` now accepts `puppeteer` in addition to existing frameworks.
+- **Workflow Output Routing:** `qa_workflow.py` now routes Puppeteer output directly to `tests/puppeteer/generated` without nested duplicate folder segments.
+- **Puppeteer Assertion and Navigation Guidance:** Improved prompt guidance to wait for post-submit navigation and use resilient success/error message validation.
+- **Release Metadata Versioning:** Bumped from `5.1.0`/`v5.1.0` to `5.2.0`/`v5.2.0` across:
+  - `package.json` and root `package-lock.json`
+  - `agent.yaml`
+  - `Dockerfile` (`ARG RELEASE_TAG`)
+  - `docker-compose.yml` (image tags and build args)
+  - `README.md` (pinned release tag table)
+  - `CONTRIBUTING.md` (publish examples and tag conventions)
+  - `.github/workflows/publish-ghcr.yml` (tag comment)
 
 ## [5.1.0] - 2026-06-23
 ### Added

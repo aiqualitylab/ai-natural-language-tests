@@ -1,7 +1,7 @@
-name: Publish Docker Image (GHCR)
+﻿name: Publish Docker Image (GHCR)
 
 # Triggers:
-#   - When you push a version tag like v5.1.0 (production publish)
+#   - When you push a version tag like v5.2.0 (production publish)
 #   - workflow_dispatch lets you trigger it manually from GitHub UI (useful for testing)
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v7
 
       # Step 2: Log in to GHCR using your GitHub username and a built-in token
-      # GITHUB_TOKEN is automatically provided by GitHub Actions — no manual secret needed
+      # GITHUB_TOKEN is automatically provided by GitHub Actions ÔÇö no manual secret needed
       - name: Login to GHCR
         uses: docker/login-action@v4
         with:
