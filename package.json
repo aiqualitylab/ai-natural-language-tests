@@ -1,7 +1,7 @@
 {
   "name": "ai-natural-language-tests",
-  "version": "5.1.0",
-  "description": "AI-powered Cypress, Playwright, and WebdriverIO test generation from natural language",
+  "version": "5.2.0",
+  "description": "AI-powered Cypress, Playwright, Puppeteer, and WebdriverIO test generation from natural language",
   "scripts": {
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
@@ -11,6 +11,7 @@
     "playwright:test": "npx playwright test tests/generated/",
     "playwright:test:headed": "npx playwright test --headed tests/generated/",
     "playwright:report": "npx playwright show-report",
+    "puppeteer:test": "npx jest tests/puppeteer/generated/",
     "webdriverio:test": "npx wdio run wdio.conf.js",
     "webdriverio:test:latest": "npx wdio run wdio.conf.js --spec ./webdriverio/tests/generated/*.spec.js",
     "appium:test": "npx wdio run wdio.appium.conf.js",
@@ -31,6 +32,8 @@
     "@wdio/spec-reporter": "^8.43.0",
     "chromedriver": "^147.0.4",
     "cypress": "^15.8.1",
+    "jest": "^29.7.0",
+    "puppeteer": "^24.16.0",
     "expect-webdriverio": "^4.15.4",
     "wdio-chromedriver-service": "^8.1.1",
     "webdriverio": "^8.46.0"
