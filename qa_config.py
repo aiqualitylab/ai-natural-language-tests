@@ -123,6 +123,15 @@ FRAMEWORK_CONFIG = {
         "prompt_file_prompt": "test_generation_appium_prompt_powered.yaml",
         "supports_prompt_mode": True,
     },
+    "puppeteer": {
+        "name": "Puppeteer",
+        "file_ext": ".test.js",
+        "default_output": "tests/puppeteer/generated",
+        "run_cmd": "npx jest",
+        "code_fence": "javascript",
+        "prompt_file_standard": "puppeteer.yaml",
+        "supports_prompt_mode": False,
+    },
 }
 
 

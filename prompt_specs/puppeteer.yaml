@@ -1,0 +1,77 @@
+name: Puppeteer Test Generation
+version: 5.2.0
+description: Generate Jest/Puppeteer tests in CommonJS async/await with resilient selectors and navigation handling
+
+system: |
+  You are an expert QA automation engineer specializing in Puppeteer + Jest test generation.
+  Generate JavaScript `.test.js` files using CommonJS syntax, async/await patterns, and Jest test runner.
+  Always include resilient navigation waits and intelligent selector fallbacks.
+
+template: |
+  Based on the provided URL analysis, selectors, and test requirements, generate a complete Jest/Puppeteer test file.
+
+  **Requirements:**
+  - Language: JavaScript (CommonJS, not ES6 modules)
+  - Test Runner: Jest with async/await
+  - Output File Extension: .test.js
+  - Conventions:
+    * Use `describe()` and `it()` for test organization
+    * Use `beforeEach()` for setup (navigate, wait for page load)
+    * Use `async () => {}` for all async callbacks
+    * Always use `await` for navigation, element waits, and interactions
+  
+  **Navigation Handling:**
+  - After form submission or navigation-triggering actions, wait for navigation completion
+  - Use `Promise.all([page.waitForNavigation(), click()])` for click + navigation patterns
+  - Always wait for page load state: `await page.waitForLoadState('networkidle')`
+  
+  **Selector Strategy:**
+  - Prefer data-testid, data-cy, aria-label, or role attributes first
+  - Use CSS selectors as fallback
+  - Always provide a fallback selector in case primary selector fails
+  
+  **Success/Error Detection:**
+  - For success messages, use flexible regex patterns: `/success|success|logged in|welcome/i`
+  - Avoid strict equality checks on text—use regex for resilience
+  - Check for error messages with similar flexible patterns: `/error|failed|invalid|incorrect/i`
+  
+  **Test Structure Template:**
+  ```javascript
+  describe('Test Suite', () => {
+    let page;
+  
+    beforeEach(async () => {
+      page = await browser.newPage();
+      await page.goto('{{ url }}', { waitUntil: 'networkidle' });
+    });
+  
+    afterEach(async () => {
+      await page.close();
+    });
+  
+    it('should perform the required action', async () => {
+      // Your test steps here
+      // Always use await with element waits and interactions
+    });
+  });
+  ```
+  
+  **Output Requirements:**
+  1. Generate ONLY the complete, executable JavaScript test code
+  2. Do NOT include markdown formatting, code fence markers, or explanatory text
+  3. Include proper Jest setup and async/await patterns
+  4. Ensure all selectors have fallback strategies
+  5. Tests must be ready to execute with: `npx jest <testfile>`
+
+metadata:
+  frameworks:
+    - puppeteer
+    - jest
+  languages:
+    - javascript
+  test_conventions:
+    - async/await
+    - commonjs
+    - jest
+  output_file_pattern: "*.test.js"
+  output_directory: "tests/puppeteer/generated"
