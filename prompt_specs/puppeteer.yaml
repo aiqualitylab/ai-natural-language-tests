@@ -42,7 +42,7 @@ template: |
   
     beforeEach(async () => {
       page = await browser.newPage();
-      await page.goto('{{ url }}', { waitUntil: 'networkidle' });
+      await page.goto('{url}', { waitUntil: 'networkidle' });
     });
   
     afterEach(async () => {
