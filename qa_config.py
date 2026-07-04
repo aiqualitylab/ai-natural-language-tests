@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -25,6 +26,8 @@ LLM_CONFIG = {
     "openai": {"name": "OpenAI (ChatGPT)", "model": "gpt-4o-mini", "provider": "openai"},
     "anthropic": {"name": "Anthropic (Claude)", "model": "claude-3-5-sonnet-20241022", "provider": "anthropic"},
     "google": {"name": "Google (Gemini)", "model": "gemini-2.0-flash", "provider": "google"},
+    "ollama": {"name": "Ollama (Local)", "model": os.getenv("OLLAMA_MODEL", "llama2"), "provider": "ollama", "base_url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")},
+    "local-openai": {"name": "Local OpenAI-compatible", "model": os.getenv("LOCAL_OPENAI_MODEL", "gpt-3.5-turbo"), "provider": "local-openai", "base_url": os.getenv("LOCAL_OPENAI_BASE_URL", "http://localhost:8000/v1")},
 }
 
 DEFAULT_LLM = "openai"
@@ -161,6 +164,18 @@ def _get_provider_constructor(provider: str) -> Any:
         "openai": lambda cfg: ChatOpenAI(model=cfg["model"], temperature=0),
         "anthropic": lambda cfg: ChatAnthropic(model=cfg["model"], temperature=0) if ChatAnthropic else None,
         "google": lambda cfg: ChatGoogleGenerativeAI(model=cfg["model"], temperature=0) if ChatGoogleGenerativeAI else None,
+        "ollama": lambda cfg: ChatOpenAI(
+            model=cfg["model"], 
+            base_url=cfg.get("base_url"), 
+            api_key="ollama",  # Dummy key for local endpoint
+            temperature=0
+        ),
+        "local-openai": lambda cfg: ChatOpenAI(
+            model=cfg["model"], 
+            base_url=cfg.get("base_url"), 
+            api_key="local-openai",  # Dummy key for local endpoint
+            temperature=0
+        ),
     }
     return constructor_map.get(provider, constructor_map[DEFAULT_LLM])
 

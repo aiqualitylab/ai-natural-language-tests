@@ -16,7 +16,7 @@ from typing import Generator, List
 import gradio as gr
 from langchain_core.runnables import RunnableLambda
 
-from qa_config import FRAMEWORK_CONFIG
+from qa_config import FRAMEWORK_CONFIG, LLM_CONFIG
 from qa_runtime import analyze_test_failure
 from qa_workflow import TestState, create_workflow
 
@@ -79,14 +79,30 @@ class _QueueLogHandler(logging.Handler):
         self.out_queue.put(self.format(record))
 
 
-def _apply_api_keys(openai_key: str, anthropic_key: str, google_key: str) -> None:
-    """Set API keys as environment variables if provided by the user."""
+def _apply_api_keys(
+    openai_key: str, 
+    anthropic_key: str, 
+    google_key: str,
+    ollama_base_url: str = "",
+    ollama_model: str = "",
+    local_openai_base_url: str = "",
+    local_openai_model: str = "",
+) -> None:
+    """Set API keys and local endpoint configs as environment variables if provided by the user."""
     if openai_key.strip():
         os.environ["OPENAI_API_KEY"] = openai_key.strip()
     if anthropic_key.strip():
         os.environ["ANTHROPIC_API_KEY"] = anthropic_key.strip()
     if google_key.strip():
         os.environ["GOOGLE_API_KEY"] = google_key.strip()
+    if ollama_base_url.strip():
+        os.environ["OLLAMA_BASE_URL"] = ollama_base_url.strip()
+    if ollama_model.strip():
+        os.environ["OLLAMA_MODEL"] = ollama_model.strip()
+    if local_openai_base_url.strip():
+        os.environ["LOCAL_OPENAI_BASE_URL"] = local_openai_base_url.strip()
+    if local_openai_model.strip():
+        os.environ["LOCAL_OPENAI_MODEL"] = local_openai_model.strip()
 
 
 def _run_generation(
@@ -97,8 +113,13 @@ def _run_generation(
     anthropic_key: str = "",
     google_key: str = "",
     use_prompt: bool = False,
+    llm_provider: str = "openai",
+    ollama_base_url: str = "",
+    ollama_model: str = "",
+    local_openai_base_url: str = "",
+    local_openai_model: str = "",
 ) -> Generator[tuple[str, str, str, str | None], None, None]:
-    _apply_api_keys(openai_key, anthropic_key, google_key)
+    _apply_api_keys(openai_key, anthropic_key, google_key, ollama_base_url, ollama_model, local_openai_base_url, local_openai_model)
 
     requirements = _split_requirements(requirements_text)
     if not requirements:
@@ -144,7 +165,7 @@ def _run_generation(
                 framework=framework,
                 url=url_value,
                 run_tests=False,
-                llm_provider="openai",
+                llm_provider=llm_provider,
                 run_id=run_id,
             )
 
@@ -222,11 +243,20 @@ def _run_generation(
         capture_handler.close()
 
 
-def _run_analysis(log_text: str, openai_key: str, anthropic_key: str, google_key: str) -> str:
+def _run_analysis(
+    log_text: str, 
+    openai_key: str, 
+    anthropic_key: str, 
+    google_key: str,
+    ollama_base_url: str = "",
+    ollama_model: str = "",
+    local_openai_base_url: str = "",
+    local_openai_model: str = "",
+) -> str:
     if not log_text.strip():
         return "Paste log text to continue."
 
-    _apply_api_keys(openai_key, anthropic_key, google_key)
+    _apply_api_keys(openai_key, anthropic_key, google_key, ollama_base_url, ollama_model, local_openai_base_url, local_openai_model)
 
     try:
         return FAILURE_ANALYZER.invoke(log_text)
@@ -248,9 +278,18 @@ Enterprise-grade platform to generate Cypress, Playwright, WebdriverIO, and Appi
 
         with gr.Tab("Settings"):
             gr.Markdown("Configure provider keys here. These fields are masked. Keys entered here override any environment variables.")
-            openai_key = gr.Textbox(label="OpenAI API Key", type="password", lines=1)
-            anthropic_key = gr.Textbox(label="Anthropic API Key", type="password", lines=1)
-            google_key = gr.Textbox(label="Google API Key", type="password", lines=1)
+            with gr.Row():
+                with gr.Column():
+                    gr.Markdown("**Cloud Providers**")
+                    openai_key = gr.Textbox(label="OpenAI API Key", type="password", lines=1)
+                    anthropic_key = gr.Textbox(label="Anthropic API Key", type="password", lines=1)
+                    google_key = gr.Textbox(label="Google API Key", type="password", lines=1)
+                with gr.Column():
+                    gr.Markdown("**Local Endpoints**")
+                    ollama_base_url = gr.Textbox(label="Ollama Base URL", placeholder="http://localhost:11434/v1", lines=1)
+                    ollama_model = gr.Textbox(label="Ollama Model", placeholder="llama2", lines=1)
+                    local_openai_base_url = gr.Textbox(label="Local OpenAI Base URL (vLLM/LM Studio)", placeholder="http://localhost:8000/v1", lines=1)
+                    local_openai_model = gr.Textbox(label="Local OpenAI Model", placeholder="gpt-3.5-turbo", lines=1)
 
         with gr.Tab("Generate Tests"):
             with gr.Row():
@@ -260,6 +299,11 @@ Enterprise-grade platform to generate Cypress, Playwright, WebdriverIO, and Appi
                         label="Framework",
                         choices=["cypress", "playwright", "webdriverio", "appium"],
                         value="cypress",
+                    )
+                    llm_provider = gr.Dropdown(
+                        label="LLM Provider",
+                        choices=list(LLM_CONFIG.keys()),
+                        value="openai",
                     )
                     use_prompt = gr.Checkbox(
                         label="Prompt-powered mode (Cypress self-healing / Appium mobile)",
@@ -280,7 +324,7 @@ Enterprise-grade platform to generate Cypress, Playwright, WebdriverIO, and Appi
 
             generate_button.click(
                 _run_generation,
-                inputs=[requirements_text, framework, url, openai_key, anthropic_key, google_key, use_prompt],
+                inputs=[requirements_text, framework, url, openai_key, anthropic_key, google_key, use_prompt, llm_provider, ollama_base_url, ollama_model, local_openai_base_url, local_openai_model],
                 outputs=[generate_output, generate_logs, generated_test_code, generated_code_file],
             )
 
@@ -304,7 +348,7 @@ Enterprise-grade platform to generate Cypress, Playwright, WebdriverIO, and Appi
 
             analyze_button.click(
                 _run_analysis,
-                inputs=[log_text, openai_key, anthropic_key, google_key],
+                inputs=[log_text, openai_key, anthropic_key, google_key, ollama_base_url, ollama_model, local_openai_base_url, local_openai_model],
                 outputs=[analyze_output],
             )
 

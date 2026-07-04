@@ -147,6 +147,8 @@ Examples:
     python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --use-prompt
     python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --run
     python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --llm anthropic
+    python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --llm ollama
+    python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --llm local-openai
   python qa_automation.py --analyze "CypressError: Element not found"
   python qa_automation.py --analyze -f error.log
   python qa_automation.py --list-patterns
