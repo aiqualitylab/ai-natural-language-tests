@@ -1,5 +1,5 @@
 flowchart TD
-    A[Start: User Input<br/>Requirements + Framework] --> C[Step 2: Fetch Test Data<br/>Analyze URL/HTML<br/>Extract Selectors<br/>Generate Fixtures]
+    A[Start: User Input<br/>Requirements + Framework + LLM Provider<br/>Cloud: OpenAI/Anthropic/Google<br/>Local: Ollama/vLLM/LM Studio] --> C[Step 2: Fetch Test Data<br/>Analyze URL/HTML<br/>Extract Selectors<br/>Generate Fixtures]
     C --> D[Step 3: Search Similar Patterns<br/>Query Vector Store<br/>Find Matching Test Patterns<br/>From Past Generations]
     D --> E[Step 4: Generate Tests<br/>Use AI + Patterns<br/>Create Framework-Specific Code<br/>Cypress, Playwright, or WebdriverIO]
     E --> H[HITL Approval<br/>Optional --approve before save]

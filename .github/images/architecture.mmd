@@ -7,7 +7,8 @@ graph TB
 
     subgraph "AI & Workflow Engine"
         D[LangGraph Workflow<br/>5-Step Process]
-        E[Multi-Provider LLM<br/>OpenAI / Anthropic / Google]
+        E1["Cloud LLM Providers<br/>OpenAI / Anthropic / Google"]
+        E2["Local LLM Endpoints<br/>Ollama / vLLM / LM Studio<br/>Privacy-First"]
         F[Vector Store<br/>Pattern Learning<br/>FAISS + SQLite]
     end
 
@@ -30,8 +31,10 @@ graph TB
     A --> D
     B --> D
     C --> D
-    D --> E
-    E --> F
+    D --> E1
+    D --> E2
+    E1 --> F
+    E2 --> F
     F --> D
     D --> G
     D --> H
@@ -47,7 +50,8 @@ graph TB
     P --> M
 
     style D fill:#e3f2fd
-    style E fill:#f3e5f5
+    style E1 fill:#f3e5f5
+    style E2 fill:#e8f5e9
     style F fill:#fff3e0
     style G fill:#c8e6c9
     style H fill:#ffcdd2
