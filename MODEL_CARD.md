@@ -12,9 +12,9 @@ OpenAI · Anthropic · Google — one provider is active at a time based on your
 
 ## What Gets Sent to the AI
 
-✅ Your test requirement text  
-✅ The HTML of the page being tested  
-❌ Passwords, personal data, or production content — never sent
+Your test requirement text  
+The HTML of the page being tested  
+Passwords, personal data, or production content — never sent
 
 ---
 
@@ -42,14 +42,14 @@ Use `--approve` to review every generated test before it is saved. Always review
 
 ## Use This For
 
-✅ Writing end-to-end tests during development and QA  
-✅ Speeding up test authoring for engineering teams  
-✅ Mobile test generation with Appium (Experimental, requires mobile infrastructure)
+Writing end-to-end tests during development and QA  
+Speeding up test authoring for engineering teams  
+Mobile test generation with Appium (Experimental, requires mobile infrastructure)
 
 ## Do Not Use This For
 
-❌ Replacing human judgment in test strategy  
-❌ Fully automated production deployments without review  
+Replacing human judgment in test strategy  
+Fully automated production deployments without review  
 
 ---
 
