@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 ARG RELEASE_TAG=v5.1.0
 LABEL org.opencontainers.image.version=$RELEASE_TAG
