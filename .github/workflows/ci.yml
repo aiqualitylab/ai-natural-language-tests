@@ -14,6 +14,10 @@ on:
       target_url:
         required: false
         default: 'https://the-internet.herokuapp.com/login'
+      llm_provider:
+        description: 'LLM provider: openai, anthropic, google, ollama, local-openai'
+        required: false
+        default: 'openai'
 
 env:
   REQS: ${{ github.event.inputs.requirements || 'Test user login with valid credentials, Test login with invalid credentials' }}
@@ -111,4 +115,71 @@ jobs:
             cypress/e2e/generated/
             tests/generated/
             webdriverio/tests/generated/
+            test-output.log
+
+  # ── JOB 4 (OPTIONAL): Test with Ollama (Privacy-first local inference) ────
+  # Runs when: workflow_dispatch with llm_provider=ollama, or manual trigger
+  # Uses Ollama service container for local LLM inference (no cloud APIs)
+  test-with-ollama:
+    needs: nlp-baseline
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.llm_provider == 'ollama' || contains(github.event.head_commit.message, '[ollama]') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        framework: [cypress, playwright]
+
+    services:
+      ollama:
+        image: ollama/ollama:latest
+        options: >-
+          --health-cmd "curl -f http://localhost:11434/api/tags || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 11434:11434
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with: { python-version: '3.12' }
+      - uses: actions/setup-node@v6
+        with: { node-version: '24' }
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt && npm install
+          [ "${{ matrix.framework }}" = "playwright" ] && npm install --save-dev @playwright/test && npx playwright install chromium || true
+
+      - name: Pull Ollama model
+        run: |
+          echo "Pulling Mistral model (use 'neural-chat' for smaller model)..."
+          curl -X POST http://localhost:11434/api/pull -d '{"name": "neural-chat"}'
+
+      - name: Generate tests with Ollama
+        env:
+          OLLAMA_BASE_URL: http://localhost:11434/v1
+          OLLAMA_MODEL: neural-chat
+        run: |
+          QUOTED=$(echo "$REQS" | sed 's/,/" "/g;s/^/"/;s/$/"/')
+          eval python qa_automation.py --framework ${{ matrix.framework }} --llm ollama $QUOTED --url $URL
+
+      - name: Run tests
+        id: run
+        continue-on-error: true
+        run: |
+          case "${{ matrix.framework }}" in
+            playwright)  npx playwright test tests/generated/ 2>&1 | tee test-output.log ;;
+            *)           npx cypress run --spec "cypress/e2e/generated/**/*.cy.js" 2>&1 | tee test-output.log ;;
+          esac
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: results-ollama-${{ matrix.framework }}
+          path: |
+            cypress/e2e/generated/
+            tests/generated/
             test-output.log

@@ -1,0 +1,195 @@
+name: Local Provider Test (Ollama / vLLM)
+
+# Trigger: Manual workflow dispatch only
+# Purpose: Test generation with local LLM endpoints (privacy-first, no cloud APIs)
+# Supported: Ollama, vLLM, LM Studio, any OpenAI-compatible endpoint
+
+on:
+  workflow_dispatch:
+    inputs:
+      llm_provider:
+        description: 'Local LLM provider'
+        required: true
+        type: choice
+        options:
+          - ollama
+          - local-openai
+      llm_model:
+        description: 'Model name (ollama: llama2/mistral/neural-chat, local-openai: gpt-3.5-turbo/etc)'
+        required: false
+        default: 'neural-chat'
+      frameworks:
+        description: 'Frameworks (comma-separated: cypress,playwright,webdriverio)'
+        required: false
+        default: 'cypress,playwright'
+      requirements:
+        description: 'Test requirements (comma separated)'
+        required: false
+        default: 'Test user login with valid credentials, Test login with invalid credentials'
+      target_url:
+        description: 'Target URL for testing'
+        required: false
+        default: 'https://the-internet.herokuapp.com/login'
+
+env:
+  REQS: ${{ github.event.inputs.requirements || 'Test user login with valid credentials, Test login with invalid credentials' }}
+  URL: ${{ github.event.inputs.target_url || 'https://the-internet.herokuapp.com/login' }}
+  LLM_PROVIDER: ${{ github.event.inputs.llm_provider }}
+  LLM_MODEL: ${{ github.event.inputs.llm_model || 'neural-chat' }}
+
+jobs:
+
+  # ── Test with Ollama (Local Open-Source Models) ──────────────────────────
+  test-ollama:
+    if: ${{ github.event.inputs.llm_provider == 'ollama' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        framework: [cypress, playwright, webdriverio]
+
+    services:
+      ollama:
+        image: ollama/ollama:latest
+        options: >-
+          --health-cmd "curl -f http://localhost:11434/api/tags || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 11434:11434
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with: { python-version: '3.12' }
+      - uses: actions/setup-node@v6
+        with: { node-version: '24' }
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt && npm install
+          [ "${{ matrix.framework }}" = "playwright"   ] && npm install --save-dev @playwright/test && npx playwright install chromium || true
+          [ "${{ matrix.framework }}" = "webdriverio"  ] && npm install --save-dev @wdio/cli @wdio/local-runner @wdio/mocha-framework || true
+
+      - name: Pull Ollama model
+        run: |
+          echo "Pulling model: ${{ env.LLM_MODEL }}"
+          curl -X POST http://localhost:11434/api/pull -d "{\"name\": \"${{ env.LLM_MODEL }}}\"}"
+          echo "Model pulled"
+
+      - name: List available models
+        run: curl -s http://localhost:11434/api/tags | jq .models
+
+      - name: Generate tests with Ollama
+        env:
+          OLLAMA_BASE_URL: http://localhost:11434/v1
+          OLLAMA_MODEL: ${{ env.LLM_MODEL }}
+        run: |
+          echo "Generating tests with Ollama (${{ env.LLM_MODEL }})"
+          QUOTED=$(echo "$REQS" | sed 's/,/" "/g;s/^/"/;s/$/"/')
+          eval python qa_automation.py --framework ${{ matrix.framework }} --llm ollama $QUOTED --url $URL
+
+      - name: Run generated tests
+        id: run
+        continue-on-error: true
+        run: |
+          case "${{ matrix.framework }}" in
+            playwright)  npx playwright test tests/generated/ 2>&1 | tee test-output.log ;;
+            webdriverio) npx wdio run wdio.conf.js            2>&1 | tee test-output.log ;;
+            *)           npx cypress run --spec "cypress/e2e/generated/**/*.cy.js" 2>&1 | tee test-output.log ;;
+          esac
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ollama-results-${{ matrix.framework }}
+          path: |
+            cypress/e2e/generated/
+            tests/generated/
+            webdriverio/tests/generated/
+            test-output.log
+            test-results/
+
+  # ── Test with Local OpenAI-compatible (vLLM, LM Studio) ───────────────────
+  test-local-openai:
+    if: ${{ github.event.inputs.llm_provider == 'local-openai' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        framework: [cypress, playwright, webdriverio]
+
+    services:
+      # Note: You must have a vLLM or LM Studio server running on your local machine or a separate service
+      # This job assumes an external OpenAI-compatible endpoint is available
+      # Start vLLM: python -m vllm.entrypoints.openai.api_server --model mistralai/Mistral-7B-Instruct-v0.1 --port 8000
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with: { python-version: '3.12' }
+      - uses: actions/setup-node@v6
+        with: { node-version: '24' }
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt && npm install
+          [ "${{ matrix.framework }}" = "playwright"   ] && npm install --save-dev @playwright/test && npx playwright install chromium || true
+          [ "${{ matrix.framework }}" = "webdriverio"  ] && npm install --save-dev @wdio/cli @wdio/local-runner @wdio/mocha-framework || true
+
+      - name: Check local endpoint health
+        run: |
+          echo "Checking endpoint: http://localhost:8000/v1"
+          curl -f http://localhost:8000/v1/models || echo "Endpoint not available (expected for local-only endpoints)"
+
+      - name: Generate tests with local endpoint
+        env:
+          LOCAL_OPENAI_BASE_URL: http://localhost:8000/v1
+          LOCAL_OPENAI_MODEL: ${{ env.LLM_MODEL }}
+        run: |
+          echo "Generating tests with local endpoint (${{ env.LLM_MODEL }})"
+          QUOTED=$(echo "$REQS" | sed 's/,/" "/g;s/^/"/;s/$/"/')
+          eval python qa_automation.py --framework ${{ matrix.framework }} --llm local-openai $QUOTED --url $URL
+
+      - name: Run generated tests
+        id: run
+        continue-on-error: true
+        run: |
+          case "${{ matrix.framework }}" in
+            playwright)  npx playwright test tests/generated/ 2>&1 | tee test-output.log ;;
+            webdriverio) npx wdio run wdio.conf.js            2>&1 | tee test-output.log ;;
+            *)           npx cypress run --spec "cypress/e2e/generated/**/*.cy.js" 2>&1 | tee test-output.log ;;
+          esac
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: local-openai-results-${{ matrix.framework }}
+          path: |
+            cypress/e2e/generated/
+            tests/generated/
+            webdriverio/tests/generated/
+            test-output.log
+            test-results/
+
+  # ── Summary Report ──────────────────────────────────────────────────────────
+  report:
+    needs: [test-ollama, test-local-openai]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v7
+
+      - name: Generate summary
+        run: |
+          echo "## Local Provider Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Provider:** ${{ env.LLM_PROVIDER }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Model:** ${{ env.LLM_MODEL }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts Available for Download:" >> $GITHUB_STEP_SUMMARY
+          ls -la | grep -E "^d" | awk '{print "- " $NF}' >> $GITHUB_STEP_SUMMARY || echo "- (No artifacts)" >> $GITHUB_STEP_SUMMARY
