@@ -463,13 +463,43 @@ For publishing and release management, see [CONTRIBUTING.md](CONTRIBUTING.md).
 ## Configuration
 
 <details>
-<summary><strong>Core API Keys</strong></summary>
+<summary><strong>Core API Keys (Cloud Providers)</strong></summary>
 
 ```bash
 OPENAI_API_KEY=your_key
 ANTHROPIC_API_KEY=your_key
 GOOGLE_API_KEY=your_key
 ```
+
+</details>
+
+<details>
+<summary><strong>Local LLM Endpoints (Ollama, vLLM, LM Studio)</strong></summary>
+
+Use local LLM endpoints to generate tests **without sending HTML data to cloud APIs**. Supports:
+- **Ollama** (run locally: `ollama serve`)
+- **vLLM** (high-throughput inference)
+- **LM Studio** (simple GUI setup)
+
+**For complete setup, CI/CD workflows, model recommendations, and troubleshooting, see [LOCAL_PROVIDER_GUIDE.md](.github/LOCAL_PROVIDER_GUIDE.md)**
+
+```bash
+# Ollama (default: http://localhost:11434/v1)
+OLLAMA_BASE_URL=http://localhost:11434/v1
+OLLAMA_MODEL=llama2
+
+# OpenAI-compatible endpoint (vLLM, LM Studio)
+LOCAL_OPENAI_BASE_URL=http://localhost:8000/v1
+LOCAL_OPENAI_MODEL=gpt-3.5-turbo
+```
+
+**CLI Usage:**
+```bash
+python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --llm ollama
+python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --llm local-openai
+```
+
+**UI Usage:** Set endpoint URLs in **Settings** tab, then select provider in **Generate Tests** → **LLM Provider** dropdown.
 
 </details>
 
@@ -522,6 +552,26 @@ GRAFANA_API_TOKEN=<logs_write_token>
 | Generate + Execute | `python qa_automation.py "requirement" --url <url> --run` |
 | Failure Analysis | `python qa_automation.py --analyze "error message"` |
 | Pattern Inventory | `python qa_automation.py --list-patterns` |
+
+### Demo & Test URLs
+
+Use these URLs to try the platform immediately:
+
+| App | URL | Best For |
+|-----|-----|----------|
+| **The Internet** (login form) | `https://the-internet.herokuapp.com/login` | Login tests, form validation, error handling |
+| **The Internet** (dynamic loading) | `https://the-internet.herokuapp.com/dynamic_loading/1` | Wait/timing tests, dynamic content |
+| **The Internet** (tables) | `https://the-internet.herokuapp.com/tables` | Data extraction, table assertions |
+| **The Internet** (file download) | `https://the-internet.herokuapp.com/download` | File handling, downloads |
+| **The Internet** (drag & drop) | `https://the-internet.herokuapp.com/drag_and_drop` | Complex interactions |
+
+**Quick test command:**
+```bash
+python qa_automation.py "Test login with valid credentials" \
+  --url https://the-internet.herokuapp.com/login \
+  --framework playwright \
+  --run
+```
 
 > [!TIP]
 > If your global `python` misses project dependencies, run with the repository virtual environment:
@@ -642,7 +692,7 @@ python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/lo
 
 **iOS Testing** (macOS only):
 ```bash
-APP_PLATFORM=ios python qa_automation.py "Test login" --url <url> --framework appium --run
+APP_PLATFORM=ios python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/login --framework appium --run
 ```
 
 </details>

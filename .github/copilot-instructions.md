@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Generate Cypress, Playwright, WebdriverIO, and Appium E2E tests from natural language using OpenAI GPT-4o-mini and LangGraph.
+Generate Cypress, Playwright, WebdriverIO, and Appium E2E tests from natural language using OpenAI GPT-4o-mini, Anthropic Claude, Google Gemini, or local LLM endpoints (Ollama, vLLM, LM Studio) and LangGraph.
 
 ## CLI Quick Reference
 
@@ -11,6 +11,7 @@ Generate Cypress, Playwright, WebdriverIO, and Appium E2E tests from natural lan
 | `requirements` | Test descriptions (positional) |
 | `--framework`, `-f` | Target framework: `cypress`, `playwright`, `webdriverio`, or `appium` (default: cypress) |
 | `--url`, `-u` | Fetch URL, analyze HTML, generate fixture |
+| `--llm` | LLM provider: `openai`, `anthropic`, `google`, `ollama`, or `local-openai` (default: openai) |
 | `--use-prompt` | Generate prompt-powered self-healing tests (Cypress and Appium) |
 | `--run` | Execute tests after generation |
 | `--analyze`, `-a` | Diagnose test failure with AI |
@@ -18,6 +19,21 @@ Generate Cypress, Playwright, WebdriverIO, and Appium E2E tests from natural lan
 | `--list-patterns` | List all stored historical test patterns |
 | `--list-html-replays` | List saved HTML analysis replay IDs |
 | `--replay-html-analysis` | Print saved HTML analysis snapshot by run ID |
+
+## LLM Providers
+
+### Cloud Providers
+- **OpenAI** (default): `gpt-4o-mini` — Requires `OPENAI_API_KEY`
+- **Anthropic**: `claude-3-5-sonnet-20241022` — Requires `ANTHROPIC_API_KEY`
+- **Google**: `gemini-2.0-flash` — Requires `GOOGLE_API_KEY`
+
+### Local Providers (Privacy-First, No HTML Sent to APIs)
+- **Ollama**: Local open-source models (Llama, Mistral, etc.)
+  - Set: `OLLAMA_BASE_URL=http://localhost:11434/v1` (default)
+  - Set: `OLLAMA_MODEL=llama2` (or any Ollama model)
+- **Local OpenAI-compatible** (vLLM, LM Studio):
+  - Set: `LOCAL_OPENAI_BASE_URL=http://localhost:8000/v1` (default)
+  - Set: `LOCAL_OPENAI_MODEL=gpt-3.5-turbo` (any compatible model name)
 
 ## Framework Modes
 
