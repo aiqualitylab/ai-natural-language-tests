@@ -11,12 +11,13 @@ import time
 import zipfile
 from pathlib import Path
 from datetime import datetime
-from typing import Generator, List
+from typing import Generator, List, Tuple
 
 import gradio as gr
 from langchain_core.runnables import RunnableLambda
 
 from qa_config import FRAMEWORK_CONFIG, LLM_CONFIG
+from qa_refinement import refine_tests
 from qa_runtime import analyze_test_failure
 from qa_workflow import TestState, create_workflow
 
@@ -264,6 +265,67 @@ def _run_analysis(
         return f"Analysis failed: {exc}"
 
 
+def _run_refinement(
+    current_code: str,
+    instruction: str,
+    framework: str,
+    openai_key: str = "",
+    anthropic_key: str = "",
+    google_key: str = "",
+    llm_provider: str = "openai",
+) -> Tuple[str, str]:
+    """
+    Refine generated test code based on user instruction.
+    
+    Returns:
+        Tuple of (updated_code_panel, status_json)
+    """
+    # Check prerequisites
+    if not current_code.strip():
+        error_payload = {
+            "error": "No code to refine",
+            "details": "Generate tests first — there is no code to refine.",
+        }
+        return current_code, json.dumps(error_payload, indent=2)
+
+    if not instruction.strip():
+        error_payload = {
+            "error": "Empty instruction",
+            "details": "Describe the change you want to make to the tests.",
+        }
+        return current_code, json.dumps(error_payload, indent=2)
+
+    # Apply API keys
+    _apply_api_keys(openai_key, anthropic_key, google_key)
+
+    try:
+        revised_code, files_written = refine_tests(
+            current_code=current_code,
+            instruction=instruction,
+            framework=framework,
+            llm_provider=llm_provider,
+        )
+
+        files_updated = [path for path, success in files_written if success]
+        status_payload = {
+            "message": "Refinement complete.",
+            "provider": llm_provider,
+            "instruction": instruction,
+            "files_updated": files_updated,
+            "files_failed": [path for path, success in files_written if not success],
+        }
+
+        return revised_code, json.dumps(status_payload, indent=2)
+
+    except Exception as exc:
+        error_payload = {
+            "error": "Refinement failed",
+            "details": str(exc),
+        }
+        # Return original code unchanged on error (don't corrupt the panel)
+        return current_code, json.dumps(error_payload, indent=2)
+
+
 def _build_ui() -> gr.Blocks:
     with gr.Blocks(title="AI Test Generator UI") as app:
         gr.Markdown(
@@ -322,10 +384,33 @@ Enterprise-grade platform to generate Cypress, Playwright, WebdriverIO, and Appi
                     generated_test_code = gr.Code(label="Generated Test Code (copy)", language="javascript")
                     generated_code_file = gr.File(label="Generated Test Code File (save/download)")
 
+                    # Refinement UI
+                    gr.Markdown("### Refine Tests (Conversational)")
+                    refinement_instruction = gr.Textbox(
+                        label="Refine (describe the change)",
+                        placeholder="e.g. also assert the success toast message",
+                        lines=2,
+                    )
+                    refinement_button = gr.Button("Refine")
+                    refinement_status = gr.Code(label="Refinement Status", language="json")
+
             generate_button.click(
                 _run_generation,
                 inputs=[requirements_text, framework, url, openai_key, anthropic_key, google_key, use_prompt, llm_provider, ollama_base_url, ollama_model, local_openai_base_url, local_openai_model],
                 outputs=[generate_output, generate_logs, generated_test_code, generated_code_file],
+            )
+
+            refinement_button.click(
+                _run_refinement,
+                inputs=[
+                    generated_test_code,
+                    refinement_instruction,
+                    framework,
+                    openai_key,
+                    anthropic_key,
+                    google_key,
+                ],
+                outputs=[generated_test_code, refinement_status],
             )
 
             framework.change(
