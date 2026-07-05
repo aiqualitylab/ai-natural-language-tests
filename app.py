@@ -273,6 +273,10 @@ def _run_refinement(
     anthropic_key: str = "",
     google_key: str = "",
     llm_provider: str = "openai",
+    ollama_base_url: str = "",
+    ollama_model: str = "",
+    local_openai_base_url: str = "",
+    local_openai_model: str = "",
 ) -> Tuple[str, str]:
     """
     Refine generated test code based on user instruction.
@@ -295,8 +299,8 @@ def _run_refinement(
         }
         return current_code, json.dumps(error_payload, indent=2)
 
-    # Apply API keys
-    _apply_api_keys(openai_key, anthropic_key, google_key)
+    # Apply API keys and local endpoints
+    _apply_api_keys(openai_key, anthropic_key, google_key, ollama_base_url, ollama_model, local_openai_base_url, local_openai_model)
 
     try:
         revised_code, files_written = refine_tests(
@@ -409,6 +413,11 @@ Enterprise-grade platform to generate Cypress, Playwright, WebdriverIO, and Appi
                     openai_key,
                     anthropic_key,
                     google_key,
+                    llm_provider,
+                    ollama_base_url,
+                    ollama_model,
+                    local_openai_base_url,
+                    local_openai_model,
                 ],
                 outputs=[generated_test_code, refinement_status],
             )
