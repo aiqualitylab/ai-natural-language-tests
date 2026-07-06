@@ -1,6 +1,5 @@
 ---
 title: AI Natural Language Tests
-emoji: 🧪
 colorFrom: blue
 colorTo: green
 sdk: gradio
@@ -139,6 +138,7 @@ python qa_automation.py "Test login with valid credentials" --url https://the-in
 | Capability | Detail |
 |------------|--------|
 | Test Generation | Natural language to executable E2E test generation |
+| **Conversational Refinement** | Multi-turn natural language refinement of generated tests |
 | Orchestration | LangGraph-based multi-step orchestration |
 | LangChain Runnables | `RunnableLambda` wrappers for workflow invocation in CLI/UI paths |
 | URL Analysis | Dynamic URL analysis and fixture generation |
@@ -241,6 +241,11 @@ graph TB
   - Defines `TestState` and step nodes (fetch, pattern search, generate, run).
   - Uses LangChain runnables/parsers for generation input/output shaping.
   - Builds workflow graph with conditional transitions and checkpointer.
+- Conversational refinement (`qa_refinement.py`)
+  - Multi-turn natural language refinement of generated tests.
+  - Panel-based state management: code + instruction → revised code.
+  - Safety rules: file integrity, no empty sections, disk-only writes, error recovery.
+  - Zero heavy dependencies: imports only from `qa_config` (not `qa_workflow` or `qa_runtime`).
 - Observability layer (OpenTelemetry + Loki)
 
 </details>
@@ -325,6 +330,8 @@ ai-natural-language-tests/
 |-- qa_config.py
 |-- qa_runtime.py
 |-- qa_workflow.py
+|-- qa_refinement.py
+|-- test_qa_refinement.py
 |-- ragas_evaluator.py
 |-- ragas_nlp_evaluator.py
 |-- cypress.config.js
@@ -718,6 +725,48 @@ python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/lo
 ```
 
 </details>
+
+### Conversational Test Refinement
+
+**Refine generated tests in the UI with natural language instructions — multi-turn refinement supported.**
+
+1. **Generate tests** using the "Generate" button
+2. **Describe your refinement** in the "Refine (describe the change)" textbox
+3. **Click "Refine"** to apply the refinement
+4. **Repeat** for multi-turn refinement
+
+**Refinement Examples:**
+
+| Instruction | What Happens |
+|------------|--------------|
+| `"add an assertion for the success toast message"` | LLM revises test to include toast validation |
+| `"add error case test for empty password"` | LLM adds a negative test case |
+| `"add explicit wait before clicking submit"` | LLM adds `cy.wait()` or `page.waitForLoadState()` |
+| `"verify response status is 200"` | LLM adds network assertion |
+| `"use data-testid selectors instead of CSS classes"` | LLM updates all selectors to use data attributes |
+
+**Safety Guarantees:**
+
+- **File integrity:** LLM cannot add, remove, or rename files
+- **No empty tests:** Every file must have runnable code
+- **No panel corruption:** If refinement fails, original code is preserved
+- **Multi-turn support:** Each refinement builds on the previous output
+
+**How It Works:**
+
+1. Generated code panel displays with `// FILE: <path>` headers
+2. User enters refinement instruction (e.g., "also test the error message")
+3. System sends current code + instruction to LLM
+4. LLM returns complete revised code (never diffs or fragments)
+5. Panel updates and files written to disk (if originals had headers)
+6. Repeat for additional refinements
+
+> [!TIP]
+> **Best Practices for Refinements**
+> - Start with generation, then refine iteratively
+> - Be specific: `"add assertion for button text"` vs `"improve the test"`
+> - One instruction per refinement (easier for LLM to apply correctly)
+> - Use the same LLM provider throughout a refinement session for consistency
 
 ### Failure Analysis
 

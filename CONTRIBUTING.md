@@ -129,6 +129,9 @@ python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/lo
 ```
 
 If change affects Cypress pathing or prompt mode, run at least one Cypress generation command.
+- Error recovery and panel integrity
+
+For UI refinement testing in the app, generate tests normally, then use the "Refine" textbox and button to verify refinement updates both the panel and disk files correctly.
 
 ## Documentation Requirements
 
@@ -239,11 +242,13 @@ Starting in `v5.1.0`, keep contributions aligned to module responsibilities:
 - `qa_config.py`: static configuration, prompt loading, model factory
 - `qa_runtime.py`: external integrations (logging, tracing, persistence, replay, pattern store)
 - `qa_workflow.py`: LangGraph state, nodes, and graph assembly
+- `qa_refinement.py`: conversational refinement of generated tests
 
 Current implementation notes:
 
 - Keep structured LLM output handling in parser classes (`BaseOutputParser`) rather than ad-hoc string parsing.
 - Keep workflow/app/CLI invocation wrappers in `RunnableLambda` when introducing new orchestration boundaries.
 - Keep embeddings imports compatible with `langchain-huggingface` first, then fallback only when needed.
+- Keep refinement logic isolated from heavy dependencies: `qa_refinement.py` imports only from `qa_config` (not `qa_workflow` or `qa_runtime`).
 
 When adding features, prefer extending the relevant module over reintroducing monolithic logic into the CLI entry file.
