@@ -251,6 +251,11 @@ def _run_review(
     openai_key: str = "",
     anthropic_key: str = "",
     google_key: str = "",
+    llm_provider: str = "openai",
+    ollama_base_url: str = "",
+    ollama_model: str = "",
+    local_openai_base_url: str = "",
+    local_openai_model: str = "",
 ) -> tuple[str, str]:
     """
     Review generated test code using AI.
@@ -265,10 +270,8 @@ def _run_review(
         )
         return error_json, ""
     
-    _apply_api_keys(openai_key, anthropic_key, google_key)
-    
-    # Default to openai if no explicit provider is set
-    llm_provider = "openai"
+    # Apply API keys and local endpoints
+    _apply_api_keys(openai_key, anthropic_key, google_key, ollama_base_url, ollama_model, local_openai_base_url, local_openai_model)
     
     try:
         result = review_test(current_code, framework, llm_provider)
@@ -465,7 +468,18 @@ Enterprise-grade platform to generate Cypress, Playwright, WebdriverIO, and Appi
 
             review_button.click(
                 _run_review,
-                inputs=[generated_test_code, framework, openai_key, anthropic_key, google_key],
+                inputs=[
+                    generated_test_code,
+                    framework,
+                    openai_key,
+                    anthropic_key,
+                    google_key,
+                    llm_provider,
+                    ollama_base_url,
+                    ollama_model,
+                    local_openai_base_url,
+                    local_openai_model,
+                ],
                 outputs=[review_output],
             )
 
