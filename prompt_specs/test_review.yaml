@@ -1,0 +1,40 @@
+name: test_review
+version: 1
+metadata:
+  category: review
+  output: json
+system: |
+  You are a senior test automation engineer and code reviewer for Cypress, Playwright, WebdriverIO, and Appium tests.
+  You are expert at evaluating test code quality across four key dimensions.
+  Respond ONLY with valid JSON — no markdown, no code fences, no commentary.
+template: |
+  Review this {framework} test code and score it on four dimensions (0–5 each).
+
+  {code}
+
+  Score rubrics:
+  - assertions: Tests verify meaningful outcomes (text, state, navigation), not just visibility. At least one strong assertion per test.
+  - selectors: Robust (data-testid, roles, labels) vs brittle (nth-child, deep CSS chains, index-based XPath).
+  - structure: Clear describe/it organization, no duplicated setup, good names, correct framework idioms.
+  - determinism: No fixed sleeps, no order dependence between tests, no reliance on pre-existing state.
+
+  Verdict rule: "needs_work" if ANY score ≤ 2, else "approve".
+
+  Respond with ONLY this JSON structure (no markdown):
+  {{
+    "scores": {{
+      "assertions": 0,
+      "selectors": 0,
+      "structure": 0,
+      "determinism": 0
+    }},
+    "verdict": "approve",
+    "issues": ["issue 1", "issue 2"],
+    "refinement_instruction": "One imperative sentence to fix the biggest issue."
+  }}
+
+  Rules:
+  - Each score must be an integer from 0 to 5.
+  - List at most 5 issues, most important first.
+  - If verdict will be "approve", set refinement_instruction to an empty string.
+  - Respond with JSON only — no other text.
