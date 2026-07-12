@@ -18,6 +18,7 @@ from langchain_core.runnables import RunnableLambda
 
 from qa_config import FRAMEWORK_CONFIG, LLM_CONFIG
 from qa_refinement import refine_tests
+from qa_review import review_test
 from qa_runtime import analyze_test_failure
 from qa_workflow import TestState, create_workflow
 
@@ -244,6 +245,44 @@ def _run_generation(
         capture_handler.close()
 
 
+def _run_review(
+    current_code: str,
+    framework: str,
+    openai_key: str = "",
+    anthropic_key: str = "",
+    google_key: str = "",
+) -> tuple[str, str]:
+    """
+    Review generated test code using AI.
+    
+    Returns:
+        (review_json_str, refinement_instruction)
+    """
+    if not current_code.strip():
+        error_json = json.dumps(
+            {"error": "Generate tests first — there is no code to review."},
+            indent=2,
+        )
+        return error_json, ""
+    
+    _apply_api_keys(openai_key, anthropic_key, google_key)
+    
+    # Default to openai if no explicit provider is set
+    llm_provider = "openai"
+    
+    try:
+        result = review_test(current_code, framework, llm_provider)
+        review_json = json.dumps(result, indent=2)
+        refinement = result.get("refinement_instruction", "")
+        return review_json, refinement
+    except Exception as exc:
+        error_json = json.dumps(
+            {"error": f"Review failed: {exc}"},
+            indent=2,
+        )
+        return error_json, ""
+
+
 def _run_analysis(
     log_text: str, 
     openai_key: str, 
@@ -387,6 +426,8 @@ Enterprise-grade platform to generate Cypress, Playwright, WebdriverIO, and Appi
                     generate_logs = gr.Textbox(label="Console Logs (live)", lines=10)
                     generated_test_code = gr.Code(label="Generated Test Code (copy)", language="javascript")
                     generated_code_file = gr.File(label="Generated Test Code File (save/download)")
+                    review_button = gr.Button("Review (AI judge)")
+                    review_output = gr.Code(label="Review Scores", language="json")
 
                     # Refinement UI
                     gr.Markdown("### Refine Tests (Conversational)")
@@ -420,6 +461,12 @@ Enterprise-grade platform to generate Cypress, Playwright, WebdriverIO, and Appi
                     local_openai_model,
                 ],
                 outputs=[generated_test_code, refinement_status],
+            )
+
+            review_button.click(
+                _run_review,
+                inputs=[generated_test_code, framework, openai_key, anthropic_key, google_key],
+                outputs=[review_output],
             )
 
             framework.change(

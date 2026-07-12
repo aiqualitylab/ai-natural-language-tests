@@ -27,6 +27,8 @@ jobs:
           cp qa_config.py .hf-deploy/
           cp qa_runtime.py .hf-deploy/
           cp qa_workflow.py .hf-deploy/
+          cp qa_review.py .hf-deploy/
+          cp qa_refinement.py .hf-deploy/
 
           # Required prompt templates/specs
           cp -r prompt_specs/* .hf-deploy/prompt_specs/

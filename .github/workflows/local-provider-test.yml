@@ -121,11 +121,6 @@ jobs:
       matrix:
         framework: [cypress, playwright, webdriverio]
 
-    services:
-      # Note: You must have a vLLM or LM Studio server running on your local machine or a separate service
-      # This job assumes an external OpenAI-compatible endpoint is available
-      # Start vLLM: python -m vllm.entrypoints.openai.api_server --model mistralai/Mistral-7B-Instruct-v0.1 --port 8000
-
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
@@ -177,19 +172,19 @@ jobs:
 
   # ── Summary Report ──────────────────────────────────────────────────────────
   report:
-    needs: [test-ollama, test-local-openai]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v7
+        continue-on-error: true
 
       - name: Generate summary
         run: |
           echo "## Local Provider Test Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Provider:** ${{ env.LLM_PROVIDER }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Model:** ${{ env.LLM_MODEL }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Provider:** ${{ github.event.inputs.llm_provider }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Model:** ${{ github.event.inputs.llm_model }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Artifacts Available for Download:" >> $GITHUB_STEP_SUMMARY
           ls -la | grep -E "^d" | awk '{print "- " $NF}' >> $GITHUB_STEP_SUMMARY || echo "- (No artifacts)" >> $GITHUB_STEP_SUMMARY

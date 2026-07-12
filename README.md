@@ -67,7 +67,7 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 | Getting Started | [Product Preview](#product-preview)<br/>[Overview](#overview)<br/>[Quick Start (5 Minutes)](#quick-start-5-minutes)<br/>[Business Value](#business-value)<br/>[Core Capabilities](#core-capabilities) |
 | Platform Design | [Architecture](#architecture)<br/>[Workflow](#workflow)<br/>[Technology Stack](#technology-stack) |
 | Setup and Configuration | [Repository Structure](#repository-structure)<br/>[Prerequisites](#prerequisites)<br/>[Installation](#installation)<br/>[GitHub Registry (GHCR)](#github-registry-ghcr)<br/>[Configuration](#configuration) |
-| Using the Platform | [Usage](#usage)<br/>[CI/CD Integration](#cicd-integration) |
+| Using the Platform | [Usage](#usage)<br/>[Test Code Review (AI Judge)](#test-code-review-ai-judge)<br/>[CI/CD Integration](#cicd-integration) |
 | Operations | [Security and Compliance Guidance](#security-and-compliance-guidance)<br/>[Troubleshooting](#troubleshooting)<br/>[Compliance and Data Handling](#compliance-and-data-handling)<br/>[Operational Expectations](#operational-expectations)<br/>[Support Matrix](#support-matrix) |
 | Project Info | [Documentation Map](#documentation-map)<br/>[Versioning and Release Policy](#versioning-and-release-policy)<br/>[Support and Security Reporting](#support-and-security-reporting)<br/>[Changelog](#changelog) |
 
@@ -144,6 +144,7 @@ python qa_automation.py "Test login with valid credentials" --url https://the-in
 | URL Analysis | Dynamic URL analysis and fixture generation |
 | Structured Parsing | LangChain `BaseOutputParser` classes for code fences, HTML JSON, and failure output |
 | Pattern Memory | Pattern storage and semantic retrieval using FAISS + SQLite |
+| Code Review | AI-powered test quality review on four dimensions (assertions, selectors, structure, determinism) with concrete issue detection |
 | LLM Support | Multi-provider: OpenAI, Anthropic, Google |
 | Cypress Modes | Traditional mode and Cypress prompt-powered mode |
 | Playwright | TypeScript generation |
@@ -788,7 +789,57 @@ python qa_automation.py --analyze -f error.log
 > | `CATEGORY` | Error type: `SELECTOR`, `TIMING`, `ASSERTION`, `NETWORK`, `STATE`, `NAVIGATION`, `INTERACTION`, `CONFIGURATION`, `ENVIRONMENT`, or `DYNAMIC_URL` |
 > | `REASON` | Root cause explanation in plain English |
 > | `FIX` | Suggested code change or configuration fix |
+### Test Code Review (AI Judge)
 
+Review generated test code quality before execution. The AI judge scores tests on four dimensions and suggests concrete improvements.
+
+**Available in Gradio UI:**
+
+1. Generate tests using the "Generate" button
+2. Review generated code in the "Generated Test Code" panel
+3. Click "Review (AI judge)" button
+4. Read scores and issues in "Review Scores" panel
+
+**Review Dimensions**
+
+| Dimension | Description | Criteria |
+|-----------|-------------|----------|
+| **Assertions** | Tests verify meaningful outcomes | Text content, state changes, navigation verified (not just visibility) |
+| **Selectors** | Selector robustness | Prefer `data-testid`, roles, labels over brittle patterns (nth-child, deep CSS chains) |
+| **Structure** | Code organization | Clear describe/it blocks, no duplication, good naming, framework idioms |
+| **Determinism** | Test stability | No fixed sleeps, no order dependence, no reliance on pre-existing state |
+
+**Scoring & Verdict**
+
+- Each dimension scored 0–5
+- **"needs_work"** verdict if ANY dimension scores ≤ 2
+- **"approve"** verdict if all dimensions score > 2
+- Issues list: up to 5 concrete problems, most important first
+- Refinement suggestion: one-sentence fix for the biggest issue
+
+**Example Review Output**
+
+```json
+{
+  "scores": {
+    "assertions": 4,
+    "selectors": 3,
+    "structure": 5,
+    "determinism": 2
+  },
+  "verdict": "needs_work",
+  "issues": [
+    "Add explicit waits before assertions to ensure determinism",
+    "Use data-testid attributes instead of nth-child selectors",
+    "Add error case assertion for failed login"
+  ],
+  "refinement_instruction": "Replace hardcoded timeouts with proper element waits and data-testid selectors."
+}
+```
+
+**Works with all frameworks**
+
+Code review applies uniformly to Cypress, Playwright, WebdriverIO, and Appium tests. The AI understands framework syntax from the framework context and provides actionable feedback.
 ### Pattern Inventory
 
 <details>
