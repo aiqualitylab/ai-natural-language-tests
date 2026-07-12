@@ -384,123 +384,149 @@ Enterprise-grade platform to generate Cypress, Playwright, WebdriverIO, and Appi
             """
         )
 
-        with gr.Tab("Settings"):
-            gr.Markdown("Configure provider keys here. These fields are masked. Keys entered here override any environment variables.")
+        # ===== SETTINGS (COLLAPSIBLE) =====
+        with gr.Accordion("⚙️ API Configuration", open=False):
+            gr.Markdown("**Note:** Keys entered here override environment variables. All keys are masked.", elem_classes="section-note")
+            
             with gr.Row():
                 with gr.Column():
-                    gr.Markdown("**Cloud Providers**")
-                    openai_key = gr.Textbox(label="OpenAI API Key", type="password", lines=1)
-                    anthropic_key = gr.Textbox(label="Anthropic API Key", type="password", lines=1)
-                    google_key = gr.Textbox(label="Google API Key", type="password", lines=1)
+                    with gr.Group():
+                        gr.Markdown("### ☁️ Cloud Providers")
+                        openai_key = gr.Textbox(label="OpenAI", type="password", placeholder="sk-...", lines=1)
+                        anthropic_key = gr.Textbox(label="Anthropic", type="password", placeholder="sk-ant-...", lines=1)
+                        google_key = gr.Textbox(label="Google Gemini", type="password", placeholder="AIza...", lines=1)
+                
                 with gr.Column():
-                    gr.Markdown("**Local Endpoints**")
-                    ollama_base_url = gr.Textbox(label="Ollama Base URL", placeholder="http://localhost:11434/v1", lines=1)
-                    ollama_model = gr.Textbox(label="Ollama Model", placeholder="llama2", lines=1)
-                    local_openai_base_url = gr.Textbox(label="Local OpenAI Base URL (vLLM/LM Studio)", placeholder="http://localhost:8000/v1", lines=1)
-                    local_openai_model = gr.Textbox(label="Local OpenAI Model", placeholder="gpt-3.5-turbo", lines=1)
+                    with gr.Group():
+                        gr.Markdown("### 🖥️ Local Endpoints")
+                        ollama_base_url = gr.Textbox(label="Ollama URL", placeholder="http://localhost:11434/v1", lines=1)
+                        ollama_model = gr.Textbox(label="Ollama Model", placeholder="llama2", lines=1)
+                        local_openai_base_url = gr.Textbox(label="vLLM/LM Studio URL", placeholder="http://localhost:8000/v1", lines=1)
+                        local_openai_model = gr.Textbox(label="Model Name", placeholder="gpt-3.5-turbo", lines=1)
 
-        with gr.Tab("Generate Tests"):
-            with gr.Row():
-                with gr.Column(scale=1):
-                    requirements_text = gr.Textbox(label="Test requirements (one per line)", lines=4)
-                    framework = gr.Dropdown(
-                        label="Framework",
-                        choices=["cypress", "playwright", "webdriverio", "appium"],
-                        value="cypress",
-                    )
-                    llm_provider = gr.Dropdown(
-                        label="LLM Provider",
-                        choices=list(LLM_CONFIG.keys()),
-                        value="openai",
-                    )
-                    use_prompt = gr.Checkbox(
-                        label="Prompt-powered mode (Cypress self-healing / Appium mobile)",
-                        value=False,
-                    )
-                    appium_note = gr.Markdown(
-                        value="",
-                        visible=False,
-                    )
-                    url = gr.Textbox(label="URL (mandatory, one URL only)", placeholder="https://example.com/login")
-                    generate_button = gr.Button("Generate")
-                    generate_output = gr.Code(label="Output", language="json")
-
-                with gr.Column(scale=1):
-                    generate_logs = gr.Textbox(label="Console Logs (live)", lines=10)
-                    generated_test_code = gr.Code(label="Generated Test Code (copy)", language="javascript")
-                    generated_code_file = gr.File(label="Generated Test Code File (save/download)")
-                    review_button = gr.Button("Review (AI judge)")
-                    review_output = gr.Code(label="Review Scores", language="json")
-                    review_refinement = gr.Textbox(label="Suggested Refinement", interactive=False)
-
-                    # Refinement UI
-                    gr.Markdown("### Refine Tests (Conversational)")
+        # ===== TEST GENERATION (MAIN) =====
+        gr.Markdown("## Test Generation", elem_classes="section-title")
+        
+        with gr.Row():
+            # LEFT: Collapsible inputs
+            with gr.Column(scale=0, min_width=350):
+                with gr.Accordion("📋 Input Parameters", open=True):
+                    with gr.Group():
+                        requirements_text = gr.Textbox(label="Test requirements (one per line)", lines=3)
+                        url = gr.Textbox(label="URL (mandatory)", placeholder="https://example.com/login")
+                    
+                    with gr.Group():
+                        framework = gr.Dropdown(
+                            label="Framework",
+                            choices=["cypress", "playwright", "webdriverio", "appium"],
+                            value="cypress",
+                        )
+                        llm_provider = gr.Dropdown(
+                            label="LLM Provider",
+                            choices=list(LLM_CONFIG.keys()),
+                            value="openai",
+                        )
+                    
+                    with gr.Group():
+                        use_prompt = gr.Checkbox(
+                            label="Prompt-powered mode (Cypress self-healing / Appium mobile)",
+                            value=False,
+                        )
+                        appium_note = gr.Markdown(value="", visible=False)
+                    
+                    generate_button = gr.Button("▶ Generate", scale=1, variant="primary")
+            
+            # RIGHT: Outputs and controls
+            with gr.Column(scale=1):
+                with gr.Group():
+                    gr.Markdown("### Status & Logs")
+                    generate_output = gr.Code(label="Generation Output", language="json", lines=8)
+                    generate_logs = gr.Textbox(label="Console Logs (live)", lines=6)
+                
+                with gr.Group():
+                    gr.Markdown("### Generated Code")
+                    generated_test_code = gr.Code(label="Test Code (copy)", language="javascript", lines=12)
+                    generated_code_file = gr.File(label="Download (.zip)")
+                
+                with gr.Group():
+                    gr.Markdown("### Quality Review")
+                    review_button = gr.Button("🔍 Review (AI Judge)", variant="secondary")
+                    review_output = gr.Code(label="Review Scores", language="json", lines=8)
+                    review_refinement = gr.Textbox(label="Refinement Suggestion", interactive=False, lines=2)
+                
+                with gr.Group():
+                    gr.Markdown("### Iterative Refinement")
                     refinement_instruction = gr.Textbox(
-                        label="Refine (describe the change)",
-                        placeholder="e.g. also assert the success message",
+                        label="Describe the change",
+                        placeholder="e.g. add error assertion",
                         lines=2,
                     )
-                    refinement_button = gr.Button("Refine")
-                    refinement_status = gr.Code(label="Refinement Status", language="json")
+                    refinement_button = gr.Button("✏️ Refine", variant="secondary")
+                    refinement_status = gr.Code(label="Refinement Output", language="json", lines=6)
 
-            generate_button.click(
-                _run_generation,
-                inputs=[requirements_text, framework, url, openai_key, anthropic_key, google_key, use_prompt, llm_provider, ollama_base_url, ollama_model, local_openai_base_url, local_openai_model],
-                outputs=[generate_output, generate_logs, generated_test_code, generated_code_file],
-            )
+        generate_button.click(
+            _run_generation,
+            inputs=[requirements_text, framework, url, openai_key, anthropic_key, google_key, use_prompt, llm_provider, ollama_base_url, ollama_model, local_openai_base_url, local_openai_model],
+            outputs=[generate_output, generate_logs, generated_test_code, generated_code_file],
+        )
 
-            refinement_button.click(
-                _run_refinement,
-                inputs=[
-                    generated_test_code,
-                    refinement_instruction,
-                    framework,
-                    openai_key,
-                    anthropic_key,
-                    google_key,
-                    llm_provider,
-                    ollama_base_url,
-                    ollama_model,
-                    local_openai_base_url,
-                    local_openai_model,
-                ],
-                outputs=[generated_test_code, refinement_status],
-            )
+        refinement_button.click(
+            _run_refinement,
+            inputs=[
+                generated_test_code,
+                refinement_instruction,
+                framework,
+                openai_key,
+                anthropic_key,
+                google_key,
+                llm_provider,
+                ollama_base_url,
+                ollama_model,
+                local_openai_base_url,
+                local_openai_model,
+            ],
+            outputs=[generated_test_code, refinement_status],
+        )
 
-            review_button.click(
-                _run_review,
-                inputs=[
-                    generated_test_code,
-                    framework,
-                    openai_key,
-                    anthropic_key,
-                    google_key,
-                    llm_provider,
-                    ollama_base_url,
-                    ollama_model,
-                    local_openai_base_url,
-                    local_openai_model,
-                ],
-                outputs=[review_output, review_refinement],
-            )
+        review_button.click(
+            _run_review,
+            inputs=[
+                generated_test_code,
+                framework,
+                openai_key,
+                anthropic_key,
+                google_key,
+                llm_provider,
+                ollama_base_url,
+                ollama_model,
+                local_openai_base_url,
+                local_openai_model,
+            ],
+            outputs=[review_output, review_refinement],
+        )
 
-            framework.change(
-                fn=lambda fw: gr.update(
-                    value="> **Appium (Experimental):** Test generation works immediately. **Execution requires** a running Appium server (`appium --port 4723`) and an Android emulator or iOS device. See README for setup.",
-                    visible=(fw == "appium"),
-                ),
-                inputs=[framework],
-                outputs=[appium_note],
-            )
+        framework.change(
+            fn=lambda fw: gr.update(
+                value="> **Appium (Experimental):** Test generation works immediately. **Execution requires** a running Appium server (`appium --port 4723`) and an Android emulator or iOS device. See README for setup.",
+                visible=(fw == "appium"),
+            ),
+            inputs=[framework],
+            outputs=[appium_note],
+        )
 
-        with gr.Tab("Analyze Failure"):
+        # ===== FAILURE ANALYSIS (COLLAPSIBLE) =====
+        with gr.Accordion("🔎 AI-Assisted Failure Analysis", open=False):
             with gr.Row():
+                with gr.Column(scale=0, min_width=350):
+                    with gr.Group():
+                        gr.Markdown("### Error Input")
+                        log_text = gr.Textbox(label="Log Text / Error Message", lines=12, placeholder="Paste error or log here...")
+                    analyze_button = gr.Button("🔎 Analyze", scale=1, variant="primary")
+                
                 with gr.Column(scale=1):
-                    log_text = gr.Textbox(label="Log Text", lines=12)
-                    analyze_button = gr.Button("Analyze")
-
-                with gr.Column(scale=1):
-                    analyze_output = gr.Textbox(label="Output", lines=12)
+                    with gr.Group():
+                        gr.Markdown("### AI Diagnosis")
+                        analyze_output = gr.Textbox(label="Root Cause Analysis", lines=12)
 
             analyze_button.click(
                 _run_analysis,
@@ -519,7 +545,26 @@ def main() -> None:
     args = parser.parse_args()
 
     app = _build_ui()
-    app.launch(server_name=args.server_name, server_port=args.server_port, share=args.share, ssr_mode=False)
+    app.launch(
+        server_name=args.server_name,
+        server_port=args.server_port,
+        share=args.share,
+        ssr_mode=False,
+        css="""
+            .section-title {
+                font-size: 1.3em !important;
+                font-weight: 600 !important;
+                margin-bottom: 0.5em !important;
+                border-bottom: 2px solid #0066cc !important;
+                padding-bottom: 0.3em !important;
+            }
+            .section-note {
+                font-size: 0.9em !important;
+                opacity: 0.8 !important;
+                margin-bottom: 1em !important;
+            }
+        """
+    )
 
 
 if __name__ == "__main__":
