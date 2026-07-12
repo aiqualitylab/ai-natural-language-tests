@@ -121,11 +121,6 @@ jobs:
       matrix:
         framework: [cypress, playwright, webdriverio]
 
-    services:
-      # Note: You must have a vLLM or LM Studio server running on your local machine or a separate service
-      # This job assumes an external OpenAI-compatible endpoint is available
-      # Start vLLM: python -m vllm.entrypoints.openai.api_server --model mistralai/Mistral-7B-Instruct-v0.1 --port 8000
-
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
