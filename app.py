@@ -431,12 +431,13 @@ Enterprise-grade platform to generate Cypress, Playwright, WebdriverIO, and Appi
                     generated_code_file = gr.File(label="Generated Test Code File (save/download)")
                     review_button = gr.Button("Review (AI judge)")
                     review_output = gr.Code(label="Review Scores", language="json")
+                    review_refinement = gr.Textbox(label="Suggested Refinement", interactive=False)
 
                     # Refinement UI
                     gr.Markdown("### Refine Tests (Conversational)")
                     refinement_instruction = gr.Textbox(
                         label="Refine (describe the change)",
-                        placeholder="e.g. also assert the success toast message",
+                        placeholder="e.g. also assert the success message",
                         lines=2,
                     )
                     refinement_button = gr.Button("Refine")
@@ -480,7 +481,7 @@ Enterprise-grade platform to generate Cypress, Playwright, WebdriverIO, and Appi
                     local_openai_base_url,
                     local_openai_model,
                 ],
-                outputs=[review_output],
+                outputs=[review_output, review_refinement],
             )
 
             framework.change(
