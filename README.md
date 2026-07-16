@@ -512,6 +512,44 @@ python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/lo
 </details>
 
 <details>
+<summary><strong>Use Your Own Local Model (No API Key)</strong></summary>
+
+Instead of OpenAI/Anthropic/Google, you can run the project's own fine-tuned model
+locally through the built-in `ollama` provider. Your HTML and requirements never leave
+your machine — ideal for privacy-sensitive or air-gapped environments.
+
+**1. Install Ollama** — download from [ollama.com](https://ollama.com)
+
+**2. Pull and run the model** (downloads ~1.6 GB once, then runs offline):
+
+```bash
+ollama run hf.co/aiqualitylab/ai-natural-language-tests
+```
+
+**3. Point the platform at it** in your `.env`:
+
+```bash
+# Use the local fine-tuned model instead of a cloud API
+# Note: :latest tag is optional and applied by default
+OLLAMA_MODEL=hf.co/aiqualitylab/ai-natural-language-tests
+OLLAMA_BASE_URL=http://localhost:11434/v1
+```
+
+**4. Generate a test with your local model** — no API key needed:
+
+```bash
+python qa_automation.py "Test login with valid credentials" \
+  --url https://the-internet.herokuapp.com/login --framework playwright --run
+```
+
+> **Model:** [aiqualitylab/ai-natural-language-tests](https://huggingface.co/aiqualitylab/ai-natural-language-tests)
+> — Qwen2.5-Coder-1.5B fine-tuned with LoRA on 202 requirement→test pairs.
+> See the [model card](https://huggingface.co/aiqualitylab/ai-natural-language-tests)
+> for training details and limitations.
+
+</details>
+
+<details>
 <summary><strong>OpenTelemetry (Grafana Tempo)</strong></summary>
 
 ```bash
