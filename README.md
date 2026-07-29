@@ -1120,7 +1120,7 @@ Recommended pipeline stages:
 | `CHANGELOG.md` | Release history and notable changes |
 | `PROMPT_UPDATE_GUIDE.md` | Prompt and URL-tuning workflow |
 | `RULES.md` | Repository automation and behavior constraints |
-| `tests/unit_tests.py` | Unit test suite (23 tests, no external deps) |
+| `tests/unit_tests.py` | Unit test suite (no external deps) |
 | `UNIT_TESTS.md` | Detailed test documentation and extension guide |
 
 ## Versioning and Release Policy
