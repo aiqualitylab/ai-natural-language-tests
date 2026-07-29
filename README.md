@@ -68,6 +68,7 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 | Platform Design | [Architecture](#architecture)<br/>[Workflow](#workflow)<br/>[Technology Stack](#technology-stack) |
 | Setup and Configuration | [Repository Structure](#repository-structure)<br/>[Prerequisites](#prerequisites)<br/>[Installation](#installation)<br/>[GitHub Registry (GHCR)](#github-registry-ghcr)<br/>[Configuration](#configuration) |
 | Using the Platform | [Usage](#usage)<br/>[Test Code Review (AI Judge)](#test-code-review-ai-judge)<br/>[CI/CD Integration](#cicd-integration) |
+| Testing & Quality | [Unit Tests](#unit-tests)<br/>[AI Quality Evaluation (Ragas)](#ai-quality-evaluation-ragas) |
 | Operations | [Security and Compliance Guidance](#security-and-compliance-guidance)<br/>[Troubleshooting](#troubleshooting)<br/>[Compliance and Data Handling](#compliance-and-data-handling)<br/>[Operational Expectations](#operational-expectations)<br/>[Support Matrix](#support-matrix) |
 | Project Info | [Documentation Map](#documentation-map)<br/>[Versioning and Release Policy](#versioning-and-release-policy)<br/>[Support and Security Reporting](#support-and-security-reporting)<br/>[Changelog](#changelog) |
 
@@ -150,6 +151,7 @@ python qa_automation.py "Test login with valid credentials" --url https://the-in
 | Playwright | TypeScript generation |
 | WebdriverIO | JavaScript `.spec.js` generation with Mocha and Chrome runner support |
 | **Appium** *(Experimental)* | JavaScript `.spec.js` generation with WebdriverIO + async/await for Android/iOS |
+| Unit Tests | 23-test suite validating core logic (frameworks, parsers, paths, scoring) — runs in ~10s with zero external deps |
 | HITL | Optional human approval gate with `--approve` |
 | Replay | HTML snapshot replay with `--list-html-replays` and `--replay-html-analysis` |
 | Execution | Optional immediate test execution after generation |
@@ -878,6 +880,35 @@ Review generated test code quality before execution. The AI judge scores tests o
 **Works with all frameworks**
 
 Code review applies uniformly to Cypress, Playwright, WebdriverIO, and Appium tests. The AI understands framework syntax from the framework context and provides actionable feedback.
+
+## Unit Tests
+
+The repository includes a minimal, production-ready unit test suite that validates core, dependency-free logic with **zero external API calls or secrets required**.
+
+### Test Coverage
+
+| Module | Coverage |
+|--------|----------|
+| `qa_config.py` | Framework registry, file extensions, default output paths |
+| `qa_workflow.py` | CodeFenceParser, extract_code_fence, get_test_filepath |
+| `ragas_nlp_evaluator.py` | SCORE_AVERAGE lambda, load_samples |
+
+### Running Tests Locally
+
+```bash
+# Install dependencies (includes pytest)
+pip install -r requirements.txt
+
+# Run all tests
+pytest tests/unit_tests.py -v
+
+# Run a specific test class
+pytest tests/unit_tests.py::TestFrameworkConfig -v
+
+# Run with short traceback
+pytest tests/unit_tests.py -v --tb=short
+```
+
 ### Pattern Inventory
 
 <details>
@@ -1089,6 +1120,8 @@ Recommended pipeline stages:
 | `CHANGELOG.md` | Release history and notable changes |
 | `PROMPT_UPDATE_GUIDE.md` | Prompt and URL-tuning workflow |
 | `RULES.md` | Repository automation and behavior constraints |
+| `tests/unit_tests.py` | Unit test suite (23 tests, no external deps) |
+| `UNIT_TESTS.md` | Detailed test documentation and extension guide |
 
 ## Versioning and Release Policy
 

@@ -37,7 +37,18 @@ jobs:
           path: ./
           extra_args: --only-verified
 
-  # ── JOB 2: NLP baseline — no API key ─────────────────────────────────────
+  # ── JOB 2: Unit tests — core logic validation (no external deps) ─────────
+  unit-tests:
+    needs: secret-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with: { python-version: '3.12' }
+      - run: pip install -r requirements.txt
+      - run: python -m pytest tests/unit_tests.py -v
+
+  # ── JOB 3: NLP baseline — no API key ─────────────────────────────────────
   nlp-baseline:
     needs: secret-scan
     runs-on: ubuntu-latest
@@ -48,7 +59,7 @@ jobs:
       - run: pip install -r requirements.txt
       - run: python ragas_nlp_evaluator.py --dataset test_dataset.json
 
-  # ── JOB 3: Generate → Ragas → Run (3 frameworks in parallel) ─────────────
+  # ── JOB 4: Generate → Ragas → Run (3 frameworks in parallel) ─────────────
   test:
     needs: nlp-baseline
     runs-on: ubuntu-latest
@@ -117,7 +128,7 @@ jobs:
             webdriverio/tests/generated/
             test-output.log
 
-  # ── JOB 4 (OPTIONAL): Test with Ollama (Privacy-first local inference) ────
+  # ── JOB 5 (OPTIONAL): Test with Ollama (Privacy-first local inference) ────
   # Runs when: workflow_dispatch with llm_provider=ollama, or manual trigger
   # Uses Ollama service container for local LLM inference (no cloud APIs)
   test-with-ollama:
