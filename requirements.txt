@@ -20,4 +20,4 @@ datasets==5.0.0
 sacrebleu
 rapidfuzz
 rouge-score
-pytest==8.4.2
+pytest==9.1.1
