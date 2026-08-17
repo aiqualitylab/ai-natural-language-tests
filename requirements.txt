@@ -4,7 +4,7 @@ langchain-community==0.3.21
 langchain-huggingface==0.3.1
 langchain-core==0.3.86
 faiss-cpu==1.15.0
-sentence-transformers==5.6.0
+sentence-transformers==5.7.0
 python-dotenv==1.2.2
 requests==2.34.2
 langchain-anthropic==0.3.22
