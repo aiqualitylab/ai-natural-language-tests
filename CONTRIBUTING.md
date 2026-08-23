@@ -183,7 +183,7 @@ If your change affects user workflows, include a short release note proposal in 
 - Why it matters.
 - Any migration step required.
 
-For `v5.1.0` and later, release notes should explicitly call out changes in these areas when applicable:
+For `v6.0.0` and later, release notes should explicitly call out changes in these areas when applicable:
 
 - HITL behavior (`--approve` flow and approval UX)
 - Replay behavior (`--list-html-replays`, `--replay-html-analysis`)
@@ -199,7 +199,7 @@ Only the repository maintainer publishes Docker images. Contributors open a pull
 Pushing a version tag triggers `.github/workflows/publish-ghcr.yml` automatically:
 
 ```
-git push origin v5.1.0
+git push origin v6.0.0
         |
         ▼
 GitHub Actions
@@ -207,7 +207,7 @@ GitHub Actions
         ├── Logs in to GHCR using GITHUB_TOKEN (no manual secret needed)
         ├── Builds the Docker image from Dockerfile
         └── Pushes to GHCR:
-                                  ghcr.io/aiqualitylab/ai-natural-language-tests:v5.1.0  ← pinned
+                                  ghcr.io/aiqualitylab/ai-natural-language-tests:v6.0.0  ← pinned
               ghcr.io/aiqualitylab/ai-natural-language-tests:latest   ← always current
 ```
 
@@ -226,17 +226,17 @@ GitHub Actions
 ```bash
 # 1. Merge the PR and ensure main is clean
 # 2. Tag the current commit
-git tag v5.1.0
+git tag v6.0.0
 
 # 3. Push the tag — this triggers the publish workflow
-git push origin v5.1.0
+git push origin v6.0.0
 ```
 
 After ~2 minutes the image appears in the **Packages** tab of the repository.
 
 ## Architecture Contribution Notes
 
-Starting in `v5.1.0`, keep contributions aligned to module responsibilities:
+Starting in `v6.0.0`, keep contributions aligned to module responsibilities:
 
 - `qa_automation.py`: CLI and command dispatch only
 - `qa_config.py`: static configuration, prompt loading, model factory

@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.0.0] - 2026-08-23
+### Added
+- **Local LLM Support (Privacy-First):** Added support for local LLM providers enabling offline test generation without sending HTML to external APIs:
+  - **Ollama** (`--llm ollama`): Local open-source models via Ollama server (Llama 2, Mistral, etc.)
+  - **Local OpenAI-Compatible** (`--llm local-openai`): vLLM, LM Studio, and other OpenAI-compatible servers
+  - Environment variables: `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `LOCAL_OPENAI_BASE_URL`, `LOCAL_OPENAI_MODEL`
+  - Reduces latency and cost; enables enterprise deployment in air-gapped environments
+- **Conversational Test Refinement UI:** Interactive, multi-turn natural language refinement interface within web UI
+  - Panel-based UI: code editor + instruction input + refined output
+  - Safety rules: file integrity checks, no empty sections, disk-only writes, error recovery
+  - Zero heavy dependencies in refinement module
+- **AI-Powered Test Code Review:** New test quality review capability across four dimensions:
+  - **Assertions**: Sufficient coverage and semantic correctness
+  - **Selectors**: Robust, maintainable, resilient to layout changes
+  - **Structure**: Logical organization, proper setup/teardown, readable test names
+  - **Determinism**: Avoiding flaky patterns (hardcoded waits, race conditions, etc.)
+  - Integrated into `qa_refinement.py` with concrete issue detection
+- **Collapsible UI Sections:** Enhanced API configuration and failure analysis display with expandable sections
+- **Suggested Refinement Textbox:** New refinement suggestion input field in review UI for guided test improvements
+- **Unit Test Suite:** Added comprehensive 23-test suite validating core logic:
+  - Framework selection logic
+  - Parser implementations
+  - Selector path resolution
+  - Scoring mechanisms
+  - ~10s execution time with zero external API dependencies
+- **CI/CD Test Workflow:** New `test` job in GitHub Actions running Python 3.12 with pytest and dependency caching
+
+### Changed
+- **LLM Provider Selection**: `--llm` flag now supports: `openai`, `anthropic`, `google`, `ollama`, `local-openai` (default: `openai`)
+- **Model Configuration**: LLM provider initialization refactored for extensibility with `ChatOllama` and `ChatOpenAI` local endpoint support
+- **Workflow Diagrams:** Updated README architecture diagrams to highlight local LLM provider support
+- **Dependency Updates:**
+  - Cypress upgraded to v15.21.0
+  - Playwright upgraded to v1.62.1
+  - Sentence-transformers updated to v6
+  - FAISS-CPU updated to v1.15.0
+  - pytest upgraded to v9
+  - All development dependencies updated via Renovate
+
+### Fixed
+- **UI Rendering**: Collapsible sections now properly toggle state during API configuration and failure analysis display
+- **Model Initialization**: Fixed fallback logic for local providers when API keys are unavailable
+
+### Documentation
+- Added comprehensive Local LLM Provider Guide with setup instructions for Ollama, vLLM, and LM Studio
+- Updated README with local provider environment variable table
+- Documented privacy-first deployment architecture (no HTML sent to cloud APIs)
+- Updated CLI reference with all LLM provider options and model names
+- Added conversational refinement usage examples and safety rule documentation
+
+### Dependencies
+- Added `langchain-community` integration for Ollama and local OpenAI-compatible endpoints
+- All workflow versions pinned to v6.0.0 in GitHub Actions and CI/CD configurations
+
 ## [5.1.0] - 2026-06-23
 ### Added
 - **Appium Mobile Support (Experimental):** WebdriverIO-based test generation for Android and iOS with prompt-powered self-healing

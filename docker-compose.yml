@@ -3,8 +3,8 @@ services:
     build:
       context: .
       args:
-        RELEASE_TAG: v5.1.0
-    image: ai-natural-language-tests:v5.1.0
+        RELEASE_TAG: v6.0.0
+    image: ai-natural-language-tests:v6.0.0
     env_file: .env
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}

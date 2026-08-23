@@ -187,7 +187,7 @@ graph TB
         G{Cypress Framework}
         H{Playwright Framework}
         W{WebdriverIO Framework}
-        I[Cypress Tests<br/>.cy.js files<br/>Traditional & cy.prompt&#40;&#41;]
+        I[Cypress Tests<br/>.cy.js files<br/>Traditional &amp; cy.prompt&#40;&#41;]
         J[Playwright Tests<br/>.spec.ts files<br/>TypeScript]
         X[WebdriverIO Tests<br/>.spec.js files<br/>Mocha + expect]
     end
@@ -466,7 +466,7 @@ docker run --rm \
 | Tag | Use case |
 |-----|----------|
 | `latest` | Always the most recently published version — use for quick runs |
-| `v5.1.0` | Pinned to a specific release — use in CI/CD for reproducibility |
+| `v6.0.0` | Pinned to a specific release — use in CI/CD for reproducibility |
 
 For publishing and release management, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -1128,7 +1128,7 @@ Recommended pipeline stages:
 | Policy Area | Guidance |
 |-------------|----------|
 | Release model | Changelog-driven, documented in `CHANGELOG.md` |
-| Production pinning | Prefer version tags such as `v5.1.0` instead of `latest` |
+| Production pinning | Prefer version tags such as `v6.0.0` instead of `latest` |
 | `latest` usage | Use for local exploration, not for controlled CI/CD |
 | Upgrade notes | Breaking changes and upgrade guidance are captured per release |
 

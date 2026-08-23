@@ -1,6 +1,6 @@
 spec_version: "0.1.0"
 name: ai-natural-language-tests
-version: "5.1.0"
+version: "6.0.0"
 description: Generate and analyze Cypress, Playwright, WebdriverIO, and Appium tests from natural language
 author: AI Quality Lab
 license: AGPL-3.0-or-later
