@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-ARG RELEASE_TAG=v5.1.0
+ARG RELEASE_TAG=v6.0.0
 LABEL org.opencontainers.image.version=$RELEASE_TAG
 
 # ── Install Node.js 22 + browser dependencies for Cypress, Playwright, and WebdriverIO ──
