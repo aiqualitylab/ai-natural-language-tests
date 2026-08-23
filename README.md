@@ -187,7 +187,7 @@ graph TB
         G{Cypress Framework}
         H{Playwright Framework}
         W{WebdriverIO Framework}
-        I[Cypress Tests<br/>.cy.js files<br/>Traditional &amp; cy.prompt&#40;&#41;]
+        I[Cypress Tests<br/>.cy.js files<br/>Traditional & <br/>cy prompt]
         J[Playwright Tests<br/>.spec.ts files<br/>TypeScript]
         X[WebdriverIO Tests<br/>.spec.js files<br/>Mocha + expect]
     end
