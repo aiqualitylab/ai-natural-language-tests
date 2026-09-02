@@ -30,7 +30,7 @@
     "@wdio/mocha-framework": "^8.46.0",
     "@wdio/spec-reporter": "^8.43.0",
     "chromedriver": "^147.0.4",
-    "cypress": "^15.8.1",
+    "cypress": "^16.0.0",
     "expect-webdriverio": "^4.15.4",
     "wdio-chromedriver-service": "^8.1.1",
     "webdriverio": "^8.46.0"
