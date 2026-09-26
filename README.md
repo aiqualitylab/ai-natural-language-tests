@@ -65,7 +65,7 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 | Section | Links |
 |---------|-------|
 | Getting Started | [Product Preview](#product-preview)<br/>[Overview](#overview)<br/>[Quick Start (5 Minutes)](#quick-start-5-minutes)<br/>[Business Value](#business-value)<br/>[Core Capabilities](#core-capabilities) |
-| Platform Design | [Architecture](#architecture)<br/>[Workflow](#workflow)<br/>[Technology Stack](#technology-stack) |
+| Platform Design | [Architecture](#architecture)<br/>[Workflow](#workflow)<br/>[Technology Stack](#technology-stack)<br/>[Project Roadmap](#project-roadmap) |
 | Setup and Configuration | [Repository Structure](#repository-structure)<br/>[Prerequisites](#prerequisites)<br/>[Installation](#installation)<br/>[GitHub Registry (GHCR)](#github-registry-ghcr)<br/>[Configuration](#configuration) |
 | Using the Platform | [Usage](#usage)<br/>[Test Code Review (AI Judge)](#test-code-review-ai-judge)<br/>[CI/CD Integration](#cicd-integration) |
 | Testing & Quality | [Unit Tests](#unit-tests)<br/>[AI Quality Evaluation (Ragas)](#ai-quality-evaluation-ragas) |
@@ -296,6 +296,23 @@ Generation follows a deterministic five-step flow:
 | Test Runners | Cypress, Playwright, and WebdriverIO runners |
 | Observability | OpenTelemetry SDK and OTLP exporter |
 | Logging | Loki logging handler (optional) |
+
+## Project Roadmap
+
+Strategic roadmap with 8 pillars from the [GitHub Wiki](https://github.com/aiqualitylab/ai-natural-language-tests/wiki).
+
+| Pillar | Items |
+|--------|-------|
+| **Watching & Quality** | Keep records  ·  Track spending  ·  Link mistakes<br/>Send alerts  ·  Health dashboard  ·  Quality metrics<br/>Confidence levels  ·  Before/After comparison |
+| **Self-Fixing & Reliability** | Try again on fail  ·  Fix failures  ·  Screenshot compare<br/>Auto-heal tests  ·  Regular check-ups  ·  Clean answers<br/>Service backups  ·  Review before saving |
+| **Speed & Efficiency** | Parallel generation  ·  Route requests  ·  Break big tasks<br/>Reuse blocks  ·  Handle batches  ·  Cheap help<br/>Show progress  ·  Stream output |
+| **Memory & Learning** | Approval step  ·  Session history  ·  Rewind retry<br/>Long-term memory  ·  Smart search  ·  Learn from corrections<br/>Activity log  ·  Per-site learning |
+| **Ease of Use** | Suggest wording  ·  Ask if unsure  ·  Show examples<br/>Autocomplete  ·  Clean pages  ·  First-time guide<br/>Simple mode  ·  Warn impossible |
+| **Teamwork & Workflows** | Comments on tests  ·  Group approval  ·  Shared library<br/>Chat integrate  ·  Bug reports  ·  Pre-release tests<br/>Export formats |
+| **Safety & Trust** | Show cost upfront  ·  Spending limits  ·  Private data<br/>Confirm jobs  ·  Activity log  ·  Block unsafe<br/>Review before save |
+| **Thoroughness** | Tricky cases  ·  Screen sizes  ·  Languages<br/>Performance  ·  Accessibility  ·  File uploads<br/>Search results |
+
+---
 
 ## Repository Structure
 
