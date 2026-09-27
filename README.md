@@ -48,7 +48,7 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 
 [![Website](https://img.shields.io/badge/Website-tests.aiqualitylab.org-4a7cff?style=flat-square&logo=google-chrome&logoColor=white)](https://tests.aiqualitylab.org)
 
-[![Hugging Face Spaces](https://img.shields.io/badge/Hugging%20Face-Spaces-FFD700?logo=huggingface&logoColor=black)](https://huggingface.co/spaces/aiqualitylab/ai-natural-language-tests)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-demo.aiqualitylab.org-4a7cff?style=flat-square&logo=google-chrome&logoColor=white)](https://demo.aiqualitylab.org/)
 
 </div>
 
@@ -56,7 +56,7 @@ This project combines LLM-driven generation, LangGraph workflow orchestration, a
 
 ## Try It Live
 
-**[ai-natural-language-tests on Hugging Face Spaces](https://huggingface.co/spaces/aiqualitylab/ai-natural-language-tests)** — Try the platform directly in your browser without installation.
+**[demo.aiqualitylab.org](https://demo.aiqualitylab.org/)** — Try the platform directly in your browser without installation.
 
 ---
 
