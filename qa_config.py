@@ -1,5 +1,6 @@
 import logging
 import os
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -159,11 +160,20 @@ def load_prompt_system(filename: str) -> str:
     return str(spec.get("system", ""))
 
 
+# API keys typed into the UI, for the current request
+USER_API_KEYS: ContextVar[Dict[str, str]] = ContextVar("USER_API_KEYS", default={})
+
+
+def _user_key(provider: str, param: str = "api_key") -> Dict[str, str]:
+    key = USER_API_KEYS.get().get(provider, "").strip()
+    return {param: key} if key else {}
+
+
 def _get_provider_constructor(provider: str) -> Any:
     constructor_map = {
-        "openai": lambda cfg: ChatOpenAI(model=cfg["model"], temperature=0),
-        "anthropic": lambda cfg: ChatAnthropic(model=cfg["model"], temperature=0) if ChatAnthropic else None,
-        "google": lambda cfg: ChatGoogleGenerativeAI(model=cfg["model"], temperature=0) if ChatGoogleGenerativeAI else None,
+        "openai": lambda cfg: ChatOpenAI(model=cfg["model"], temperature=0, **_user_key("openai")),
+        "anthropic": lambda cfg: ChatAnthropic(model=cfg["model"], temperature=0, **_user_key("anthropic")) if ChatAnthropic else None,
+        "google": lambda cfg: ChatGoogleGenerativeAI(model=cfg["model"], temperature=0, **_user_key("google", "google_api_key")) if ChatGoogleGenerativeAI else None,
         "ollama": lambda cfg: ChatOpenAI(
             model=cfg["model"], 
             base_url=cfg.get("base_url"), 
