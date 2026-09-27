@@ -2,6 +2,7 @@
 """Gradio UI for AI-Powered Cypress, Playwright, WebdriverIO, and Appium test generator."""
 
 import argparse
+import contextvars
 import json
 import logging
 import os
@@ -16,7 +17,7 @@ from typing import Generator, List, Tuple
 import gradio as gr
 from langchain_core.runnables import RunnableLambda
 
-from qa_config import FRAMEWORK_CONFIG, LLM_CONFIG
+from qa_config import FRAMEWORK_CONFIG, LLM_CONFIG, USER_API_KEYS
 from qa_refinement import refine_tests
 from qa_review import review_test
 from qa_runtime import analyze_test_failure
@@ -90,13 +91,8 @@ def _apply_api_keys(
     local_openai_base_url: str = "",
     local_openai_model: str = "",
 ) -> None:
-    """Set API keys and local endpoint configs as environment variables if provided by the user."""
-    if openai_key.strip():
-        os.environ["OPENAI_API_KEY"] = openai_key.strip()
-    if anthropic_key.strip():
-        os.environ["ANTHROPIC_API_KEY"] = anthropic_key.strip()
-    if google_key.strip():
-        os.environ["GOOGLE_API_KEY"] = google_key.strip()
+    """Use the user's API keys for this request"""
+    USER_API_KEYS.set({"openai": openai_key, "anthropic": anthropic_key, "google": google_key})
     if ollama_base_url.strip():
         os.environ["OLLAMA_BASE_URL"] = ollama_base_url.strip()
     if ollama_model.strip():
@@ -210,7 +206,7 @@ def _run_generation(
         except Exception as exc:
             error_holder["details"] = str(exc)
 
-    worker_thread = threading.Thread(target=_worker, daemon=True)
+    worker_thread = threading.Thread(target=contextvars.copy_context().run, args=(_worker,), daemon=True)
     worker_thread.start()
 
     yield json.dumps(start_payload, indent=2), "", "", None
