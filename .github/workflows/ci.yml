@@ -44,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
-        with: { python-version: '3.12' }
+        with: { python-version: '3.14' }
       - run: pip install -r requirements.txt
       - run: python -m pytest tests/unit_tests.py -v
 
@@ -55,7 +55,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
-        with: { python-version: '3.12' }
+        with: { python-version: '3.14' }
       - run: pip install -r requirements.txt
       - run: python ragas_nlp_evaluator.py --dataset test_dataset.json
 
@@ -71,7 +71,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
-        with: { python-version: '3.12' }
+        with: { python-version: '3.14' }
       - uses: actions/setup-node@v7
         with: { node-version: '24' }
 
@@ -154,7 +154,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
-        with: { python-version: '3.12' }
+        with: { python-version: '3.14' }
       - uses: actions/setup-node@v7
         with: { node-version: '24' }
 
