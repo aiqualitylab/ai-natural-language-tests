@@ -9,8 +9,10 @@ Generate Cypress, Playwright, WebdriverIO, and Appium E2E tests from natural lan
 | Flag | Purpose |
 |------|---------|
 | `requirements` | Test descriptions (positional) |
-| `--framework`, `-f` | Target framework: `cypress`, `playwright`, `webdriverio`, or `appium` (default: cypress) |
+| `--framework`, `-fw` | Target framework: `cypress`, `playwright`, `webdriverio`, or `appium` (default: cypress) |
 | `--url`, `-u` | Fetch URL, analyze HTML, generate fixture |
+| `--out` | Output directory for generated tests (default: `cypress/e2e`) |
+| `--approve` | Review each generated test before it is saved (human approval gate) |
 | `--llm` | LLM provider: `openai`, `anthropic`, `google`, `ollama`, or `local-openai` (default: openai) |
 | `--use-prompt` | Generate prompt-powered self-healing tests (Cypress and Appium) |
 | `--run` | Execute tests after generation |
@@ -19,6 +21,7 @@ Generate Cypress, Playwright, WebdriverIO, and Appium E2E tests from natural lan
 | `--list-patterns` | List all stored historical test patterns |
 | `--list-html-replays` | List saved HTML analysis replay IDs |
 | `--replay-html-analysis` | Print saved HTML analysis snapshot by run ID |
+| `--jira` | Jira work item key; its summary and description become the requirement (via `twg`) |
 
 ## LLM Providers
 
@@ -38,7 +41,7 @@ Generate Cypress, Playwright, WebdriverIO, and Appium E2E tests from natural lan
 ## Framework Modes
 
 **Cypress Traditional** (`cypress/e2e/generated/`)
-- Uses fixture data from `--url` or `--data`
+- Uses fixture data generated from `--url`
 - MUST use `function()` syntax for `this.testData`
 - Fast, deterministic, best for CI/CD
 
@@ -61,7 +64,6 @@ Generate Cypress, Playwright, WebdriverIO, and Appium E2E tests from natural lan
 - Mobile test generation for Android (default) and iOS
 - Self-healing with prompt-powered natural language selectors
 - Mobile capabilities for Android by default, iOS via `APP_PLATFORM=ios`
-- Self-healing with prompt-powered natural language selectors
 - Runs through `wdio.appium.conf.js`
 
 ## Test Data Options
@@ -70,10 +72,6 @@ Generate Cypress, Playwright, WebdriverIO, and Appium E2E tests from natural lan
 - Fetches page, extracts selectors, generates test cases
 - Saves to `cypress/fixtures/url_test_data.json`
 - Works for ANY URL (login, contact, signup, search forms)
-
-**JSON Data** (`--data`)
-- Loads existing test data file
-- Same structure as URL-generated data
 
 ## Dynamic Test Pattern (v5.0)
 

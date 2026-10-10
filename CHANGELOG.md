@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.0] - 2026-10-10
+### Added
+- **Jira Requirement Source (`--jira`):** New `jira_source.py` module and `--jira` CLI flag build the test requirement from a Jira work item's summary and description via the Atlassian Teamwork Graph CLI (`twg`). `twg` is only invoked when `--jira` is used.
+- **Roadmap:** Added a project roadmap to the README.
+
+### Changed
+- **Per-Request API Keys (Web UI):** API keys entered in the UI are now scoped to the current request (`USER_API_KEYS` context variable) instead of being written to process-wide environment variables.
+- **Playwright Config:** Added test, expect, navigation, and action timeouts for slow pages.
+- **Prompts:** HTML analysis now targets the innermost message element instead of empty wrapper containers; WebdriverIO generation waits for a post-submit URL change or message display before asserting.
+- **Generated Test Filenames:** Slug generation collapses whitespace and trims leading/trailing hyphens.
+- **Dependency Updates:**
+  - Cypress upgraded to v16 (`^16.0.0`, lockfile 16.1.1)
+  - Playwright Test upgraded to v1.64.0
+  - Chromedriver `^154.0.1`
+  - dotenv `^18.0.0` (lockfile 18.0.4)
+  - Gradio 6.27.0, sentence-transformers 6.1.0, faiss-cpu 1.15.1, python-dotenv 1.2.3, datasets 5.0.1
+- **Release Metadata:** Bumped version references from `6.0.0`/`v6.0.0` to `7.0.0`/`v7.0.0` across `package.json`, `package-lock.json`, `agent.yaml`, `Dockerfile`, `docker-compose.yml`, `README.md`, `CONTRIBUTING.md`, and the GHCR workflow example.
+
+### Removed
+- Stale generated test scripts from previous releases.
+
+### Documentation
+- Documented the `--jira`, `--out`, and `--approve` flags in `.github/copilot-instructions.md`, corrected the `--framework` alias to `-fw`, and removed the unimplemented `--data` flag.
+- Updated README baseline versions for Cypress (16.0.0+) and Chromedriver (154.0.1+).
+- Corrected the README repository tree and documentation map (removed non-existent entries, added missing files).
+- Bumped the `html_analysis` prompt spec to version 4.
+
 ## [6.0.0] - 2026-08-23
 ### Added
 - **Local LLM Support (Privacy-First):** Added support for local LLM providers enabling offline test generation without sending HTML to external APIs:
