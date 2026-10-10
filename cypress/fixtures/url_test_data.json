@@ -24,12 +24,12 @@
     "error_container": {
       "cypress": "cy.findByRole('alert')",
       "playwright": "page.getByRole('alert')",
-      "fallback_css": "#flash-messages"
+      "fallback_css": "#flash"
     },
     "success_container": {
       "cypress": "cy.findByText(/success/i)",
       "playwright": "page.getByText(/success/i)",
-      "fallback_css": "#flash-messages"
+      "fallback_css": "#flash"
     }
   },
   "element_types": {
@@ -38,21 +38,17 @@
   },
   "test_cases": [
     {
-      "name": "valid_test",
+      "name": "valid_login",
       "description": "Test with valid username and password",
-      "field_name": {
-        "username": "tomsmith",
-        "password": "SuperSecretPassword!"
-      },
+      "username": "tomsmith",
+      "password": "SuperSecretPassword!",
       "expected": "success"
     },
     {
-      "name": "invalid_test",
+      "name": "invalid_login",
       "description": "Test with invalid username and password",
-      "field_name": {
-        "username": "invalidUser",
-        "password": "wrongPassword"
-      },
+      "username": "invalidUser",
+      "password": "wrongPassword",
       "expected": "error"
     }
   ]

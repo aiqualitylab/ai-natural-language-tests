@@ -1,4 +1,5 @@
-// Requirement: Test login
+// Requirement:
+// Test login
 
 describe('Login Tests', function () {
 
@@ -35,8 +36,9 @@ describe('Login Tests', function () {
     });
 
     it('should succeed with valid data', function () {
-        const valid = this.testData.test_cases.find(tc => tc.name === 'valid_test');
+        const valid = this.testData.test_cases.find(tc => tc.name === 'valid_login');
         const selectors = this.testData.selectors;
+
         cy.visit(this.testData.url);
 
         fillFormFields(valid, selectors);
@@ -49,8 +51,9 @@ describe('Login Tests', function () {
     });
 
     it('should fail with invalid data', function () {
-        const invalid = this.testData.test_cases.find(tc => tc.name === 'invalid_test');
+        const invalid = this.testData.test_cases.find(tc => tc.name === 'invalid_login');
         const selectors = this.testData.selectors;
+
         cy.visit(this.testData.url);
 
         fillFormFields(invalid, selectors);
