@@ -71,7 +71,8 @@ def get_test_filepath(framework: str, output_dir: str, use_prompt_mode: bool, in
     output_base = output_dir if output_dir != "cypress/e2e" else fw["default_output"]
     folder = f"{output_base}/{folder_name}"
     os.makedirs(folder, exist_ok=True)
-    slug = re.sub(r"[^\w\s-]", "", requirement.lower()).replace(" ", "-")[:50]
+    slug = re.sub(r"[^\w\s-]", "", requirement.lower())
+    slug = re.sub(r"\s+", "-", slug).strip("-")[:50]
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"{index:02d}_{slug}_{timestamp}{fw['file_ext']}"
     filepath = f"{folder}/{filename}"
@@ -207,7 +208,8 @@ def step_4_generate_tests(state: TestState) -> TestState:
                     continue
 
                 with open(filepath, "w") as file:
-                    file.write(f"// Requirement: {requirement}\n\n{content}")
+                    requirement_comment = "\n".join(f"// {line}" for line in requirement.splitlines())
+                    file.write(f"// Requirement:\n{requirement_comment}\n\n{content}")
 
                 logger.info(f"Saved: {filename}")
                 test_span.set_attribute("filepath", filepath)

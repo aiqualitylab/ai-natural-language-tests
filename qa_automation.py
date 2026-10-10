@@ -153,6 +153,7 @@ Examples:
   python qa_automation.py --analyze -f error.log
   python qa_automation.py --list-patterns
   python qa_automation.py --list-html-replays
+  python qa_automation.py --jira KAN-5 --url https://the-internet.herokuapp.com/login --run
 """,
     )
     parser.add_argument("requirements", nargs="*", help="Test requirements in natural language")
@@ -173,8 +174,20 @@ Examples:
     parser.add_argument("--list-patterns", action="store_true")
     parser.add_argument("--list-html-replays", action="store_true", help="List saved HTML replay run ids")
     parser.add_argument("--replay-html-analysis", help="Replay HTML analysis for a run id")
+    parser.add_argument(
+        "--jira",
+        help="Jira work item key (e.g. KAN-5); uses its summary and description as the requirement via twg",
+    )
 
     args = parser.parse_args()
+
+    if args.jira:
+        from jira_source import get_requirement_from_jira
+
+        requirement = get_requirement_from_jira(args.jira)
+        logger.info(requirement)
+        args.requirements = [requirement]
+
     dispatch_cli_mode(args)
 
 

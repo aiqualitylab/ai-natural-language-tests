@@ -666,6 +666,20 @@ python qa_automation.py "Test login with valid credentials" \
 > - Use `--url` to give the AI real page context — it reads the HTML and picks the right selectors automatically
 > - Chain multiple requirements in one run: `"Test login" "Test logout" --url <url>`
 
+### Generate tests from Jira (optional)
+
+Generate a test requirement directly from a Jira work item instead of typing it by hand. This requires the [Atlassian Teamwork Graph CLI (twg)](https://teamworkgraph.com/cli) and a connected Jira Cloud site.
+
+- Install twg: https://teamworkgraph.com/cli
+- Check setup: `twg doctor`
+- Example:
+
+```bash
+python qa_automation.py --jira KAN-5 --url https://the-internet.herokuapp.com/login --run
+```
+
+When `--jira` is used, the work item's summary and description are read via `twg` and used as the requirement; everything else (generation, running tests) works exactly as before. Without `--jira`, `twg` is never invoked.
+
 ### Generate Cypress Test
 
 <details>
