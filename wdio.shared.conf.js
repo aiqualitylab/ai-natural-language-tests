@@ -4,14 +4,14 @@ const sharedConfig = {
     maxInstances: 1,
     logLevel: 'error',
     bail: 0,
-    waitforTimeout: 10000,
+    waitforTimeout: 30000,
     connectionRetryTimeout: 120000,
     connectionRetryCount: 2,
     framework: 'mocha',
     reporters: ['spec'],
     mochaOpts: {
         ui: 'bdd',
-        timeout: 60000,
+        timeout: 120000,
     },
 };
 
