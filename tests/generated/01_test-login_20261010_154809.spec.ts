@@ -1,4 +1,5 @@
-// Requirement: Test login
+// Requirement:
+// Test login
 
 import { test, expect, Page } from '@playwright/test';
 
@@ -25,24 +26,24 @@ const testData = {
     error_container: {
       cypress: "cy.findByRole('alert')",
       playwright: "page.getByRole('alert')",
-      fallback_css: "#flash-messages"
+      fallback_css: "#flash"
     },
     success_container: {
       cypress: "cy.findByText(/success/i)",
       playwright: "page.getByText(/success/i)",
-      fallback_css: "#flash-messages"
+      fallback_css: "#flash"
     }
   },
   test_cases: [
     {
-      name: "valid_test",
+      name: "valid_login",
       description: "Test with valid username and password",
       username: "tomsmith",
       password: "SuperSecretPassword!",
       expected: "success"
     },
     {
-      name: "invalid_test",
+      name: "invalid_login",
       description: "Test with invalid username and password",
       username: "invalidUser",
       password: "wrongPassword",

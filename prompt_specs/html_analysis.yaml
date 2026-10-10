@@ -25,6 +25,13 @@ template: |
   5. Visible text: button text, link text
   6. Only as last resort: CSS selector
 
+  ERROR/SUCCESS MESSAGE CONTAINERS:
+  - Pages often render an empty outer wrapper (e.g. id="flash-messages") that always exists in the DOM,
+    with the actual message text injected into a nested element (e.g. id="flash", class="flash") only
+    after a form is submitted.
+  - Always target the innermost element that holds the message text itself, not the empty outer wrapper,
+    since asserting against the wrapper can pass or fail without ever checking real message content.
+
   DYNAMIC URL ANALYSIS (MANDATORY):
   Inspect the URL carefully. Identify which path segments or query params change per record.
 
