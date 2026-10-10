@@ -100,8 +100,17 @@ template: |
   - Use the test case shape field_name when present, otherwise use the flat test case values.
   - Wait for input elements to be displayed before setValue when selectors exist.
   - Submit using the context submit selector when present.
+  - After submit, wait up to 60000ms for either the URL to differ from urlBefore or the error/success
+    message selector to become displayed, before reading currentUrl or message text. Slow pages can
+    take many seconds to redirect after submit, so never read browser.getUrl or getMessageText
+    immediately after the submit click without this wait.
+  - Implement this wait as a Promise.any of two independent, caught promises — one browser.waitUntil
+    polling browser.getUrl() for a change, and one $(selector).waitForDisplayed() on the message
+    selector — each with .catch(() => {{}}) so neither rejection aborts the other. Do NOT implement this
+    wait as a single browser.waitUntil condition function that calls isDisplayed() internally; that
+    pattern is unreliable for elements that only exist after a full page navigation.
   - After submit, assert either message visibility with non-empty text or meaningful URL behavior.
-  - Capture urlBefore immediately before submit and currentUrl immediately after submit.
+  - Capture urlBefore immediately before submit and currentUrl only after the post-submit wait completes.
   - In getMessageText, if configured selector is empty or hidden, try #flash fallback before returning empty text.
 
   DO NOT OUTPUT SYNC WDIO CODE:
