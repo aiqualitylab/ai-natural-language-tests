@@ -329,11 +329,8 @@ ai-natural-language-tests/
 |   |   `-- prompt-powered/
 |   `-- fixtures/
 |-- tests/
-|   `-- generated/
-|-- webdriverio/
-|   `-- tests/
-|       `-- generated/
-|-- web/
+|   |-- generated/
+|   `-- unit_tests.py
 |-- webdriverio/
 |   `-- tests/
 |       |-- generated/
@@ -341,22 +338,26 @@ ai-natural-language-tests/
 |       `-- prompt-powered/
 |-- prompt_specs/
 |-- skills/
-|-- services/
 |-- knowledge/
 |-- generated_exports/
 |-- rag_failure_analysis/
 |-- vector_db/
+|-- app.py
 |-- qa_automation.py
 |-- qa_config.py
 |-- qa_runtime.py
 |-- qa_workflow.py
 |-- qa_refinement.py
-|-- test_qa_refinement.py
+|-- qa_review.py
+|-- jira_source.py
 |-- ragas_evaluator.py
 |-- ragas_nlp_evaluator.py
+|-- test_dataset.json
 |-- cypress.config.js
 |-- playwright.config.ts
 |-- wdio.conf.js
+|-- wdio.appium.conf.js
+|-- wdio.shared.conf.js
 |-- package.json
 |-- package-lock.json
 |-- requirements.txt
@@ -366,6 +367,8 @@ ai-natural-language-tests/
 |-- SOUL.md
 |-- RULES.md
 |-- PROMPT_UPDATE_GUIDE.md
+|-- INCIDENT_RESPONSE.md
+|-- MODEL_CARD.md
 |-- CONTRIBUTING.md
 |-- CHANGELOG.md
 `-- README.md
@@ -483,7 +486,7 @@ docker run --rm \
 | Tag | Use case |
 |-----|----------|
 | `latest` | Always the most recently published version — use for quick runs |
-| `v6.0.0` | Pinned to a specific release — use in CI/CD for reproducibility |
+| `v7.0.0` | Pinned to a specific release — use in CI/CD for reproducibility |
 
 For publishing and release management, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -1152,14 +1155,13 @@ Recommended pipeline stages:
 | `PROMPT_UPDATE_GUIDE.md` | Prompt and URL-tuning workflow |
 | `RULES.md` | Repository automation and behavior constraints |
 | `tests/unit_tests.py` | Unit test suite (no external deps) |
-| `UNIT_TESTS.md` | Detailed test documentation and extension guide |
 
 ## Versioning and Release Policy
 
 | Policy Area | Guidance |
 |-------------|----------|
 | Release model | Changelog-driven, documented in `CHANGELOG.md` |
-| Production pinning | Prefer version tags such as `v6.0.0` instead of `latest` |
+| Production pinning | Prefer version tags such as `v7.0.0` instead of `latest` |
 | `latest` usage | Use for local exploration, not for controlled CI/CD |
 | Upgrade notes | Breaking changes and upgrade guidance are captured per release |
 
@@ -1212,10 +1214,10 @@ The matrix below reflects currently configured and documented project baselines.
 <tbody>
 <tr><td>Python</td><td>3.10+</td></tr>
 <tr><td>Node.js</td><td>22+</td></tr>
-<tr><td>Cypress</td><td>15.8.1+</td></tr>
+<tr><td>Cypress</td><td>16.0.0+</td></tr>
 <tr><td>Playwright</td><td>1.58.1+</td></tr>
 <tr><td>WebdriverIO</td><td>8.46.0+</td></tr>
-<tr><td>Chromedriver</td><td>145.0.6+</td></tr>
+<tr><td>Chromedriver</td><td>154.0.1+</td></tr>
 </tbody>
 </table>
 
