@@ -6,19 +6,83 @@ This project follows enterprise-style contribution standards to maintain reliabi
 
 ## Table of Contents
 
-1. Contribution Principles
-2. Development Setup
-3. Forking and Clone Strategy
-4. Branching Strategy
-5. Commit Standards
-6. Pull Request Requirements
-7. Testing Requirements
-8. Documentation Requirements
-9. Security Requirements
-10. Observability Requirements
-11. Code Review Checklist
-12. Release Contribution Notes
-13. Publishing a Docker Image (GHCR)
+0. [Volunteer Testing (no coding needed)](#volunteer-testing)
+1. [Contribution Principles](#contribution-principles)
+2. [Development Setup](#development-setup)
+3. [Forking and Clone Strategy](#forking-and-clone-strategy)
+4. [Branching Strategy](#branching-strategy)
+5. [Commit Standards](#commit-standards)
+6. [Pull Request Requirements](#pull-request-requirements)
+7. [Testing Requirements](#testing-requirements)
+8. [Documentation Requirements](#documentation-requirements)
+9. [Security Requirements](#security-requirements)
+10. [Observability Requirements](#observability-requirements)
+11. [Code Review Checklist](#code-review-checklist)
+12. [Release Contribution Notes](#release-contribution-notes)
+13. [Publishing a Docker Image (GHCR)](#publishing-a-docker-image-ghcr)
+14. [Architecture Contribution Notes](#architecture-contribution-notes)
+
+## Volunteer Testing
+
+**No coding needed.** New here? Welcome. This is simply an invitation to explore the repo and try the tool. There is no commitment and no deadline; do as much or as little as you like.
+
+The rest of this guide (from *Contribution Principles* onward) is for code contributors. If you only want to try the tool and share feedback, this section is all you need.
+
+### 1. Open the tool
+
+- **No install:** [Hugging Face Space](https://huggingface.co/spaces/aiqualitylab/ai-natural-language-tests)
+- **On your computer:** follow the [Quick Start](README.md#quick-start-5-minutes) in the README.
+
+You'll need your own **OpenAI API key**. By default the tool uses **GPT-4o-mini**, which keeps costs low.
+Prefer not to use a key? A free offline model via Ollama is also available (see the README, *Use Your Own Local Model*).
+
+### 2. Pick a website you are allowed to test
+
+- your own app or website
+- a local or staging (test) version of an app you work on, with permission
+- a public practice site, for example:
+  - https://the-internet.herokuapp.com/login
+  - https://www.saucedemo.com
+  - https://demoqa.com
+
+Please don't test other people's live websites.
+
+The page HTML is sent to OpenAI to generate the test, so avoid pages with real personal or company data, or use the offline model, where nothing leaves your computer.
+
+### 3. Generate a test
+
+Type what you want to test in plain English, for example:
+
+> Test login fails with wrong password
+
+Choose a framework (Cypress, Playwright or WebdriverIO) and generate the test.
+
+### 4. Check the result
+
+- Does the test run?
+- Does it test the right thing?
+- Does it use stable selectors (not fragile ones)?
+- Did the AI make up buttons or fields that aren't on the page?
+
+### 5. Tell us what you found
+
+[Open a "Generated test feedback" issue](../../issues/new?template=generated-test-feedback.yml) and include:
+
+- the website URL
+- what you typed
+- the framework and AI model you used
+- the test it generated
+- what was wrong, or what worked well
+
+Questions? Ask in [GitHub Discussions](../../discussions).
+
+### 6. Contributing code
+
+To work on the code, fork the repo (see [Forking and Clone Strategy](#forking-and-clone-strategy)) and open a pull request (see [Pull Request Requirements](#pull-request-requirements)).
+Issues labeled [`good first issue`](../../labels/good%20first%20issue) are a good place to begin.
+Starring the repo lets you follow updates and helps other testers find it.
+
+Anyone can help, beginners and experts both welcome.
 
 ## Contribution Principles
 
@@ -129,7 +193,8 @@ python qa_automation.py "Test login" --url https://the-internet.herokuapp.com/lo
 ```
 
 If change affects Cypress pathing or prompt mode, run at least one Cypress generation command.
-- Error recovery and panel integrity
+
+If change affects conversational refinement, also check error recovery and panel integrity (a failed refinement must keep the original code).
 
 For UI refinement testing in the app, generate tests normally, then use the "Refine" textbox and button to verify refinement updates both the panel and disk files correctly.
 
